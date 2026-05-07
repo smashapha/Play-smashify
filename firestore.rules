@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    
+    // Profiles
+    match /profiles/{userId} {
+      function isValidProfile(data) {
+        return data.keys().hasAll(['full_name', 'email', 'is_artist', 'created_at']) &&
+               data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 100 &&
+               data.email is string && data.email.size() > 0 && data.email.size() <= 150 &&
+               data.is_artist is bool &&
+               data.created_at is number;
+      }
+      
+      allow get: if isSignedIn(); // Open to read for users
+      allow list: if isSignedIn(); // In a real app we might bound this further
+      
+      allow create: if isOwner(userId) &&
+                       isValidProfile(incoming()) &&
+                       incoming().created_at == request.time.toMillis();
+                       
+      allow update: if isOwner(userId) &&
+                       isValidProfile(incoming()) &&
+                       incoming().created_at == existing().created_at;
+    }
+    
+    // Songs
+    match /songs/{songId} {
+      function isValidSong(data) {
+        return data.keys().hasAll(['title', 'artist_id', 'artist_name', 'audio_url', 'created_at', 'status']) &&
+               data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+               data.artist_id is string && data.artist_id == request.auth.uid &&
+               data.artist_name is string && data.artist_name.size() > 0 && data.artist_name.size() <= 100 &&
+               data.audio_url is string && data.audio_url.size() > 0 && data.audio_url.size() <= 1000 &&
+               data.created_at is number &&
+               data.status is string && data.status.size() <= 50;
+      }
+      
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      
+      allow create: if isSignedIn() &&
+                       isValidSong(incoming()) &&
+                       incoming().created_at == request.time.toMillis();
+      
+      allow update: if isSignedIn() &&
+                       existing().artist_id == request.auth.uid &&
+                       incoming().artist_id == existing().artist_id &&
+                       incoming().created_at == existing().created_at &&
+                       isValidSong(incoming());
+                       
+      allow delete: if isSignedIn() && existing().artist_id == request.auth.uid;
+    }
+  }
+}
