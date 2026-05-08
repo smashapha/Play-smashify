@@ -2,7 +2,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { supabase } from "../lib/supabase";
 import { Song } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+function getAiClient() {
+  if (!aiClient) {
+    let key;
+    try {
+      key = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    } catch {
+      key = import.meta.env.VITE_GEMINI_API_KEY;
+    }
+    aiClient = new GoogleGenAI({ apiKey: key || 'missing_key' });
+  }
+  return aiClient;
+}
 
 export async function getAiRecommendations(userLikes: string[], availableSongs: Song[]): Promise<Song[]> {
   if (availableSongs.length === 0) return [];
@@ -13,6 +26,7 @@ export async function getAiRecommendations(userLikes: string[], availableSongs: 
   }
 
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `User likes these songs: ${userLikes.join(", ")}. 
@@ -42,6 +56,7 @@ export async function getRadioNextSong(currentSong: Song, availableSongs: Song[]
   if (otherSongs.length === 0) return null;
 
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `The user just finished listening to: "${currentSong.title}" by "${currentSong.artist_name}" (Genre: ${currentSong.genre}).

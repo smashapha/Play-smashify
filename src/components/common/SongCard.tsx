@@ -8,6 +8,7 @@ import { buyTrack } from '../../lib/paychangu';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import AddToPlaylistModal from './AddToPlaylistModal';
+import toast from 'react-hot-toast';
 
 interface SongCardProps {
   song: Song;
@@ -18,7 +19,7 @@ interface SongCardProps {
 
 const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', variant = 'list' }) => {
   const navigate = useNavigate();
-  const { currentSong, isPlaying, playSong, addToQueue } = usePlayer();
+  const { currentSong, isPlaying, playSong, addToQueue, playQueue } = usePlayer();
   const { userProfile } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -76,21 +77,25 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    playSong(song, queue);
+    if (isCurrent) {
+      playSong(song);
+    } else {
+      playQueue([song, ...queue.filter(s => s.id !== song.id)]);
+    }
   };
 
   const handleBuy = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!userProfile) {
-      alert('Please sign in to buy tracks');
+      toast.error('Please sign in to buy tracks');
       return;
     }
     buyTrack({
       song,
       user: userProfile,
       onSuccess: () => {
-        alert('Purchase successful! You now own ' + song.title);
-        window.location.reload();
+        toast.success(`Purchase successful! You now own ${song.title}`);
+        setTimeout(() => window.location.reload(), 1500);
       }
     });
   };
@@ -99,7 +104,7 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
     return (
       <div className={`group flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-3 md:p-4 hover:bg-white/10 transition-all cursor-pointer ${className}`} onClick={handlePlay}>
         <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-lg border border-white/5">
-          <img src={song.cover_url} className="w-full h-full object-cover" alt="" />
+          <img src={song.cover_url} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             {isCurrent && isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" className="ml-0.5" />}
           </div>
@@ -252,6 +257,26 @@ const SongMenu = ({ song, onClose, onBuy, onAddToPlaylist }: any) => {
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
   
+  const handleShare = async () => {
+    const shareData = {
+      title: song.title,
+      text: `Listen to ${song.title} by ${song.artist_name} on Smashify!`,
+      url: window.location.origin + `/artist/${song.artist_id}`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.success('Link copied to clipboard');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+    onClose();
+  };
+
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
@@ -273,7 +298,10 @@ const SongMenu = ({ song, onClose, onBuy, onAddToPlaylist }: any) => {
         >
           <ListMusic size={16} /> Add to Playlist
         </button>
-        <button className="w-full px-4 py-3 text-left text-sm font-bold flex items-center gap-3 hover:bg-white/5 transition-colors text-white">
+        <button 
+          onClick={(e) => { e.stopPropagation(); handleShare(); }}
+          className="w-full px-4 py-3 text-left text-sm font-bold flex items-center gap-3 hover:bg-white/5 transition-colors text-white"
+        >
           <Share2 size={16} /> Share Song
         </button>
         <button 

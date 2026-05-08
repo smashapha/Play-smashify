@@ -28,7 +28,7 @@ export const musicService = {
           title: 'Malawi Gold',
           artist_id: 'a1',
           artist_name: 'The Great Artist',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
           cover_url: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=300&h=300&fit=crop',
           price: 500,
           trending: true,

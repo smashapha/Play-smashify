@@ -10,6 +10,8 @@ import { usePlayer } from '../../context/PlayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { EQPreset } from '../../types';
 import { buyTrack } from '../../lib/paychangu';
+import toast from 'react-hot-toast';
+import { Share2, Trash2 } from 'lucide-react';
 
 const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
   const { 
@@ -22,6 +24,8 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
     radioMode, toggleRadioMode, adPlaying,
     isShuffle, toggleShuffle, repeatMode, toggleRepeat
   } = usePlayer();
+  const { userProfile } = useAuth();
+  const accentColor = userProfile?.is_artist ? 'smash-purple' : 'smash-orange';
   const [showQueue, setShowQueue] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showSleepMenu, setShowSleepMenu] = useState(false);
@@ -31,6 +35,41 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
   const [showLyricsModal, setShowLyricsModal] = useState(false);
   const [lyrics, setLyrics] = useState<string | null>(null);
   const [loadingLyrics, setLoadingLyrics] = useState(false);
+
+  const ProgressBar = ({ current, total, onSeek }: { current: number, total: number, onSeek: (time: number) => void }) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragWidth, setDragWidth] = useState(0);
+
+    const handleInteract = (e: React.MouseEvent | React.TouchEvent) => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const percent = x / rect.width;
+      onSeek(percent * total);
+    };
+
+    return (
+      <div 
+        className="group relative h-2.5 bg-white/10 rounded-full cursor-pointer touch-none"
+        onMouseDown={(e) => { setIsDragging(true); handleInteract(e); }}
+        onMouseMove={(e) => { if (isDragging) handleInteract(e); }}
+        onMouseUp={() => setIsDragging(false)}
+        onMouseLeave={() => setIsDragging(false)}
+        onTouchStart={(e) => { setIsDragging(true); handleInteract(e); }}
+        onTouchMove={(e) => { if (isDragging) handleInteract(e); }}
+        onTouchEnd={() => setIsDragging(false)}
+      >
+        <motion.div 
+          className="h-full bg-gradient-to-r from-smash-orange to-smash-red relative rounded-full"
+          style={{ width: `${(current / total) * 100}%` }}
+        />
+        <div 
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity border-4 border-smash-black" 
+          style={{ left: `calc(${(current / total) * 100}% - 10px)` }} 
+        />
+      </div>
+    );
+  };
 
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
@@ -72,23 +111,24 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
     
     // Only allow download if free or purchased
     if (currentSong.is_for_sale && !currentSong.is_purchased) {
-      alert("Please purchase the track to download.");
+      toast.error("Please purchase the track to download.");
       return;
     }
 
+    const toastId = toast.loading('Preparing download...');
     try {
-      const response = await fetch(currentSong.url);
+      const response = await fetch(currentSong.audio_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${currentSong.title} - ${currentSong.profiles?.stage_name || currentSong.artist_name}.mp3`;
+      link.download = `${currentSong.title} - ${currentSong.artist_name}.mp3`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      // Record in LocalStorage for Library
+      toast.success('Download started!', { id: toastId });
       let downloads: string[] = [];
       try {
         downloads = JSON.parse(localStorage.getItem('smash_downloads') || '[]');
@@ -183,20 +223,10 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
            </div>
         </div>
 
-        <div className="mt-auto w-full max-w-4xl mx-auto pt-6 pb-2">
+         <div className="mt-auto w-full max-w-4xl mx-auto pt-6 pb-2">
            {/* Progress Bar */}
            <div className="space-y-3 mb-6 md:mb-8">
-              <div className="group relative h-2.5 bg-white/10 rounded-full cursor-pointer overflow-hidden touch-pan-x" onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                seek(percent * duration);
-              }}>
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-smash-orange to-smash-red relative"
-                  style={{ width: `${(currentTime / duration) * 100}%` }}
-                />
-                <div className="absolute top-1/2 -translate-y-1/2 right-0 w-5 h-5 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" style={{ left: `calc(${(currentTime / duration) * 100}% - 10px)` }} />
-              </div>
+              <ProgressBar current={currentTime} total={duration} onSeek={seek} />
               <div className="flex justify-between text-xs font-black text-smash-gray tracking-widest uppercase">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
@@ -209,19 +239,19 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                 <button 
                   onClick={toggleShuffle}
                   disabled={adPlaying} 
-                  className={`transition-all p-2 rounded-full ${adPlaying ? 'opacity-20 cursor-not-allowed' : isShuffle ? 'text-smash-orange bg-smash-orange/10 shadow-lg' : 'text-smash-gray hover:text-smash-orange'}`}
+                  className={`transition-all p-2 rounded-full ${adPlaying ? 'opacity-20 cursor-not-allowed' : isShuffle ? `text-${accentColor} bg-${accentColor}/10 shadow-lg` : `text-smash-gray hover:text-${accentColor}`}`}
                 >
                   <Shuffle size={24} />
                 </button>
                 
                 <div className="flex items-center gap-6 md:gap-10">
-                   <button onClick={previousTrack} disabled={adPlaying} className={`transition-colors active:scale-90 ${adPlaying ? 'opacity-20 cursor-not-allowed' : 'text-white hover:text-smash-orange'}`}>
+                   <button onClick={previousTrack} disabled={adPlaying} className={`transition-colors active:scale-90 ${adPlaying ? 'opacity-20 cursor-not-allowed' : `text-white hover:text-${accentColor}`}`}>
                      <SkipBack size={32} md:size={40} fill="white" />
                    </button>
                    <button onClick={togglePlay} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white text-smash-black flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl shadow-white/20">
                       {isPlaying ? <Pause size={40} md:size={48} fill="currentColor" /> : <Play size={40} md:size={48} fill="currentColor" className="ml-2" />}
                    </button>
-                   <button onClick={nextTrack} disabled={adPlaying} className={`transition-colors active:scale-90 ${adPlaying ? 'opacity-20 cursor-not-allowed' : 'text-white hover:text-smash-orange'}`}>
+                   <button onClick={nextTrack} disabled={adPlaying} className={`transition-colors active:scale-90 ${adPlaying ? 'opacity-20 cursor-not-allowed' : `text-white hover:text-${accentColor}`}`}>
                      <SkipForward size={32} md:size={40} fill="white" />
                    </button>
                 </div>
@@ -229,7 +259,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                 <button 
                   onClick={toggleRepeat}
                   disabled={adPlaying} 
-                  className={`transition-all p-2 rounded-full relative ${adPlaying ? 'opacity-20 cursor-not-allowed' : repeatMode !== 'off' ? 'text-smash-orange bg-smash-orange/10 shadow-lg' : 'text-smash-gray hover:text-white'}`}
+                  className={`transition-all p-2 rounded-full relative ${adPlaying ? 'opacity-20 cursor-not-allowed' : repeatMode !== 'off' ? `text-${accentColor} bg-${accentColor}/10 shadow-lg` : 'text-smash-gray hover:text-white'}`}
                 >
                   <Repeat size={24} />
                   {repeatMode === 'one' && (
@@ -243,7 +273,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                    <button 
                      key={p}
                      onClick={() => setEQPreset(p)}
-                     className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex-shrink-0 ${eqPreset === p ? 'bg-smash-orange text-white' : 'bg-white/5 text-smash-gray hover:text-white'}`}
+                     className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex-shrink-0 ${eqPreset === p ? `bg-${accentColor} text-white` : 'bg-white/5 text-smash-gray hover:text-white'}`}
                    >
                      {p}
                    </button>
@@ -266,7 +296,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                      type="range" 
                      min="0" max="1" step="0.01" value={volume}
                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                     className="w-full accent-smash-orange bg-white/10 h-1.5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-smash-orange"
+                     className={`w-full accent-${accentColor} bg-white/10 h-1.5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-${accentColor}`}
                    />
                  </div>
               </div>
@@ -276,14 +306,14 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                  <div className="relative">
                    <button 
                      onClick={() => setShowSpeedMenu(!showSpeedMenu)} 
-                     className={`flex items-center gap-2 font-black uppercase transition-colors ${playbackRate !== 1 || showSpeedMenu ? 'text-smash-orange' : 'text-smash-gray hover:text-white'}`}
+                     className={`flex items-center gap-2 font-black uppercase transition-colors ${playbackRate !== 1 || showSpeedMenu ? `text-${accentColor}` : 'text-smash-gray hover:text-white'}`}
                    >
                      <Gauge size={18} /> {playbackRate}x
                    </button>
                    {showSpeedMenu && (
                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-full mb-4 right-0 bg-smash-dark border border-white/10 rounded-xl p-2 w-32 shadow-2xl z-[150]">
                        {speeds.map(s => (
-                         <button key={s} onClick={() => { setPlaybackRate(s); setShowSpeedMenu(false); }} className={`w-full p-3 text-left font-bold rounded-lg transition-colors ${playbackRate === s ? 'bg-smash-orange text-white' : 'text-smash-gray hover:bg-white/10 hover:text-white'}`}>
+                         <button key={s} onClick={() => { setPlaybackRate(s); setShowSpeedMenu(false); }} className={`w-full p-3 text-left font-bold rounded-lg transition-colors ${playbackRate === s ? `bg-${accentColor} text-white` : 'text-smash-gray hover:bg-white/10 hover:text-white'}`}>
                            {s}x
                          </button>
                        ))}
@@ -295,7 +325,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                  <div className="relative">
                    <button 
                      onClick={() => setShowSleepMenu(!showSleepMenu)} 
-                     className={`flex items-center gap-2 font-black uppercase transition-colors ${sleepTimerRemaining || showSleepMenu ? 'text-smash-orange' : 'text-smash-gray hover:text-white'}`}
+                     className={`flex items-center gap-2 font-black uppercase transition-colors ${sleepTimerRemaining || showSleepMenu ? `text-${accentColor}` : 'text-smash-gray hover:text-white'}`}
                    >
                      <Clock size={18} /> {sleepTimerRemaining ? `${sleepTimerRemaining}m` : 'Timer'}
                    </button>
@@ -333,7 +363,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                {/* Simplified Queue Item */}
                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-smash-orange flex items-center justify-center flex-shrink-0">
+                  <div className={`w-12 h-12 rounded-xl bg-${accentColor} flex items-center justify-center flex-shrink-0`}>
                      <Play size={20} fill="white" />
                   </div>
                   <div className="min-w-0">
@@ -371,7 +401,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                   {loadingLyrics ? (
                     <div className="flex items-center justify-center h-40">
                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                         <Zap size={32} className="text-smash-orange opacity-50" />
+                         <Zap size={32} className={`text-${accentColor} opacity-50`} />
                       </motion.div>
                     </div>
                   ) : (
@@ -394,8 +424,10 @@ const GlobalPlayer: React.FC = () => {
     currentSong, isPlaying, togglePlay, currentTime, duration, 
     volume, setVolume, dataSaver, toggleDataSaver, isExpanded, setIsExpanded,
     queue, nextTrack, previousTrack, radioMode, toggleRadioMode, playSong, adPlaying,
-    isShuffle, toggleShuffle, repeatMode, toggleRepeat
+    isShuffle, toggleShuffle, repeatMode, toggleRepeat, seek, removeFromQueue
   } = usePlayer();
+  const { userProfile } = useAuth();
+  const accentColor = userProfile?.is_artist ? 'smash-purple' : 'smash-orange';
 
   const [localVolume, setLocalVolume] = useState(volume);
   const [lastVolume, setLastVolume] = useState(volume || 0.8);
@@ -416,8 +448,6 @@ const GlobalPlayer: React.FC = () => {
     }
   };
 
-  const { seek } = usePlayer();
-
   if (!currentSong) return null;
 
   return (
@@ -430,15 +460,15 @@ const GlobalPlayer: React.FC = () => {
         >
           {/* Top Progress Line - Interactive */}
           <div 
-            className="absolute top-0 left-0 right-0 h-[3px] md:h-1 bg-white/10 cursor-pointer group-hover/player:h-1.5 transition-all z-10"
-            onClick={(e) => {
+            className="absolute top-0 left-0 right-0 h-[3px] md:h-1 bg-white/10 cursor-pointer group-hover/player:h-1.5 transition-all z-10 touch-none"
+            onMouseDown={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const percent = (e.clientX - rect.left) / rect.width;
               seek(percent * duration);
             }}
           >
             <motion.div 
-              className="h-full bg-smash-orange shadow-[0_0_10px_rgba(255,95,0,0.5)]"
+              className={`h-full bg-${accentColor} shadow-[0_0_10px_var(--color-${accentColor})] opacity-80`}
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
           </div>
@@ -460,11 +490,11 @@ const GlobalPlayer: React.FC = () => {
               </div>
               <div className="min-w-0 cursor-pointer">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-display font-black text-sm md:text-xl italic uppercase tracking-tighter truncate leading-none group-hover:text-smash-orange transition-colors">
+                  <h3 className={`font-display font-black text-sm md:text-xl italic uppercase tracking-tighter truncate leading-none group-hover:text-${accentColor} transition-colors`}>
                     {currentSong.title}
                   </h3>
                   {adPlaying && (
-                    <span className="bg-smash-orange text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">AD</span>
+                    <span className={`bg-${accentColor} text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest`}>AD</span>
                   )}
                 </div>
                 <p className="text-[10px] md:text-sm text-smash-gray font-bold truncate tracking-tight">
@@ -503,7 +533,7 @@ const GlobalPlayer: React.FC = () => {
                  <button 
                    onClick={toggleShuffle}
                    disabled={adPlaying}
-                   className={`p-2 transition-all ${adPlaying ? 'opacity-20' : isShuffle ? 'text-smash-orange' : 'text-smash-gray hover:text-white'}`}
+                   className={`p-2 transition-all ${adPlaying ? 'opacity-20' : isShuffle ? `text-${accentColor}` : 'text-smash-gray hover:text-white'}`}
                    title="Shuffle"
                  >
                     <Shuffle size={18} />
@@ -511,7 +541,7 @@ const GlobalPlayer: React.FC = () => {
                  <button 
                    onClick={toggleRepeat}
                    disabled={adPlaying}
-                   className={`p-2 transition-all relative ${adPlaying ? 'opacity-20' : repeatMode !== 'off' ? 'text-smash-orange' : 'text-smash-gray hover:text-white'}`}
+                   className={`p-2 transition-all relative ${adPlaying ? 'opacity-20' : repeatMode !== 'off' ? `text-${accentColor}` : 'text-smash-gray hover:text-white'}`}
                    title="Repeat"
                  >
                     <Repeat size={18} />
@@ -539,7 +569,7 @@ const GlobalPlayer: React.FC = () => {
                       setLocalVolume(val);
                       setVolume(val);
                     }}
-                    className="flex-1 accent-smash-orange h-1 opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    className={`flex-1 accent-${accentColor} h-1 opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer`}
                   />
                 </div>
 
@@ -550,7 +580,7 @@ const GlobalPlayer: React.FC = () => {
                 >
                   <ListMusic size={20} />
                   {queue.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-smash-orange text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-smash-black">
+                    <span className={`absolute -top-1 -right-1 w-5 h-5 bg-${accentColor} text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg border border-smash-black`}>
                       {queue.length}
                     </span>
                   )}
@@ -568,7 +598,7 @@ const GlobalPlayer: React.FC = () => {
 
                 <button 
                   onClick={toggleRadioMode}
-                  className={`p-3 rounded-2xl border transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${radioMode ? 'bg-smash-orange/10 border-smash-orange text-smash-orange shadow-lg shadow-smash-orange/10' : 'bg-white/5 border-white/10 text-smash-gray hover:text-white'}`}
+                  className={`p-3 rounded-2xl border transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${radioMode ? `bg-${accentColor}/10 border-${accentColor} text-${accentColor} shadow-lg shadow-${accentColor}/10` : 'bg-white/5 border-white/10 text-smash-gray hover:text-white'}`}
                   title="Endless Radio"
                 >
                    <Zap size={18} fill={radioMode ? "currentColor" : "none"} />
@@ -613,13 +643,13 @@ const GlobalPlayer: React.FC = () => {
                 {queue.length > 0 ? queue.map((song, i) => (
                   <div 
                     key={`${song.id}-${i}`}
-                    className={`p-4 rounded-2xl flex items-center gap-4 group transition-colors cursor-pointer ${currentSong?.id === song.id ? 'bg-smash-orange/10 border border-smash-orange/20' : 'bg-white/5 border border-white/5 hover:bg-white/10'}`}
+                    className={`p-4 rounded-2xl flex items-center gap-4 group transition-colors cursor-pointer ${currentSong?.id === song.id ? `bg-${accentColor}/10 border border-${accentColor}/20` : 'bg-white/5 border border-white/5 hover:bg-white/10'}`}
                     onClick={() => playSong(song)}
                   >
                     <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 relative">
                        <img src={song.cover_url} className="w-full h-full object-cover" alt="" />
                        {currentSong?.id === song.id && (
-                         <div className="absolute inset-0 bg-smash-orange/40 flex items-center justify-center">
+                         <div className={`absolute inset-0 bg-${accentColor}/40 flex items-center justify-center`}>
                            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
                              <Play size={16} fill="white" />
                            </motion.div>
@@ -627,11 +657,16 @@ const GlobalPlayer: React.FC = () => {
                        )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-bold text-sm truncate uppercase tracking-tight italic ${currentSong?.id === song.id ? 'text-smash-orange' : 'text-white'}`}>{song.title}</p>
+                      <p className={`font-bold text-sm truncate uppercase tracking-tight italic ${currentSong?.id === song.id ? `text-${accentColor}` : 'text-white'}`}>{song.title}</p>
                       <p className="text-xs text-smash-gray font-bold">{song.artist_name}</p>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Download size={14} className="text-smash-gray" />
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); removeFromQueue(song.id); }}
+                        className="p-2 hover:bg-white/10 rounded-full text-smash-red"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 )) : (
@@ -682,15 +717,16 @@ const PreviewModal = () => {
 
    const handleBuy = () => {
       if (!userProfile) {
-         alert('Please sign in to purchase tracks.');
+         toast.error('Please sign in to purchase tracks.');
          return;
       }
       buyTrack({
          song,
          user: userProfile,
          onSuccess: () => {
-            alert('Track purchased successfully!');
+            toast.success('Track purchased successfully!');
             setSong(null);
+            setTimeout(() => window.location.reload(), 1500);
          }
       });
    };

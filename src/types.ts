@@ -1,9 +1,17 @@
+export interface Album {
+  id: string;
+  artist_id: string;
+  title: string;
+  cover_url: string;
+  release_year: number;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist_id: string;
   artist_name: string;
-  url: string;          // audio_url from DB
+  audio_url: string;          // Renamed from url
   cover_url: string;
   price: number;
   duration?: number;
@@ -50,12 +58,17 @@ export interface UserProfile {
   full_name?: string;
   stage_name?: string;
   avatar_url?: string;
+  banner_url?: string;
   bio?: string;
   instagram?: string;
   twitter?: string;
   city?: string;
   genre?: string;
   is_artist: boolean;
+  is_admin?: boolean;
+  verified?: boolean;
+  followers_count?: number;
+  total_plays?: number;
   subscription_tier?: string;
   subscription_ends?: string;
   wallet_balance?: number;

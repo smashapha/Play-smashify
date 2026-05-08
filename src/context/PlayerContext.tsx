@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useMemo } from 'react';
 import { Song, EQPreset } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -24,6 +24,7 @@ interface PlayerContextType {
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   playSong: (song: Song, newQueue?: Song[]) => void;
+  playQueue: (songs: Song[], startIndex?: number) => void;
   togglePlay: () => void;
   pauseSong: () => void;
   setVolume: (volume: number) => void;
@@ -110,7 +111,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setSleepTimerRemaining(minutes);
   };
   
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(new Audio());
 
   useEffect(() => {
     localStorage.setItem('smash_datasaver', String(dataSaver));
@@ -121,17 +122,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [radioMode]);
 
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-    }
     const audio = audioRef.current;
     
     // Reset limit reached ref when song changes
     previewLimitReached.current = false;
     
     // Only set src if we have a current song and it differs from the current audio src
-    if (currentSong && currentSong.url && audio.src !== currentSong.url) {
-      audio.src = currentSong.url;
+    if (currentSong && currentSong.audio_url && audio.src !== currentSong.audio_url) {
+      audio.src = currentSong.audio_url;
       audio.load();
     }
 
@@ -204,7 +202,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         title: 'Advertisement',
         artist_id: 'system-ad',
         artist_name: 'Smashify Ad',
-        url: 'https://cdn.pixabay.com/download/audio/2022/10/30/audio_f535f21226.mp3?filename=advertisement-124434.mp3',
+        audio_url: 'https://cdn.pixabay.com/download/audio/2022/10/30/audio_f535f21226.mp3?filename=advertisement-124434.mp3',
         cover_url: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop',
         price: 0,
         duration: 30,
@@ -214,7 +212,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentSong(adSong);
       setIsPlaying(true);
       if (audioRef.current) {
-          audioRef.current.src = adSong.url;
+          audioRef.current.src = adSong.audio_url;
           audioRef.current.load();
       }
     };
@@ -233,7 +231,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
              ...s,
              artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
              cover_url: s.cover_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop',
-             url: s.audio_url,
+             audio_url: s.audio_url,
              profiles: s.profiles
           }));
 
@@ -341,9 +339,23 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentSong(song);
       setIsPlaying(true);
       if (audioRef.current) {
-        audioRef.current.src = song.url;
+        audioRef.current.src = song.audio_url;
         audioRef.current.load();
       }
+    }
+  };
+
+  const playQueue = (songs: Song[], startIndex = 0) => {
+    if (songs.length === 0) return;
+    setQueue(songs);
+    const songToPlay = songs[startIndex] || songs[0];
+    
+    lastIncrementedSongId.current = null;
+    setCurrentSong(songToPlay);
+    setIsPlaying(true);
+    if (audioRef.current) {
+      audioRef.current.src = songToPlay.audio_url;
+      audioRef.current.load();
     }
   };
 
@@ -421,41 +433,48 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setQueue(prev => prev.filter(s => s.id !== songId));
   };
 
+  const value = useMemo(() => ({
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    queue,
+    dataSaver,
+    eqPreset,
+    playbackRate,
+    sleepTimerRemaining,
+    isExpanded,
+    radioMode,
+    adPlaying,
+    isShuffle,
+    repeatMode,
+    toggleRadioMode,
+    toggleShuffle,
+    toggleRepeat,
+    playSong,
+    playQueue,
+    togglePlay,
+    pauseSong,
+    setVolume,
+    setPlaybackRate,
+    setSleepTimer,
+    seek,
+    nextTrack,
+    previousTrack,
+    toggleDataSaver,
+    setEQPreset,
+    setIsExpanded,
+    addToQueue,
+    removeFromQueue
+  }), [
+    currentSong, isPlaying, currentTime, duration, volume, queue, dataSaver,
+    eqPreset, playbackRate, sleepTimerRemaining, isExpanded, radioMode,
+    adPlaying, isShuffle, repeatMode
+  ]);
+
   return (
-    <PlayerContext.Provider value={{
-      currentSong,
-      isPlaying,
-      currentTime,
-      duration,
-      volume,
-      queue,
-      dataSaver,
-      eqPreset,
-      playbackRate,
-      sleepTimerRemaining,
-      isExpanded,
-      radioMode,
-      adPlaying,
-      isShuffle,
-      repeatMode,
-      toggleRadioMode,
-      toggleShuffle,
-      toggleRepeat,
-      playSong,
-      togglePlay,
-      pauseSong,
-      setVolume,
-      setPlaybackRate,
-      setSleepTimer,
-      seek,
-      nextTrack,
-      previousTrack,
-      toggleDataSaver,
-      setEQPreset,
-      setIsExpanded,
-      addToQueue,
-      removeFromQueue
-    }}>
+    <PlayerContext.Provider value={value}>
       {children}
     </PlayerContext.Provider>
   );

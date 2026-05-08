@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { Music2, Heart, ShoppingBag, Clock, Disc, PlayCircle, Search, Info, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Music2, Heart, ShoppingBag, Clock, Disc, PlayCircle, Search, Info, Download, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Song } from '../types';
@@ -8,10 +9,13 @@ import SongCard from '../components/common/SongCard';
 
 const Library: React.FC = () => {
   const { userProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'purchased' | 'likes' | 'downloads'>('purchased');
+  const [activeTab, setActiveTab] = useState<'purchased' | 'likes' | 'downloads' | 'playlists'>('purchased');
   const [songs, setSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
 
   useEffect(() => {
     if (userProfile?.id) {
@@ -84,6 +88,14 @@ const Library: React.FC = () => {
         } else {
            setSongs([]);
         }
+      } else if (activeTab === 'playlists') {
+        const { data: playlistsData, error: plError } = await supabase
+          .from('playlists')
+          .select('*, playlist_songs(songs(*, profiles!artist_id(full_name, stage_name)))')
+          .eq('user_id', userProfile?.id);
+        
+        if (plError) throw plError;
+        setPlaylists(playlistsData || []);
       }
     } catch (err) {
       console.error('Error fetching library:', err);
@@ -96,6 +108,24 @@ const Library: React.FC = () => {
     s.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     s.artist_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const createPlaylist = async () => {
+    if (!newPlaylistName.trim()) return;
+    try {
+      const { error } = await supabase.from('playlists').insert({
+        user_id: userProfile?.id,
+        name: newPlaylistName,
+        is_public: false
+      });
+      if (error) throw error;
+      toast.success('Playlist created!');
+      setNewPlaylistName('');
+      setShowCreatePlaylist(false);
+      fetchLibrary();
+    } catch (err: any) {
+      toast.error('Error: ' + err.message);
+    }
+  };
 
   if (!userProfile) {
      return (
@@ -170,6 +200,66 @@ const Library: React.FC = () => {
                 <div key={i} className="aspect-square bg-white/5 rounded-[24px] animate-pulse" />
              ))}
            </div>
+        ) : activeTab === 'playlists' ? (
+          <div className="space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+               <motion.div 
+                 whileHover={{ y: -5 }}
+                 onClick={() => setShowCreatePlaylist(true)}
+                 className="aspect-square bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center cursor-pointer hover:border-smash-orange transition-all group"
+               >
+                  <Plus size={40} className="text-white/20 group-hover:text-smash-orange transition-colors" />
+                  <p className="text-[10px] font-black uppercase tracking-widest mt-4">Create New</p>
+               </motion.div>
+
+               {playlists.map(pl => (
+                 <motion.div 
+                   key={pl.id}
+                   whileHover={{ y: -5 }}
+                   className="flex flex-col gap-3 group cursor-pointer"
+                 >
+                    <div className="aspect-square bg-smash-dark rounded-[32px] overflow-hidden border border-white/5 relative shadow-xl">
+                       <div className="grid grid-cols-2 h-full w-full opacity-40">
+                          {pl.playlist_songs?.slice(0, 4).map((ps: any, i: number) => (
+                             <img key={i} src={ps.songs?.cover_url} className="w-full h-full object-cover" />
+                          ))}
+                       </div>
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                       <div className="absolute bottom-4 left-4 p-2 bg-white/10 backdrop-blur-md rounded-lg">
+                          <Music2 size={16} />
+                       </div>
+                    </div>
+                    <div>
+                       <h4 className="font-display font-black italic uppercase text-lg truncate tracking-tight">{pl.name}</h4>
+                       <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest">{pl.playlist_songs?.length || 0} Tracks</p>
+                    </div>
+                 </motion.div>
+               ))}
+            </div>
+
+            {showCreatePlaylist && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                 <motion.div 
+                   initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                   className="bg-smash-dark border border-white/10 p-8 rounded-[40px] max-w-md w-full shadow-2xl"
+                 >
+                    <h3 className="text-3xl font-black font-display italic uppercase mb-6">NEW PLAYLIST</h3>
+                    <input 
+                      autoFocus
+                      type="text" 
+                      placeholder="My Summer Mix 24"
+                      value={newPlaylistName}
+                      onChange={e => setNewPlaylistName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold mb-6 focus:border-smash-orange outline-none"
+                    />
+                    <div className="flex gap-4">
+                       <button onClick={() => setShowCreatePlaylist(false)} className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-smash-gray">Cancel</button>
+                       <button onClick={createPlaylist} className="flex-1 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-smash-orange hover:text-white transition-all">Create</button>
+                    </div>
+                 </motion.div>
+              </div>
+            )}
+          </div>
         ) : filteredSongs.length > 0 ? (
            <div className="space-y-4">
               {filteredSongs.map((song) => (
@@ -215,13 +305,13 @@ const Library: React.FC = () => {
                   <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest">Jump back in</p>
                </div>
             </div>
-            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group opacity-50">
+            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group" onClick={() => setActiveTab('playlists')}>
                <div className="w-14 h-14 rounded-xl bg-smash-purple flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                   <Music2 size={24} fill="white" />
                </div>
                <div>
                   <h4 className="font-display font-black italic uppercase text-lg leading-none mb-1">Playlists</h4>
-                  <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest">Feature coming soon</p>
+                  <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest">Collections you love</p>
                </div>
             </div>
             <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group">

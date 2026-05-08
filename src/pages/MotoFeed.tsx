@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
 import { 
   Play, Pause, Heart, Share2, ShoppingBag, Music2, 
-  ArrowUp, ArrowDown, UserPlus, Disc, Flame, Volume2, VolumeX
+  ArrowUp, ArrowDown, UserPlus, Disc, Flame, Volume2, VolumeX, Check
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { Song } from '../types';
 import { usePlayer } from '../context/PlayerContext';
@@ -82,7 +83,7 @@ const MotoCard = ({ song, active }: { song: Song; active: boolean }) => {
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!userProfile) {
-       alert('Sign in to follow artists');
+       toast.error('Sign in to follow artists');
        return;
     }
     try {
@@ -90,27 +91,44 @@ const MotoCard = ({ song, active }: { song: Song; active: boolean }) => {
           const { error } = await supabase.from('followers').delete().eq('follower_id', userProfile.id).eq('artist_id', song.artist_id);
           if (error) throw error;
           setIsFollowing(false);
+          toast.success(`Unfollowed artist`);
        } else {
           const { error } = await supabase.from('followers').insert({ follower_id: userProfile.id, artist_id: song.artist_id });
           if (error) throw error;
           setIsFollowing(true);
+          toast.success(`Following artist!`);
        }
-    } catch (err) {
-       console.error(err);
+    } catch (err: any) {
+       toast.error(err.message);
     }
   };
 
   const handleBuy = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!userProfile) {
-       alert('Sign in to buy tracks');
+       toast.error('Sign in to buy tracks');
        return;
     }
     buyTrack({
        song,
        user: userProfile,
-       onSuccess: () => alert('Purchased!')
+       onSuccess: () => toast.success('Track purchased! Add it to your library.')
     });
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/artist/${song.artist_id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: song.title,
+        text: `Check out ${song.title} by ${song.artist_name} on Smashify!`,
+        url: url
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success('Artist link copied to clipboard!');
+    }
   };
 
   const isPreviewLimit = !song.is_purchased && currentTime >= 30;
@@ -206,6 +224,15 @@ const MotoCard = ({ song, active }: { song: Song; active: boolean }) => {
                </button>
             </div>
 
+            <div className="flex flex-col items-center gap-2">
+               <button 
+                  onClick={handleShare}
+                  className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:scale-110 transition-all border border-white/10"
+               >
+                  <Share2 size={24} />
+               </button>
+            </div>
+
             {song.is_for_sale && !song.is_unreleased && (
                <div className="flex flex-col items-center gap-2">
                   <button 
@@ -245,19 +272,38 @@ const MotoFeed: React.FC = () => {
 
   const fetchSongs = async () => {
     try {
+      // Fetch snippets from moto_feed first if available, otherwise fallback to regular songs
+      const { data: snippets, error: sError } = await supabase
+        .from('moto_feed')
+        .select('*, profiles:artist_id(full_name, stage_name, avatar_url, verified)')
+        .limit(10);
+
       const { data, error } = await supabase
         .from('songs')
         .select('*, profiles!artist_id(full_name, stage_name, avatar_url, verified)')
         .eq('approved', true)
+        .order('plays', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      setSongs((data || []).map(s => ({
-         ...s,
-         artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
-         cover_url: s.cover_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=800&h=800&fit=crop',
-         url: s.audio_url
-      })));
+      
+      const combined = [
+        ...(snippets || []).map(s => ({
+          ...s,
+          artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
+          cover_url: s.cover_url || (s.profiles as any)?.avatar_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=800&h=800&fit=crop',
+          audio_url: s.media_url,
+          is_unreleased: true
+        })),
+        ...(data || []).map(s => ({
+           ...s,
+           artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
+           cover_url: s.cover_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=800&h=800&fit=crop',
+           audio_url: s.audio_url
+        }))
+      ];
+      
+      setSongs(combined as any);
     } catch (err) {
       console.error(err);
     } finally {
@@ -336,11 +382,5 @@ const MotoFeed: React.FC = () => {
     </div>
   );
 };
-
-const Check = ({ size, className }: any) => (
-   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <polyline points="20 6 9 17 4 12" />
-   </svg>
-);
 
 export default MotoFeed;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '../types';
@@ -84,15 +84,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) await fetchProfile(user.id);
   };
 
+  const value = useMemo(() => ({
+    user,
+    session,
+    userProfile,
+    loading,
+    signOut,
+    refreshProfile
+  }), [user, session, userProfile, loading]);
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      userProfile,
-      loading,
-      signOut,
-      refreshProfile
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Check, ChevronRight } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 
-const PricingCard = ({ title, price, features, badge, isArtist = false }: any) => (
+const PricingCard = ({ title, price, features, badge, isArtist = false, onAction }: any) => (
   <div className={`bento-card p-10 flex flex-col relative overflow-hidden group hover:border-smash-orange/30 transition-all ${badge ? 'ring-2 ring-smash-orange bg-smash-dark/50' : 'bg-white/5 border-white/5'}`}>
     {badge && (
       <div className="absolute top-6 right-0 bg-smash-orange text-white text-[10px] font-black px-4 py-1.5 rounded-l-full uppercase tracking-widest shadow-lg z-10">
@@ -24,13 +24,17 @@ const PricingCard = ({ title, price, features, badge, isArtist = false }: any) =
         </li>
       ))}
     </ul>
-    <button className={`w-full py-5 rounded-[24px] font-black text-sm uppercase tracking-widest transition-all ${badge ? 'bg-smash-orange text-white hover:bg-smash-orange/80 shadow-xl' : 'bg-white text-smash-black hover:bg-smash-orange hover:text-white shadow-xl'}`}>
+    <button 
+      onClick={onAction}
+      className={`w-full py-5 rounded-[24px] font-black text-sm uppercase tracking-widest transition-all ${badge ? 'bg-smash-orange text-white hover:bg-smash-orange/80 shadow-xl' : 'bg-white text-smash-black hover:bg-smash-orange hover:text-white shadow-xl'}`}
+    >
       GET STARTED
     </button>
   </div>
 );
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'listeners' | 'artists'>((searchParams.get('tab') as 'listeners' | 'artists') || 'listeners');
 
@@ -44,6 +48,14 @@ const Pricing = () => {
   const handleTabChange = (tab: 'listeners' | 'artists') => {
     setActiveTab(tab);
     setSearchParams({ tab });
+  };
+
+  const handleAction = () => {
+    if (activeTab === 'artists') {
+      navigate('/auth?mode=artist');
+    } else {
+      navigate('/auth?mode=listener');
+    }
   };
 
   return (
@@ -91,20 +103,23 @@ const Pricing = () => {
            <PricingCard 
               title="Free Plan" 
               price="0" 
+              onAction={handleAction}
               features={["Stream with ads", "Discover via Moto Feed", "Create up to 3 playlists", "Support artists with tips"]} 
            />
            <PricingCard 
               title="Premium" 
               price="2,500" 
               badge="MOST POPULAR"
+              onAction={handleAction}
               features={["Everything in Free", "Ad-free listening", "Offline downloads", "HD audio quality", "Early access to unreleased snippets", "Unlimited playlists"]} 
            />
            <PricingCard 
               title="Family" 
               price="4,500" 
+              onAction={handleAction}
               features={["Everything in Premium", "Up to 5 separate accounts", "Shared family queue", "Parental controls", "One billing for everyone"]} 
            />
-        </motion.div>
+         </motion.div>
       )}
 
       {activeTab === 'artists' && (
@@ -118,12 +133,14 @@ const Pricing = () => {
               isArtist={true}
               title="Free Artist" 
               price="0" 
+              onAction={handleAction}
               features={["Upload 3 Songs", "Basic Profile", "Accept Fan Donations", "Basic Analytics"]} 
            />
            <PricingCard 
               isArtist={true}
               title="Rising Star" 
               price="15,000" 
+              onAction={handleAction}
               features={["Upload 10 Songs/yr", "Sell Songs & Snippets", "Earnings Dashboard", "Album Creation"]} 
            />
            <PricingCard 
@@ -131,12 +148,14 @@ const Pricing = () => {
               title="Standard" 
               price="25,000" 
               badge="RECOMMENDED" 
+              onAction={handleAction}
               features={["Unlimited Uploads", "Full Detailed Analytics", "Push Notifications to Fans", "Featured in Moto Feed", "Priority Approval"]} 
            />
            <PricingCard 
               isArtist={true}
               title="Elite/Label" 
               price="45,000" 
+              onAction={handleAction}
               features={["Manage Multiple Artists", "Label Branding", "Dedicated Manager", "Verified Badge", "Custom Profile URL"]} 
            />
         </motion.div>

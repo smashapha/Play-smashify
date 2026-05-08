@@ -9,8 +9,10 @@ import Logo from './Logo';
 
 const TopBar = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
   const { dataSaver, toggleDataSaver } = usePlayer();
-  const { user, signOut } = useAuth();
+  const { user, signOut, userProfile } = useAuth();
   const navigate = useNavigate();
+
+  const accentColor = userProfile?.is_artist ? 'smash-purple' : 'smash-orange';
 
   return (
     <div className="h-20 flex items-center justify-between px-4 md:px-8 bg-smash-black/80 backdrop-blur-xl sticky top-0 z-30 border-b border-white/5">
@@ -30,12 +32,12 @@ const TopBar = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
              navigate(`/search?q=${encodeURIComponent(q.toString())}`);
           }
         }}>
-           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-smash-orange transition-colors" />
+           <Search size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-${accentColor} transition-colors`} />
            <input 
             type="text" 
             name="q"
             placeholder="Search artists, songs, podcasts..." 
-            className="w-full bg-smash-dark/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-smash-orange/20 transition-all backdrop-blur-md"
+            className={`w-full bg-smash-dark/50 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-${accentColor}/20 transition-all backdrop-blur-md`}
            />
         </form>
       </div>
@@ -43,7 +45,7 @@ const TopBar = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
       <div className="flex items-center gap-4 ml-auto">
         <button 
            onClick={toggleDataSaver}
-           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg ${dataSaver ? 'bg-smash-orange text-white' : 'bg-smash-dark text-smash-gray hover:text-white border border-white/5'}`}
+           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg ${dataSaver ? `bg-${accentColor} text-white shadow-${accentColor}/20` : 'bg-smash-dark text-smash-gray hover:text-white border border-white/5'}`}
         >
           {dataSaver ? <WifiOff size={14} /> : <Wifi size={14} />}
           {dataSaver ? 'DATA SAVER ON' : 'DATA SAVER OFF'}
@@ -64,6 +66,7 @@ const TopBar = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const { user, userProfile } = useAuth();
+  const navigate = useNavigate();
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Flame, label: 'Moto Feed', path: '/moto-feed' },
@@ -71,6 +74,8 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     { icon: TrendingUp, label: 'Trending', path: '/trending' },
     { icon: Library, label: 'Library', path: '/library' },
   ];
+
+  const accentColor = userProfile?.is_artist ? 'smash-purple' : 'smash-orange';
 
   return (
     <aside className="flex flex-col h-full bg-smash-black p-6 overflow-y-auto scrollbar-hide">
@@ -92,19 +97,19 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             className={({ isActive }) => 
               `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group relative ${
                 isActive 
-                  ? 'bg-white/10 text-white shadow-lg' 
+                  ? 'bg-white/10 text-white shadow-lg shadow-black/20' 
                   : 'text-smash-gray hover:bg-white/5 hover:text-white'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon size={20} className={isActive ? 'text-smash-orange' : 'group-hover:text-smash-orange transition-colors'} />
+                <item.icon size={20} className={isActive ? `text-${accentColor}` : `group-hover:text-${accentColor} transition-colors`} />
                 <span>{item.label}</span>
                 {isActive && (
                   <motion.div 
                     layoutId="active-pill"
-                    className="absolute left-0 w-1 h-6 bg-smash-orange rounded-full"
+                    className={`absolute left-0 w-1 h-6 bg-${accentColor} rounded-full`}
                   />
                 )}
               </>
@@ -116,7 +121,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       <div className="mt-10 space-y-1">
         <p className="px-4 text-[10px] font-black text-smash-gray uppercase tracking-widest mb-4">Your Studio</p>
         <NavLink
-            to="/artist-hub"
+            to={userProfile?.is_artist ? "/artist-hub" : "/artists"}
             className={({ isActive }) => 
               `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group ${
                 isActive 
@@ -125,22 +130,22 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
               }`
             }
           >
-           <Mic2 size={20} className="group-hover:text-smash-orange transition-colors" />
+           <Mic2 size={20} className={`group-hover:text-${accentColor} transition-colors`} />
            <span>Artist Portal</span>
         </NavLink>
       </div>
 
       {/* Sidebar Promo Card for Artists */}
       {!userProfile?.is_artist && (
-        <div className="mt-10 p-6 rounded-[32px] bg-gradient-to-br from-smash-orange to-smash-red relative overflow-hidden group cursor-pointer shadow-xl shadow-smash-orange/10 transform hover:-translate-y-1 transition-transform">
+        <div className="mt-10 p-6 rounded-[32px] bg-gradient-to-br from-smash-purple to-smash-purple/60 relative overflow-hidden group cursor-pointer shadow-xl shadow-smash-purple/10 transform hover:-translate-y-1 transition-transform">
            <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-150 transition-transform">
               <Mic2 size={80} />
            </div>
            <p className="text-[10px] font-black tracking-widest text-white/50 mb-1 uppercase">Earn Money</p>
            <h4 className="font-display font-black italic text-lg leading-tight mb-4 tracking-tighter">WANT TO<br/>UPLOAD?</h4>
            <button 
-            onClick={() => window.location.href = '/artist-hub'}
-            className="w-full py-2 bg-white text-smash-black rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
+            onClick={() => navigate('/artists')}
+            className={`w-full py-2 bg-white text-smash-black rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-black hover:text-white transition-colors`}
            >
              JOIN AS ARTIST
            </button>
@@ -152,7 +157,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         <div className="flex items-center justify-between mb-4 px-1">
           <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest leading-none">Spotlight</p>
           <div className="flex gap-1">
-             <div className="w-1.5 h-1.5 rounded-full bg-smash-orange" />
+             <div className={`w-1.5 h-1.5 rounded-full bg-${accentColor}`} />
              <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
           </div>
         </div>
@@ -196,21 +201,24 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 };
 
 const BottomNav = () => {
+  const { userProfile } = useAuth();
+  const accentColor = userProfile?.is_artist ? 'smash-purple' : 'smash-orange';
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-morphism border-t border-white/10 z-50 flex items-center justify-around px-2">
-      <NavLink to="/" className={({ isActive }) => `p-2 ${isActive ? 'text-smash-orange' : 'text-smash-gray'}`}>
+      <NavLink to="/" className={({ isActive }) => `p-2 ${isActive ? `text-${accentColor}` : 'text-smash-gray'}`}>
         <Home size={24} />
       </NavLink>
-      <NavLink to="/moto-feed" className={({ isActive }) => `p-2 ${isActive ? 'text-smash-orange' : 'text-smash-gray'}`}>
+      <NavLink to="/moto-feed" className={({ isActive }) => `p-2 ${isActive ? `text-${accentColor}` : 'text-smash-gray'}`}>
         <Flame size={24} />
       </NavLink>
-      <NavLink to="/search" className={({ isActive }) => `p-2 ${isActive ? 'text-smash-orange' : 'text-smash-gray'}`}>
+      <NavLink to="/search" className={({ isActive }) => `p-2 ${isActive ? `text-${accentColor}` : 'text-smash-gray'}`}>
         <Search size={24} />
       </NavLink>
-      <NavLink to="/library" className={({ isActive }) => `p-2 ${isActive ? 'text-smash-orange' : 'text-smash-gray'}`}>
+      <NavLink to="/library" className={({ isActive }) => `p-2 ${isActive ? `text-${accentColor}` : 'text-smash-gray'}`}>
         <Library size={24} />
       </NavLink>
-      <NavLink to="/profile" className={({ isActive }) => `p-2 ${isActive ? 'text-smash-orange' : 'text-smash-gray'}`}>
+      <NavLink to="/profile" className={({ isActive }) => `p-2 ${isActive ? `text-${accentColor}` : 'text-smash-gray'}`}>
         <User size={24} />
       </NavLink>
     </nav>
@@ -255,7 +263,6 @@ const MainLayout: React.FC = () => {
         <TopBar onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
         <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
           <motion.div
-            key={window.location.pathname}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}

@@ -46,31 +46,41 @@ const SupportArtistModal: React.FC<SupportArtistModalProps> = ({ artist, onClose
           </button>
         </div>
 
-        {/* Content - Iframe */}
-        <div className="flex-1 bg-white relative">
-           <iframe 
-             src={donationUrl}
-             className="w-full h-full border-0"
-             title={`Support ${artist.stage_name}`}
-             allow="payment"
-           />
-           
-           {/* Fallback overlay if iframe fails or is slow */}
-           <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center bg-smash-dark/50 opacity-0 hover:opacity-100 transition-opacity">
-              <div className="bg-smash-black p-8 rounded-3xl border border-white/10 text-center max-w-sm pointer-events-auto">
-                 <Heart size={48} className="text-smash-orange mx-auto mb-4 animate-pulse" />
-                 <h3 className="text-xl font-black font-display italic uppercase mb-2">Support In Progress</h3>
-                 <p className="text-smash-gray text-sm font-bold mb-6">If the payment window didn't load, you can also support directly.</p>
-                 <a 
-                   href={donationUrl} 
-                   target="_blank" 
-                   rel="noreferrer"
-                   className="block w-full py-4 bg-white text-smash-black rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-smash-orange hover:text-white transition-all flex items-center justify-center gap-2"
-                 >
-                   Open Externally <ExternalLink size={16} />
-                 </a>
-              </div>
-           </div>
+        {/* Content */}
+        <div className="flex-1 bg-smash-black flex flex-col items-center justify-center p-12 text-center">
+            <div className="max-w-md w-full">
+               <div className="w-24 h-24 bg-smash-orange/10 text-smash-orange rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-smash-orange/20 animate-pulse">
+                  <Heart size={48} fill="currentColor" />
+               </div>
+               
+               <h3 className="text-4xl md:text-5xl font-black font-display italic uppercase mb-4 leading-none">FUEL THE <span className="text-smash-orange">DREAM</span></h3>
+               <p className="text-smash-gray text-lg font-medium leading-relaxed mb-10">
+                  Your support goes directly to <span className="text-white font-black">{artist.stage_name || artist.full_name}</span>. Artists on Smashify keep <span className="text-smash-green font-black">90%</span> of every donation.
+               </p>
+
+               <div className="space-y-4">
+                  <a 
+                    href={donationUrl} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="block w-full py-6 bg-white text-smash-black rounded-3xl font-black uppercase tracking-[0.2em] text-sm hover:bg-smash-orange hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center justify-center gap-3"
+                  >
+                    Support via PayChangu <ExternalLink size={20} />
+                  </a>
+                  
+                  <div className="flex items-center justify-center gap-6 pt-4">
+                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
+                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">Airtel Money</div>
+                     </div>
+                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
+                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">TNM Mpamba</div>
+                     </div>
+                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
+                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">Visa/Mastercard</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
         </div>
 
         {/* Footer */}
