@@ -5,7 +5,8 @@ import {
   TrendingUp, Users, Play, DollarSign, Plus, Trash2, 
   Edit3, CheckCircle2, AlertCircle, Sparkles, ChevronRight,
   Smartphone, Image as ImageIcon, FileAudio, Info, Flame,
-  Disc, LogOut, ArrowLeft, Menu, Clock, ExternalLink, ShieldCheck
+  Disc, LogOut, ArrowLeft, Menu, Clock, ExternalLink, ShieldCheck,
+  ShoppingBag, Heart
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -763,127 +764,260 @@ const UploadTab = ({ onComplete, albums }: any) => {
 
 const WalletTab = ({ balance, userProfile }: any) => {
   const [history, setHistory] = useState<any[]>([]);
-  useEffect(()=>{
-     const fetchHist = async()=>{
-        const { data } = await supabase.from('transactions').select('*').eq('user_id', userProfile?.id).order('created_at', {ascending:false});
-        if(data) setHistory(data);
-     };
-     fetchHist();
-  },[userProfile]);
-
-  const [withdrawalAmount, setWithdrawalAmount] = useState<number>(balance);
+  const [stats, setStats] = useState({ sales: 0, donations: 0, total: 0, withdrawn: 0 });
+  const [withdrawalAmount, setWithdrawalAmount] = useState<number>(0);
   const [requesting, setRequesting] = useState(false);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    const fetchHist = async () => {
+      const { data } = await supabase.from('transactions').select('*').eq('artist_id', userProfile?.id).order('created_at', { ascending: false });
+      if (data) {
+        setHistory(data);
+        const salesTotal = data.filter(t => t.type === 'sale').reduce((acc, curr) => acc + Number(curr.amount), 0);
+        const donationsTotal = data.filter(t => t.type === 'donation').reduce((acc, curr) => acc + Number(curr.amount), 0);
+        const withdrawnTotal = data.filter(t => t.type === 'withdrawal' && t.status === 'completed').reduce((acc, curr) => acc + Number(curr.amount), 0);
+        setStats({ 
+          sales: salesTotal, 
+          donations: donationsTotal, 
+          total: salesTotal + donationsTotal,
+          withdrawn: withdrawnTotal
+        });
+      }
+    };
+    fetchHist();
+  }, [userProfile]);
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     if (balance <= 0) return toast.error('No funds to withdraw.');
-    if (withdrawalAmount <= 0) return toast.error('Please enter a valid amount.');
+    if (withdrawalAmount < 5000) return toast.error('Minimum withdrawal is MK 5,000.');
     if (withdrawalAmount > balance) return toast.error('Insufficient balance.');
 
     const network = prompt('Enter network (Airtel/TNM)?', 'Airtel');
     if (!network) return;
     const phone = prompt('Enter mobile number for payment?', userProfile?.phone || '');
     if (!phone) return;
-    
+
     setRequesting(true);
     const toastId = toast.loading('Processing request...');
     try {
-      const { error } = await supabase.rpc('request_payout', { 
-        payout_amount: withdrawalAmount, 
-        mobile_number: phone, 
-        network_name: network 
+      const { error: payoutError } = await supabase.from('payout_requests').insert({
+        artist_id: userProfile?.id,
+        amount: withdrawalAmount,
+        mobile_number: phone,
+        network: network,
+        status: 'pending'
       });
-      
-      if (error) {
-         console.warn('RPC failed, falling back to manual inserts', error);
-         await supabase.from('payout_requests').insert({
-           artist_id: userProfile?.id,
-           amount: withdrawalAmount,
-           mobile_number: phone,
-           network: network,
-           status: 'pending'
-         });
-         
-         const { error: txError } = await supabase.from('transactions').insert({
-           user_id: userProfile?.id,
-           type: 'withdrawal',
-           amount: withdrawalAmount,
-           status: 'pending',
-           description: `To ${network} - ${phone}`
-         });
-         if (txError && txError.code !== '42P01') throw txError;
-         
-         const { error: updateError } = await supabase.from('profiles')
-           .update({ wallet_balance: balance - withdrawalAmount })
-           .eq('id', userProfile?.id);
-         if (updateError) throw updateError;
-      }
+
+      if (payoutError) throw payoutError;
+
+      await supabase.from('transactions').insert({
+        artist_id: userProfile?.id,
+        type: 'withdrawal',
+        amount: withdrawalAmount,
+        status: 'pending',
+        description: `Withdrawal to ${network} (${phone})`
+      });
+
+      const { error: updateError } = await supabase.from('profiles')
+        .update({ wallet_balance: balance - withdrawalAmount })
+        .eq('id', userProfile?.id);
+
+      if (updateError) throw updateError;
+
       toast.success('Payout requested successfully!', { id: toastId });
       setTimeout(() => window.location.reload(), 1500);
-    } catch(err: any) {
+    } catch (err: any) {
       toast.error('Failed to request payout: ' + err.message, { id: toastId });
     } finally {
       setRequesting(false);
     }
   };
 
-  return (
-    <div className="space-y-8 max-w-4xl">
-       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-         <h2 className="text-3xl font-studio font-black flex items-center gap-3 uppercase italic"><Wallet className="text-smash-purple" /> Earnings & Wallet</h2>
-       </div>
+  const filteredHistory = filter === 'all' ? history : history.filter(t => t.type === filter);
 
-       <div className="bg-gradient-to-br from-smash-purple/10 to-transparent border border-smash-purple/20 rounded-[40px] p-10 shadow-2xl space-y-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-smash-purple mb-3">Total Artist Credit</p>
-              <h3 className="text-6xl font-black font-studio text-white uppercase italic">MK {balance.toLocaleString()}</h3>
-              <p className="text-xs text-smash-gray mt-4 font-bold">Available for withdrawal to Airtel Money / Mpamba</p>
-            </div>
-            <div className="w-full md:w-auto p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-6">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-smash-gray block ml-2">Amount to Withdraw (MWK)</label>
+  return (
+    <div className="space-y-8 max-w-6xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h2 className="text-3xl font-studio font-black flex items-center gap-3 uppercase italic"><Wallet className="text-smash-purple" /> Earnings & Wallet</h2>
+      </div>
+
+      {/* Balance Hero Section */}
+      <div className="bg-gradient-to-br from-smash-purple/10 to-transparent border border-smash-purple/20 rounded-[40px] p-8 md:p-12 shadow-2xl flex flex-col lg:flex-row items-center gap-10">
+        <div className="flex-1 w-full">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-smash-purple mb-3">Available Balance</p>
+          <h3 className="text-6xl md:text-7xl font-black font-studio text-white uppercase italic leading-none">
+            MK {balance.toLocaleString()}
+          </h3>
+          <div className="flex gap-4 mt-8 flex-wrap">
+             <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl">
+                <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest mb-1">Total Earned</p>
+                <p className="text-xl font-studio font-black text-white italic">MK {stats.total.toLocaleString()}</p>
+             </div>
+             <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl">
+                <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest mb-1">Total Withdrawn</p>
+                <p className="text-xl font-studio font-black text-smash-orange italic">MK {stats.withdrawn.toLocaleString()}</p>
+             </div>
+          </div>
+          <p className="text-[10px] text-smash-gray mt-6 font-bold uppercase tracking-widest italic flex items-center gap-2">
+             <Info size={12} className="text-smash-purple" /> Minimum withdrawal is MK 5,000
+          </p>
+        </div>
+
+        <div className="w-full lg:w-[420px] bg-white/5 border border-white/10 rounded-[40px] p-8 space-y-6">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-smash-gray flex items-center gap-2">
+             <DollarSign size={14} className="text-smash-green" /> Withdraw Funds
+          </h4>
+          
+          <div className="space-y-4">
+             <div className="flex flex-wrap gap-2">
+                {[5000, 10000, 25000, 50000].map(amt => (
+                   <button 
+                     key={amt}
+                     onClick={() => setWithdrawalAmount(amt)}
+                     className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                       withdrawalAmount === amt ? 'bg-smash-purple text-white' : 'bg-white/5 border border-white/10 text-smash-gray hover:border-smash-purple/30'
+                     }`}
+                   >
+                      {amt.toLocaleString()}
+                   </button>
+                ))}
+             </div>
+             
+             <div className="relative">
                 <input 
-                  type="number" 
-                  value={withdrawalAmount}
-                  max={balance}
+                  type="number"
+                  value={withdrawalAmount || ''}
                   onChange={(e) => setWithdrawalAmount(Number(e.target.value))}
+                  placeholder="Custom Amount"
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 font-studio font-black text-2xl italic outline-none focus:border-smash-purple transition-all"
                 />
-              </div>
-              <button 
-                onClick={handleWithdraw} 
-                disabled={requesting || balance <= 0}
-                className="w-full py-5 bg-smash-purple text-white font-black uppercase tracking-[0.2em] text-xs rounded-full hover:bg-white hover:text-smash-purple transition-all shadow-xl shadow-smash-purple/30 active:scale-95 disabled:opacity-50"
-              >
-                {requesting ? 'Processing...' : 'Request Payout'}
-              </button>
-            </div>
-          </div>
-       </div>
+                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-smash-gray">MWK</span>
+             </div>
 
-       <div className="bg-white/5 border border-white/5 rounded-3xl p-6">
-          <h3 className="font-bold text-sm mb-4">Transaction History</h3>
-          <div className="space-y-3">
-             {history.length > 0 ? history.map(tx=>(
-               <div key={tx.id} className="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-4">
-                   <div className={`p-2 rounded-lg ${tx.type==='withdrawal'?'bg-smash-orange/10 text-smash-orange':'bg-smash-green/10 text-smash-green'}`}>
-                     <Wallet size={16} />
-                   </div>
-                   <div>
-                     <p className="font-bold text-sm uppercase tracking-widest">{tx.type}</p>
-                     <p className="text-xs text-smash-gray">{new Date(tx.created_at).toLocaleDateString()}</p>
-                   </div>
-                 </div>
-                 <div className="text-right">
-                   <p className="font-bold text-sm font-display italic tracking-tight">{tx.type==='withdrawal'?'-':'+'}MK {tx.amount.toLocaleString()}</p>
-                   <span className="text-[10px] uppercase tracking-widest font-bold text-smash-gray">{tx.status}</span>
-                 </div>
+             {withdrawalAmount >= 5000 && (
+               <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-2">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-smash-gray">
+                     <span>Platform Fee (3%)</span>
+                     <span className="text-smash-red">-MK {(withdrawalAmount * 0.03).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white border-t border-white/5 pt-2">
+                     <span>You Receive</span>
+                     <span className="text-smash-green">MK {(withdrawalAmount * 0.97).toLocaleString()}</span>
+                  </div>
                </div>
-             )) : <p className="text-sm text-smash-gray">No transactions yet.</p>}
+             )}
+
+             <button 
+               onClick={handleWithdraw}
+               disabled={requesting || balance < 5000 || withdrawalAmount < 5000 || withdrawalAmount > balance}
+               className="w-full py-5 bg-smash-purple text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-white hover:text-smash-purple transition-all shadow-xl shadow-smash-purple/30 active:scale-95 disabled:opacity-50"
+             >
+               {requesting ? 'Processing...' : 'Request Payout'}
+             </button>
+             <p className="text-[9px] text-center text-smash-gray font-bold uppercase tracking-widest leading-relaxed">Funds arrive via Airtel/Mpamba within 5-30 minutes.</p>
           </div>
-       </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+         <div className="lg:col-span-3 bg-white/5 border border-white/5 rounded-[40px] overflow-hidden">
+            <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+               <div>
+                  <h3 className="font-studio font-black uppercase italic tracking-tight flex items-center gap-2">
+                     <Clock size={16} className="text-smash-purple" /> History
+                  </h3>
+                  <p className="text-[10px] text-smash-gray font-black uppercase tracking-widest">Recent Transactions</p>
+               </div>
+               <div className="flex gap-2">
+                  {['all', 'sale', 'donation', 'withdrawal'].map(t => (
+                     <button 
+                       key={t}
+                       onClick={() => setFilter(t)}
+                       className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                         filter === t ? 'bg-smash-purple text-white' : 'bg-transparent text-smash-gray border border-white/10 hover:border-white/30'
+                       }`}
+                     >
+                        {t}
+                     </button>
+                  ))}
+               </div>
+            </div>
+
+            <div className="overflow-x-auto">
+               {filteredHistory.length > 0 ? (
+                  <table className="w-full text-left">
+                     <thead className="bg-white/5 text-[10px] font-black uppercase tracking-widest text-smash-gray border-b border-white/5">
+                        <tr>
+                           <th className="p-6">Type</th>
+                           <th className="p-6">Description</th>
+                           <th className="p-6">Amount</th>
+                           <th className="p-6 text-right">Date</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-white/5">
+                        {filteredHistory.map(tx => (
+                           <tr key={tx.id} className="hover:bg-white/5 transition-colors">
+                              <td className="p-6">
+                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                    tx.type === 'withdrawal' ? 'bg-smash-orange/10 text-smash-orange' : 
+                                    tx.type === 'donation' ? 'bg-smash-purple/10 text-smash-purple' : 'bg-smash-green/10 text-smash-green'
+                                 }`}>
+                                    {tx.type === 'withdrawal' ? <Wallet size={14} /> : tx.type === 'donation' ? <Heart size={14} /> : <ShoppingBag size={14} />}
+                                 </div>
+                              </td>
+                              <td className="p-6">
+                                 <p className="text-xs font-black uppercase tracking-widest">{tx.description || tx.type}</p>
+                                 <span className={`text-[9px] font-black uppercase tracking-widest ${tx.status === 'completed' ? 'text-smash-green' : 'text-smash-orange'}`}>{tx.status}</span>
+                              </td>
+                              <td className="p-6">
+                                 <span className={`text-sm font-studio font-black italic ${tx.type === 'withdrawal' ? 'text-smash-orange' : 'text-white'}`}>
+                                    {tx.type === 'withdrawal' ? '-' : '+'} MK {tx.amount.toLocaleString()}
+                                 </span>
+                              </td>
+                              <td className="p-6 text-right text-[10px] font-black tracking-widest text-smash-gray">
+                                 {new Date(tx.created_at).toLocaleDateString()}
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+               ) : (
+                  <div className="p-20 text-center text-smash-gray uppercase font-black tracking-widest text-xs italic">
+                     No transactions found.
+                  </div>
+               )}
+            </div>
+         </div>
+
+         <div className="bg-white/5 border border-white/5 rounded-[40px] p-8 space-y-6">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-smash-gray">Revenue Stats</h4>
+            <div className="space-y-6">
+               <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 group hover:border-smash-orange/30 transition-all">
+                  <div className="flex items-center gap-3">
+                     <ShoppingBag size={20} className="text-smash-orange" />
+                     <span className="text-[10px] font-black uppercase tracking-widest">Artist Sales</span>
+                  </div>
+                  <span className="font-studio font-black italic">MK {stats.sales.toLocaleString()}</span>
+               </div>
+               
+               <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 group hover:border-smash-purple/30 transition-all">
+                  <div className="flex items-center gap-3">
+                     <Heart size={20} className="text-smash-purple" />
+                     <span className="text-[10px] font-black uppercase tracking-widest">Fan Support</span>
+                  </div>
+                  <span className="font-studio font-black italic">MK {stats.donations.toLocaleString()}</span>
+               </div>
+
+               <div className="p-6 bg-gradient-to-br from-smash-purple/10 to-transparent rounded-2xl border border-smash-purple/10">
+                  <p className="text-[9px] text-smash-gray font-black italic uppercase leading-relaxed text-center">
+                     Every MK helps fuel the next Malawian hit. Smashify reinvests our 10% share into platform maintenance and regional marketing.
+                  </p>
+               </div>
+            </div>
+         </div>
+      </div>
     </div>
   );
 };

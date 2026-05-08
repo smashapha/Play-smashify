@@ -1,4 +1,4 @@
-import React, { ErrorInfo } from 'react';
+import React, { Component, ErrorInfo } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -10,10 +10,11 @@ interface State {
   error?: Error;
 }
 
-class ErrorBoundary extends React.Component<Props, State> {
+class ErrorBoundary extends Component<Props, State> {
+  public state: State = { hasError: false };
+
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
   }
 
   public static getDerivedStateFromError(error: Error): State {
@@ -43,7 +44,7 @@ class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
 

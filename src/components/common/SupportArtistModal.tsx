@@ -1,7 +1,10 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Heart, ShieldCheck, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { X, Heart, ShieldCheck, ChevronRight, Zap, Coffee, Crown } from 'lucide-react';
 import { UserProfile } from '../../types';
+import { supportArtist } from '../../lib/paychangu';
+import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 interface SupportArtistModalProps {
   artist: UserProfile;
@@ -9,83 +12,131 @@ interface SupportArtistModalProps {
 }
 
 const SupportArtistModal: React.FC<SupportArtistModalProps> = ({ artist, onClose }) => {
-  const donationUrl = `https://paychangu.com/donation/${artist.id}`;
+  const { userProfile } = useAuth();
+  const [amount, setAmount] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  const presetAmounts = [
+    { value: '1000', label: 'Coffee', icon: <Coffee size={16} /> },
+    { value: '5000', label: 'Vibe Check', icon: <Zap size={16} /> },
+    { value: '10000', label: 'Superfan', icon: <Heart size={16} /> },
+    { value: '25000', label: 'Patron', icon: <Crown size={16} /> },
+  ];
+
+  const handleSupport = async () => {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (!userProfile) {
+      toast.error('Please sign in to support this artist');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      supportArtist({
+        artist,
+        user: userProfile,
+        amount: Number(amount),
+        onSuccess: () => {
+          toast.success(`You sent MK ${Number(amount).toLocaleString()} to ${artist.stage_name || artist.full_name}!`);
+          onClose();
+        },
+        onClose: () => setLoading(false)
+      });
+    } catch (err: any) {
+      toast.error('Payment failed: ' + err.message);
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-smash-black/90 backdrop-blur-md">
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-smash-black/90 backdrop-blur-md"
-      />
-      
-      <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-4xl h-[85vh] glass-morphism border border-white/10 rounded-[32px] overflow-hidden shadow-2xl flex flex-col"
+        className="max-w-md w-full bg-smash-dark border border-white/10 rounded-[48px] overflow-hidden shadow-[0_0_50px_rgba(155,93,229,0.2)]"
       >
-        {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full border-2 border-smash-orange overflow-hidden">
-               <img src={artist.avatar_url || "https://i.pravatar.cc/300"} className="w-full h-full object-cover" alt="" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black font-display italic uppercase tracking-tighter">Support {artist.stage_name || artist.full_name}</h2>
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={12} className="text-smash-green" />
-                <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest">Secure Payment via Paychangu</p>
+        <div className="p-8 md:p-12 space-y-8">
+           <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-smash-purple">
+                    <img src={artist.avatar_url || "https://i.pravatar.cc/100"} className="w-full h-full object-cover" alt="" />
+                 </div>
+                 <div>
+                    <h3 className="font-black uppercase tracking-tight text-white leading-none">Support Artist</h3>
+                    <p className="text-[10px] font-black text-smash-purple uppercase tracking-widest mt-1">{artist.stage_name || artist.full_name}</p>
+                 </div>
               </div>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-smash-gray hover:text-white">
-            <X size={24} />
-          </button>
-        </div>
+              <button onClick={onClose} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                 <X size={20} />
+              </button>
+           </div>
 
-        {/* Content */}
-        <div className="flex-1 bg-smash-black flex flex-col items-center justify-center p-12 text-center">
-            <div className="max-w-md w-full">
-               <div className="w-24 h-24 bg-smash-orange/10 text-smash-orange rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-smash-orange/20 animate-pulse">
-                  <Heart size={48} fill="currentColor" />
-               </div>
-               
-               <h3 className="text-4xl md:text-5xl font-black font-display italic uppercase mb-4 leading-none">FUEL THE <span className="text-smash-orange">DREAM</span></h3>
-               <p className="text-smash-gray text-lg font-medium leading-relaxed mb-10">
-                  Your support goes directly to <span className="text-white font-black">{artist.stage_name || artist.full_name}</span>. Artists on Smashify keep <span className="text-smash-green font-black">90%</span> of every donation.
-               </p>
+           <div className="text-center space-y-4">
+              <Heart className="mx-auto text-smash-purple" size={48} fill="currentColor" />
+              <h2 className="text-3xl font-black font-studio italic uppercase tracking-tighter leading-none">FUEL THE <span className="text-smash-purple">CREATIVE</span></h2>
+              <p className="text-smash-gray font-bold text-sm">Your tips go directly to the artist. Help them keep the studio lights on and the hits coming.</p>
+           </div>
 
-               <div className="space-y-4">
-                  <a 
-                    href={donationUrl} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="block w-full py-6 bg-white text-smash-black rounded-3xl font-black uppercase tracking-[0.2em] text-sm hover:bg-smash-orange hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center justify-center gap-3"
-                  >
-                    Support via PayChangu <ExternalLink size={20} />
-                  </a>
-                  
-                  <div className="flex items-center justify-center gap-6 pt-4">
-                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
-                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">Airtel Money</div>
-                     </div>
-                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
-                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">TNM Mpamba</div>
-                     </div>
-                     <div className="flex flex-col items-center gap-1 opacity-50 grayscale hover:grayscale-0 transition-all cursor-crosshair">
-                        <div className="text-[10px] font-black text-smash-gray uppercase tracking-widest uppercase italic">Visa/Mastercard</div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-        </div>
+           <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                 {presetAmounts.map((preset) => (
+                    <button 
+                      key={preset.value}
+                      onClick={() => setAmount(preset.value)}
+                      className={`p-4 rounded-2xl border transition-all flex items-center justify-between group ${
+                        amount === preset.value ? 'bg-smash-purple border-smash-purple text-white' : 'bg-white/5 border-white/10 hover:border-smash-purple/30 text-smash-gray hover:text-white'
+                      }`}
+                    >
+                       <span className="text-xs font-black uppercase tracking-widest">{preset.label}</span>
+                       <div className="flex items-center gap-2">
+                          {preset.icon}
+                          <span className="font-studio font-black text-xs italic">MK {Number(preset.value).toLocaleString()}</span>
+                       </div>
+                    </button>
+                 ))}
+              </div>
 
-        {/* Footer */}
-        <div className="p-4 bg-smash-black text-center border-t border-white/5">
-           <p className="text-[10px] text-smash-gray font-black uppercase tracking-[0.2em]">Thank you for supporting real music</p>
+              <div className="relative group">
+                 <div className="absolute left-6 top-1/2 -translate-y-1/2 text-smash-purple font-black">MK</div>
+                 <input 
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter Custom Amount"
+                    className="w-full bg-white/5 border border-white/10 rounded-[28px] pl-16 pr-8 py-5 text-xl font-studio font-black italic outline-none focus:border-smash-purple transition-all"
+                 />
+              </div>
+
+              <div className="p-6 bg-white/5 border border-white/5 rounded-[24px] space-y-3">
+                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-smash-gray">
+                    <span>Artist Receives (90%)</span>
+                    <span className="text-white">MK {(Number(amount) * 0.9 || 0).toLocaleString()}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-smash-gray">
+                    <span>Smashify Fee (10%)</span>
+                    <span className="text-white">MK {(Number(amount) * 0.1 || 0).toLocaleString()}</span>
+                 </div>
+              </div>
+
+              <button 
+                onClick={handleSupport}
+                disabled={loading || !amount}
+                className="w-full py-6 bg-smash-purple text-white rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl shadow-smash-purple/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 italic"
+              >
+                 {loading ? 'Processing...' : `Send MK ${(Number(amount) || 0).toLocaleString()}`}
+                 <ChevronRight size={24} />
+              </button>
+           </div>
+
+           <div className="flex items-center justify-center gap-2 text-smash-gray">
+              <ShieldCheck size={16} />
+              <span className="text-[10px] font-black uppercase tracking-widest">Secured by PayChangu</span>
+           </div>
         </div>
       </motion.div>
     </div>

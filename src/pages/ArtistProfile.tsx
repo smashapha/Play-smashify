@@ -367,6 +367,27 @@ const ArtistProfile: React.FC = () => {
                   </button>
                </div>
 
+               {/* Top Supporters */}
+               <div className="p-8 bg-white/5 border border-white/5 rounded-[40px] space-y-6">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-smash-gray flex items-center gap-2">
+                     <Crown size={14} className="text-smash-purple" /> Top Supporters
+                  </h4>
+                  <div className="space-y-4">
+                     {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 overflow-hidden">
+                              <img src={`https://i.pravatar.cc/100?u=${i}`} className="w-full h-full object-cover" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black uppercase tracking-tight">Supporter #{i}</p>
+                           </div>
+                           <div className="px-2 py-1 bg-smash-purple/10 rounded text-[8px] font-black text-smash-purple uppercase">LEVEL {4-i}</div>
+                        </div>
+                     ))}
+                  </div>
+                  <p className="text-[9px] text-smash-gray font-bold text-center uppercase tracking-widest italic pt-2 border-t border-white/5">Be the next to support!</p>
+               </div>
+
                {isOwner && (
                   <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] space-y-4">
                      <h4 className="text-xs font-black uppercase tracking-widest text-smash-gray flex items-center gap-2">
