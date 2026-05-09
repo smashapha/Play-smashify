@@ -114,12 +114,12 @@ const SupportArtistModal: React.FC<SupportArtistModalProps> = ({ artist, onClose
 
               <div className="p-6 bg-white/5 border border-white/5 rounded-[24px] space-y-3">
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-smash-gray">
-                    <span>Artist Receives (90%)</span>
-                    <span className="text-white">MK {(Number(amount) * 0.9 || 0).toLocaleString()}</span>
+                    <span>Artist Receives (100%)</span>
+                    <span className="text-white">MK {(Number(amount) || 0).toLocaleString()}</span>
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-smash-gray">
-                    <span>Smashify Fee (10%)</span>
-                    <span className="text-white">MK {(Number(amount) * 0.1 || 0).toLocaleString()}</span>
+                    <span>Platform Fee</span>
+                    <span className="text-smash-green">Applied at withdrawal</span>
                  </div>
               </div>
 

@@ -36,8 +36,8 @@ const ArtistRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, role, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/auth/artist" />;
-  if (role === 'pending') return <Navigate to="/application-pending" />;
-  if (role !== 'artist') return <Navigate to="/" />;
+  // Both 'artist' AND 'pending' can enter the hub — pending is restricted inside
+  if (role !== 'artist' && role !== 'pending' && role !== 'admin') return <Navigate to="/" />;
   return <>{children}</>;
 };
 

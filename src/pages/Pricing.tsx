@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Check, ChevronRight } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { subscribeListener, subscribeArtist } from '../lib/paychangu';
+import toast from 'react-hot-toast';
 
 const PricingCard = ({ title, price, features, badge, isArtist = false, onAction }: any) => (
   <div className={`bento-card p-10 flex flex-col relative overflow-hidden group hover:border-smash-orange/30 transition-all ${badge ? 'ring-2 ring-smash-orange bg-smash-dark/50' : 'bg-white/5 border-white/5'}`}>
@@ -50,11 +53,44 @@ const Pricing = () => {
     setSearchParams({ tab });
   };
 
-  const handleAction = () => {
+  const { user, userProfile, refreshProfile } = useAuth();
+  
+  const handleAction = (planId?: string) => {
+    if (!user) {
+      if (activeTab === 'artists') {
+        navigate('/auth?mode=artist');
+      } else {
+        navigate('/auth?mode=listener');
+      }
+      return;
+    }
+
+    if (!planId) {
+       // Free plan clicked, just go to dashboard or home
+       navigate(activeTab === 'artists' ? '/artist-hub' : '/');
+       return;
+    }
+
     if (activeTab === 'artists') {
-      navigate('/auth?mode=artist');
+      subscribeArtist({
+        plan: planId as any,
+        user: userProfile,
+        onSuccess: () => {
+          toast.success('Subscription upgraded successfully!');
+          refreshProfile();
+          navigate('/artist-hub');
+        }
+      });
     } else {
-      navigate('/auth?mode=listener');
+      subscribeListener({
+        plan: planId as any,
+        user: userProfile,
+        onSuccess: () => {
+          toast.success('Subscription upgraded successfully!');
+          refreshProfile();
+          navigate('/');
+        }
+      });
     }
   };
 
@@ -103,20 +139,20 @@ const Pricing = () => {
            <PricingCard 
               title="Free Plan" 
               price="0" 
-              onAction={handleAction}
+              onAction={() => handleAction()}
               features={["Stream with ads", "Discover via Moto Feed", "Create up to 3 playlists", "Support artists with tips"]} 
            />
            <PricingCard 
               title="Premium" 
               price="2,500" 
               badge="MOST POPULAR"
-              onAction={handleAction}
+              onAction={() => handleAction('premium')}
               features={["Everything in Free", "Ad-free listening", "Offline downloads", "HD audio quality", "Early access to unreleased snippets", "Unlimited playlists"]} 
            />
            <PricingCard 
               title="Family" 
               price="4,500" 
-              onAction={handleAction}
+              onAction={() => handleAction('family')}
               features={["Everything in Premium", "Up to 5 separate accounts", "Shared family queue", "Parental controls", "One billing for everyone"]} 
            />
          </motion.div>
@@ -133,14 +169,14 @@ const Pricing = () => {
               isArtist={true}
               title="Free Artist" 
               price="0" 
-              onAction={handleAction}
+              onAction={() => handleAction()}
               features={["Upload 3 Songs", "Basic Profile", "Accept Fan Donations", "Basic Analytics"]} 
            />
            <PricingCard 
               isArtist={true}
               title="Rising Star" 
               price="15,000" 
-              onAction={handleAction}
+              onAction={() => handleAction('rising_star')}
               features={["Upload 10 Songs/yr", "Sell Songs & Snippets", "Earnings Dashboard", "Album Creation"]} 
            />
            <PricingCard 
@@ -148,14 +184,14 @@ const Pricing = () => {
               title="Standard" 
               price="25,000" 
               badge="RECOMMENDED" 
-              onAction={handleAction}
+              onAction={() => handleAction('standard')}
               features={["Unlimited Uploads", "Full Detailed Analytics", "Push Notifications to Fans", "Featured in Moto Feed", "Priority Approval"]} 
            />
            <PricingCard 
               isArtist={true}
               title="Elite/Label" 
               price="45,000" 
-              onAction={handleAction}
+              onAction={() => handleAction('elite')}
               features={["Manage Multiple Artists", "Label Branding", "Dedicated Manager", "Verified Badge", "Custom Profile URL"]} 
            />
         </motion.div>

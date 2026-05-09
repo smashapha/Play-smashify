@@ -10,6 +10,7 @@ import { Song } from '../types';
 import { usePlayer } from '../context/PlayerContext';
 import { useAuth } from '../context/AuthContext';
 import { buyTrack } from '../lib/paychangu';
+import { getListenerLimits } from '../lib/tierUtils';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -303,6 +304,8 @@ const MotoFeed: React.FC = () => {
 
   const fetchSongs = async () => {
     try {
+      const limits = getListenerLimits(userProfile);
+
       // Fetch snippets from moto_feed first if available, otherwise fallback to regular songs
       const { data: snippets, error: sError } = await supabase
         .from('moto_feed')
@@ -318,7 +321,7 @@ const MotoFeed: React.FC = () => {
 
       if (error) throw error;
       
-      const combined = [
+      let combined = [
         ...(snippets || []).map(s => ({
           ...s,
           artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
@@ -333,6 +336,10 @@ const MotoFeed: React.FC = () => {
            audio_url: s.audio_url
         }))
       ];
+      
+      if (!limits.canAccessSnippets) {
+        combined = combined.filter((s: any) => !s.is_unreleased);
+      }
       
       setSongs(combined as any);
     } catch (err) {

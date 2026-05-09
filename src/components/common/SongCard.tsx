@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Pause, ShoppingBag, Heart, MoreVertical, Plus, Share2, User, Music2, ListMusic, Info } from 'lucide-react';
-import { Song } from '../../types';
+import { Play, Pause, ShoppingBag, Heart, MoreVertical, Plus, Share2, User, Music2, ListMusic, Info, Gift } from 'lucide-react';
+import { Song, UserProfile } from '../../types';
 import { usePlayer } from '../../context/PlayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { buyTrack } from '../../lib/paychangu';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import AddToPlaylistModal from './AddToPlaylistModal';
+import SupportArtistModal from './SupportArtistModal';
 import toast from 'react-hot-toast';
 
 interface SongCardProps {
@@ -23,6 +24,8 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
   const { userProfile } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [artistData, setArtistData] = useState<UserProfile | null>(null);
   const [isLiked, setIsLiked] = useState(() => {
     try {
       const liked = JSON.parse(localStorage.getItem('smash_liked_songs') || '[]');
@@ -33,6 +36,26 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
   });
 
   const isCurrent = currentSong?.id === song.id;
+
+  const handleSupportClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (artistData) {
+      setShowSupportModal(true);
+      return;
+    }
+    try {
+      const { data } = await supabase.from('profiles').select('*').eq('id', song.artist_id).single();
+      if (data) {
+        setArtistData(data);
+        setShowSupportModal(true);
+      } else {
+        toast.error('Artist profile not found.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Could not load artist data.');
+    }
+  };
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -147,8 +170,15 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
         </div>
         <div className="flex items-center gap-1 md:gap-2">
            <button 
+             onClick={handleSupportClick}
+             className="p-2 rounded-full text-smash-purple hover:bg-smash-purple/20 transition-colors opacity-0 group-hover:opacity-100"
+             title="Support Artist"
+           >
+              <Gift size={16} />
+           </button>
+           <button 
              onClick={handleLike}
-             className={`p-2 rounded-full hover:bg-white/10 transition-colors ${isLiked ? 'text-smash-red' : 'text-smash-gray opacity-0 group-hover:opacity-100'}`}
+             className={`p-2 rounded-full hover:bg-white/10 transition-colors ${isLiked ? 'text-smash-red opacity-100' : 'text-smash-gray opacity-0 group-hover:opacity-100'}`}
            >
               <Heart size={16} fill={isLiked ? "currentColor" : "none"} />
            </button>
@@ -236,10 +266,17 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+           <button 
+             onClick={handleSupportClick}
+             className="p-2 rounded-full text-smash-purple hover:bg-smash-purple/20 transition-colors"
+             title="Support Artist"
+           >
+              <Gift size={18} />
+           </button>
            <button 
              onClick={handleLike}
-             className={`p-2 rounded-full hover:bg-white/10 transition-colors ${isLiked ? 'text-smash-red' : 'text-smash-gray'}`}
+             className={`p-2 rounded-full hover:bg-white/10 transition-colors ${isLiked ? 'text-smash-red opacity-100' : 'text-smash-gray'}`}
            >
               <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
            </button>
@@ -263,6 +300,14 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', varian
           <AddToPlaylistModal 
             song={song} 
             onClose={() => setShowPlaylistModal(false)} 
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showSupportModal && artistData && (
+          <SupportArtistModal 
+            artist={artistData} 
+            onClose={() => setShowSupportModal(false)} 
           />
         )}
       </AnimatePresence>

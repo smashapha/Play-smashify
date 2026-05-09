@@ -24,8 +24,7 @@ const AuthArtist: React.FC = () => {
 
   useEffect(() => {
     if (user && !loading && role !== null) {
-      if (role === 'artist') navigate('/artist-hub');
-      else if (role === 'pending') navigate('/application-pending');
+      if (role === 'artist' || role === 'pending') navigate('/artist-hub');
       else {
         toast.error('You are logged in as a Listener. Please apply if you wish to use the Artist Studio.');
         navigate('/');
@@ -112,8 +111,23 @@ const AuthArtist: React.FC = () => {
               status: 'pending'
            });
            if (appError) throw appError;
+
+           // Insert a profile row immediately with approved: false
+           const { error: profileError } = await supabase.from('profiles').insert({
+              id: data.user.id,
+              full_name: fullName,
+              stage_name: stageName,
+              email: email,
+              genre: genre,
+              city: city,
+              phone: phone,
+              approved: false,
+              user_type: 'artist'
+           });
+           if (profileError) throw profileError;
+
            toast.success('Application submitted! Under review.');
-           navigate('/application-pending');
+           navigate('/artist-hub');
         }
       }
     } catch (err: any) {

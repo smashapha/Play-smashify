@@ -85,30 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
-      // STRATEGY: Check 'profiles' (artist table) first, then 'user_profiles' (listener table)
+      // STRATEGY: Check 'user_profiles' (listener table) first, then 'profiles' (artist table)
       // Whichever has a row for this user determines their role.
 
-      // 1. Check if they are an artist (row in 'profiles')
-      const { data: artistData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(); // maybeSingle returns null instead of error if no row found
-
-      if (artistData) {
-        // Check if they are approved or still pending
-        if (artistData.approved === false) {
-          setRole('pending');
-        } else {
-          setRole('artist');
-        }
-        setArtistProfile({ ...artistData, user_type: 'artist' });
-        setListenerProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      // 2. If not in 'profiles', check 'user_profiles' (listener table)
+      // 1. Check if they are a listener (row in 'user_profiles')
       const { data: listenerData } = await supabase
         .from('user_profiles')
         .select('*')
@@ -116,9 +96,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (listenerData) {
+        let currentListenerData = listenerData;
+        // Check array for subscription_ends
+        if (listenerData.subscription_ends && new Date(listenerData.subscription_ends) < new Date() && listenerData.subscription_tier !== 'free') {
+           const { data: updatedListener } = await supabase
+             .from('user_profiles')
+             .update({ subscription_tier: 'free' })
+             .eq('id', userId)
+             .select()
+             .single();
+           if (updatedListener) {
+              currentListenerData = updatedListener;
+           }
+        }
+        
         setRole('listener');
-        setListenerProfile({ ...listenerData, user_type: 'listener' });
+        setListenerProfile({ ...currentListenerData, user_type: 'listener' });
         setArtistProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // 2. If not in 'user_profiles', check 'profiles' (artist table)
+      const { data: artistData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (artistData) {
+        let currentArtistData = artistData;
+        // Check for artist subscription expiry
+        if (artistData.subscription_ends && new Date(artistData.subscription_ends) < new Date() && artistData.subscription_tier !== 'free') {
+           const { data: updatedArtist } = await supabase
+             .from('profiles')
+             .update({ subscription_tier: 'free' })
+             .eq('id', userId)
+             .select()
+             .single();
+           if (updatedArtist) {
+              currentArtistData = updatedArtist;
+           }
+        }
+        
+        // Check if they are approved or still pending
+        if (currentArtistData.approved === false) {
+          setRole('pending');
+        } else {
+          setRole('artist');
+        }
+        setArtistProfile({ ...currentArtistData, user_type: 'artist' });
+        setListenerProfile(null);
         setLoading(false);
         return;
       }

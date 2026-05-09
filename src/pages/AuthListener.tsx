@@ -21,11 +21,11 @@ const AuthListener: React.FC = () => {
 
   useEffect(() => {
     if (user && !loading && role !== null) {
-      if (role === 'artist') {
-        toast.error('You are logged in with an Artist account. This portal is for listeners.');
-        navigate('/artist-hub');
+      if (role === 'artist' || role === 'pending') {
+        toast.error('This is a Listener portal. Please use Artist Studio login.');
+        navigate('/auth/artist');
       }
-      else if (role === 'pending') navigate('/application-pending');
+      else if (role === 'listener') navigate('/');
       else navigate('/');
     }
   }, [user, loading, role, navigate]);

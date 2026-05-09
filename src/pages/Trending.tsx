@@ -4,8 +4,11 @@ import { Flame, TrendingUp, Filter, PlayCircle, Trophy, LayoutGrid, List } from 
 import { supabase } from '../lib/supabase';
 import { Song } from '../types';
 import SongCard from '../components/common/SongCard';
+import { useAuth } from '../context/AuthContext';
+import { getListenerLimits } from '../lib/tierUtils';
 
 const Trending: React.FC = () => {
+   const { userProfile } = useAuth();
    const [songs, setSongs] = useState<Song[]>([]);
    const [loading, setLoading] = useState(true);
    const [view, setView] = useState<'grid' | 'list'>('list');
@@ -33,6 +36,8 @@ const Trending: React.FC = () => {
    const fetchTrending = async () => {
       setLoading(true);
       try {
+         const limits = getListenerLimits(userProfile);
+         
          const { data, error } = await supabase
             .from('songs')
             .select('*, profiles!artist_id(full_name, stage_name)')
@@ -42,12 +47,17 @@ const Trending: React.FC = () => {
          
          if (error) throw error;
 
-         const formatted = (data || []).map((s: any) => ({
+         let formatted = (data || []).map((s: any) => ({
             ...s,
             artist_name: s.profiles?.stage_name || s.profiles?.full_name || 'Artist',
             cover_url: s.cover_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop',
             url: s.audio_url
          }));
+         
+         if (!limits.canAccessSnippets) {
+           formatted = formatted.filter((s: any) => !s.is_unreleased);
+         }
+         
          setSongs(formatted as any);
       } catch (err) {
          console.error('Error fetching trending:', err);

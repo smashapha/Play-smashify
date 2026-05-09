@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { musicService } from '../services/musicService';
 import { getRadioNextSong } from '../services/aiService';
+import { getListenerLimits } from '../lib/tierUtils';
 
 interface PlayerContextType {
   currentSong: Song | null;
@@ -86,6 +87,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { userProfile } = useAuth();
   const lastIncrementedSongId = useRef<string | null>(null);
   
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('smash_datasaver') === 'true';
+      if (userProfile && userProfile.user_type === 'listener') {
+         const limits = getListenerLimits(userProfile);
+         if (!limits.hdAudio) {
+            setDataSaver(true);
+         } else {
+            setDataSaver(saved);
+         }
+      } else {
+         setDataSaver(saved);
+      }
+    } catch(e) {}
+  }, [userProfile]);
+
   // Restore session
   useEffect(() => {
     try {
@@ -221,8 +238,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
+      
+      if (adPlaying && audio.currentTime >= 30) {
+        audio.pause();
+        audio.currentTime = 30;
+        setAdPlaying(false);
+        nextTrack();
+        return;
+      }
+      
       // 30-second preview logic - ONLY for songs on sale and NOT purchased
-      if (currentSong && currentSong.is_for_sale && !currentSong.is_purchased && audio.currentTime >= 30) {
+      if (!adPlaying && currentSong && currentSong.is_for_sale && !currentSong.is_purchased && audio.currentTime >= 30) {
         // Force pause the audio
         audio.pause();
         audio.currentTime = 30;
@@ -248,7 +274,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
     const handleEnded = () => {
-      const isFreeUser = !userProfile || (userProfile.subscription_tier !== 'premium' && userProfile.subscription_tier !== 'family');
+      const limits = getListenerLimits(userProfile);
+      
+      if (adPlaying) {
+        setAdPlaying(false);
+        nextTrack();
+        return;
+      }
       
       if (repeatMode === 'one' && currentSong) {
         if (audioRef.current) {
@@ -263,7 +295,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      if (isFreeUser && !adPlaying) {
+      if (limits.hasAds && !adPlaying) {
         const nextCount = songsPlayed + 1;
         if (nextCount >= 3) {
           setSongsPlayed(0);
@@ -272,9 +304,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setSongsPlayed(nextCount);
           nextTrack();
         }
-      } else if (adPlaying) {
-        setAdPlaying(false);
-        nextTrack();
       } else {
         nextTrack();
       }

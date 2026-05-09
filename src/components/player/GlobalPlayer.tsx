@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, 
   ChevronDown, ListMusic, Heart, Shuffle, Repeat, Info, Zap, 
-  Wifi, WifiOff, Clock, Headphones, Music2, Gauge, X, Download
+  Wifi, WifiOff, Clock, Headphones, Music2, Gauge, X, Download, Lock
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { usePlayer } from '../../context/PlayerContext';
@@ -12,6 +12,8 @@ import { EQPreset } from '../../types';
 import { buyTrack } from '../../lib/paychangu';
 import toast from 'react-hot-toast';
 import { Share2, Trash2 } from 'lucide-react';
+
+import { getListenerTier, getListenerLimits } from '../../lib/tierUtils';
 
 const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
   const { 
@@ -24,8 +26,9 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
     radioMode, toggleRadioMode, adPlaying,
     isShuffle, toggleShuffle, repeatMode, toggleRepeat
   } = usePlayer();
-  const { role } = useAuth();
+  const { role, userProfile } = useAuth();
   const accentColor = role === 'artist' ? 'smash-purple' : 'smash-orange';
+  const displayDuration = adPlaying ? Math.min(30, duration || 30) : duration;
   const [showQueue, setShowQueue] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showSleepMenu, setShowSleepMenu] = useState(false);
@@ -36,11 +39,12 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
   const [lyrics, setLyrics] = useState<string | null>(null);
   const [loadingLyrics, setLoadingLyrics] = useState(false);
 
-  const ProgressBar = ({ current, total, onSeek }: { current: number, total: number, onSeek: (time: number) => void }) => {
+  const ProgressBar = ({ current, total, onSeek, disabled = false }: { current: number, total: number, onSeek: (time: number) => void, disabled?: boolean }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragWidth, setDragWidth] = useState(0);
 
     const handleInteract = (e: React.MouseEvent | React.TouchEvent) => {
+      if (disabled) return;
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
@@ -50,13 +54,13 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
 
     return (
       <div 
-        className="group relative h-2.5 bg-white/10 rounded-full cursor-pointer touch-none"
-        onMouseDown={(e) => { setIsDragging(true); handleInteract(e); }}
-        onMouseMove={(e) => { if (isDragging) handleInteract(e); }}
+        className={`group relative h-2.5 bg-white/10 rounded-full flex-1 md:flex-none cursor-pointer touch-none ${disabled ? 'pointer-events-none opacity-80' : ''}`}
+        onMouseDown={(e) => { if (disabled) return; setIsDragging(true); handleInteract(e); }}
+        onMouseMove={(e) => { if (!disabled && isDragging) handleInteract(e); }}
         onMouseUp={() => setIsDragging(false)}
         onMouseLeave={() => setIsDragging(false)}
-        onTouchStart={(e) => { setIsDragging(true); handleInteract(e); }}
-        onTouchMove={(e) => { if (isDragging) handleInteract(e); }}
+        onTouchStart={(e) => { if (disabled) return; setIsDragging(true); handleInteract(e); }}
+        onTouchMove={(e) => { if (!disabled && isDragging) handleInteract(e); }}
         onTouchEnd={() => setIsDragging(false)}
       >
         <motion.div 
@@ -226,10 +230,10 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
          <div className="mt-auto w-full max-w-4xl mx-auto pt-6 pb-2">
            {/* Progress Bar */}
            <div className="space-y-3 mb-6 md:mb-8">
-              <ProgressBar current={currentTime} total={duration} onSeek={seek} />
+              <ProgressBar current={currentTime} total={displayDuration} onSeek={seek} disabled={adPlaying} />
               <div className="flex justify-between text-xs font-black text-smash-gray tracking-widest uppercase">
                 <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span>{formatTime(displayDuration)}</span>
               </div>
            </div>
 
@@ -351,6 +355,20 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                  >
                    <Zap size={18} /> Lyrics
                  </button>
+                 
+                 <button 
+                   onClick={() => {
+                     const limits = getListenerLimits(userProfile);
+                     if (!limits.canDownload) {
+                       toast.error("Downloads are for Premium and Family plans only.");
+                       return;
+                     }
+                     handleDownload();
+                   }} 
+                   className={`flex items-center gap-2 font-black uppercase transition-colors ${!getListenerLimits(userProfile).canDownload ? 'text-smash-red/80' : 'text-smash-gray hover:text-white'}`}
+                 >
+                   {!getListenerLimits(userProfile).canDownload ? <Lock size={15} className="mr-1" /> : <Download size={18} />} Download
+                 </button>
               </div>
            </div>
         </div>
@@ -430,8 +448,9 @@ const GlobalPlayer: React.FC = () => {
     queue, nextTrack, previousTrack, radioMode, toggleRadioMode, playSong, adPlaying,
     isShuffle, toggleShuffle, repeatMode, toggleRepeat, seek, removeFromQueue
   } = usePlayer();
-  const { role } = useAuth();
+  const { role, userProfile } = useAuth();
   const accentColor = role === 'artist' ? 'smash-purple' : 'smash-orange';
+  const displayDuration = adPlaying ? Math.min(30, duration || 30) : duration;
 
   const [localVolume, setLocalVolume] = useState(volume);
   const [lastVolume, setLastVolume] = useState(volume || 0.8);
@@ -471,16 +490,17 @@ const GlobalPlayer: React.FC = () => {
         >
           {/* Top Progress Line - Interactive */}
           <div 
-            className="absolute top-0 left-0 right-0 h-[3px] md:h-1 bg-white/10 cursor-pointer group-hover/player:h-1.5 transition-all z-10 touch-none"
+            className={`absolute top-0 left-0 right-0 h-[3px] md:h-1 bg-white/10 z-10 touch-none transition-all ${adPlaying ? 'pointer-events-none' : 'cursor-pointer group-hover/player:h-1.5'}`}
             onMouseDown={(e) => {
+              if (adPlaying) return;
               const rect = e.currentTarget.getBoundingClientRect();
               const percent = (e.clientX - rect.left) / rect.width;
-              seek(percent * duration);
+              seek(percent * displayDuration);
             }}
           >
             <motion.div 
               className={`h-full bg-${accentColor} shadow-[0_0_10px_var(--color-${accentColor})] opacity-80`}
-              style={{ width: `${(currentTime / duration) * 100}%` }}
+              style={{ width: `${(currentTime / displayDuration) * 100}%` }}
             />
           </div>
 
@@ -598,9 +618,16 @@ const GlobalPlayer: React.FC = () => {
                 </button>
                 
                 <button 
-                  onClick={toggleDataSaver}
+                  onClick={() => {
+                     const limits = getListenerLimits(userProfile);
+                     if (dataSaver && !limits.hdAudio) {
+                        toast.error("HD audio quality is available on Premium plans.");
+                        return;
+                     }
+                     toggleDataSaver();
+                  }}
                   className={`p-2 rounded-xl border transition-all ${dataSaver ? 'bg-smash-green/10 border-smash-green text-smash-green' : 'border-white/10 text-smash-gray hover:text-white'}`}
-                  title="Data Saver"
+                  title={dataSaver ? "Data Saver ON" : "High Quality Audio ON"}
                 >
                   <motion.div animate={{ opacity: dataSaver ? [1, 0.5, 1] : 1 }} transition={{ duration: 2, repeat: Infinity }}>
                     {dataSaver ? <Wifi size={18} /> : <WifiOff size={18} />}

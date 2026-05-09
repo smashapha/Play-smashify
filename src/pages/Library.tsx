@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Music2, Heart, ShoppingBag, Clock, Disc, PlayCircle, Search, Info, Download, Plus } from 'lucide-react';
+import { Music2, Heart, ShoppingBag, Clock, Disc, PlayCircle, Search, Info, Download, Plus, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Song } from '../types';
 import SongCard from '../components/common/SongCard';
 
+import { getListenerLimits, getListenerTier } from '../lib/tierUtils';
+
 const Library: React.FC = () => {
   const { userProfile } = useAuth();
+  const limits = getListenerLimits(userProfile);
+  const isPremium = getListenerTier(userProfile) !== 'free';
   const [activeTab, setActiveTab] = useState<'purchased' | 'likes' | 'downloads' | 'playlists'>('purchased');
   const [songs, setSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -174,6 +178,12 @@ const Library: React.FC = () => {
               >
                 <Download size={18} /> Downloads
               </button>
+              <button 
+                onClick={() => setActiveTab('playlists')}
+                className={`flex items-center gap-3 text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'playlists' ? 'text-smash-orange' : 'text-smash-gray hover:text-white'}`}
+              >
+                <Music2 size={18} /> Playlists
+              </button>
            </div>
         </div>
 
@@ -205,11 +215,20 @@ const Library: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                <motion.div 
                  whileHover={{ y: -5 }}
-                 onClick={() => setShowCreatePlaylist(true)}
-                 className="aspect-square bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center cursor-pointer hover:border-smash-orange transition-all group"
+                 onClick={() => {
+                   if (playlists.length >= limits.maxPlaylists) {
+                     toast.error(`Free tier allows up to ${limits.maxPlaylists} playlists. Upgrade to Premium for unlimited playlists.`);
+                     return;
+                   }
+                   setShowCreatePlaylist(true);
+                 }}
+                 className="aspect-square bg-white/5 border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center cursor-pointer hover:border-smash-orange transition-all group relative"
                >
                   <Plus size={40} className="text-white/20 group-hover:text-smash-orange transition-colors" />
                   <p className="text-[10px] font-black uppercase tracking-widest mt-4">Create New</p>
+                  {playlists.length >= limits.maxPlaylists && (
+                     <div className="absolute top-4 right-4 text-smash-red"><Lock size={16} /></div>
+                  )}
                </motion.div>
 
                {playlists.map(pl => (

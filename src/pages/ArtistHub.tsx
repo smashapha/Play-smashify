@@ -13,19 +13,23 @@ import { useAuth } from '../context/AuthContext';
 import { Song, Album } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { getArtistTier, getTierLimits, getSongsUploadedThisMonth } from '../lib/tierUtils';
 
 type TabType = 'analytics' | 'songs' | 'albums' | 'upload' | 'wallet' | 'profile' | 'subscription' | 'admin';
 const ADMIN_EMAILS = ['admin@smashify.mw', 'user@example.com']; // Placeholder for admins
 
 export default function ArtistHub() {
-  const { userProfile, signOut } = useAuth();
+  const { userProfile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const isAdmin = userProfile?.is_admin || false;
-  const [stats, setStats] = useState({ streams: 0, revenue: 0, followers: 0, songs: 0 });
+  const isPending = role === 'pending';
+  const songLimit = 3;
   const [songs, setSongs] = useState<Song[]>([]);
+  const hasReachedLimit = isPending && songs.length >= songLimit;
+  const [stats, setStats] = useState({ streams: 0, revenue: 0, followers: 0, songs: 0 });
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -121,8 +125,8 @@ export default function ArtistHub() {
     switch(tier) {
       case 'rising_star': return '🌟 Rising Star';
       case 'standard': return '🚀 Standard';
-      case 'label': return '👑 Elite / Label';
-      default: return '⚪ No Plan';
+      case 'elite': return '👑 Elite / Label';
+      default: return role === 'pending' ? '⏳ Pending Review' : '🎵 Free Artist';
     }
   };
 
@@ -169,6 +173,14 @@ export default function ArtistHub() {
               <div className="overflow-hidden">
                 <p className="text-sm font-bold truncate">{userProfile?.stage_name || userProfile?.full_name || 'Artist'}</p>
                 <p className="text-[10px] text-smash-purple uppercase tracking-widest font-bold">{getTierLabel(userProfile?.subscription_tier)}</p>
+                {getArtistTier(userProfile) !== 'elite' && (
+                  <button
+                    onClick={() => { setActiveTab('subscription'); setSidebarOpen(false); }}
+                    className="mt-1 w-full text-[9px] font-black uppercase tracking-widest text-smash-purple hover:text-white transition-colors text-left"
+                  >
+                    ↑ Upgrade plan
+                  </button>
+                )}
               </div>
             </div>
             
@@ -261,6 +273,17 @@ export default function ArtistHub() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto pb-24 md:pb-0">
+            {isPending && (
+              <div className="mb-6 p-4 bg-smash-orange/10 border border-smash-orange/20 rounded-2xl flex items-start gap-4 text-smash-orange">
+                <Clock className="shrink-0 mt-0.5" size={20} />
+                <div>
+                  <p className="font-bold">Your application is under review (24–48 hrs).</p>
+                  <p className="text-sm opacity-80 mt-1">
+                    You can upload up to {songLimit} songs while you wait. [{Math.min(songs.length, songLimit)}/{songLimit} slots used] — Once approved, upgrade your plan to unlock unlimited uploads.
+                  </p>
+                </div>
+              </div>
+            )}
             <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -269,13 +292,13 @@ export default function ArtistHub() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {activeTab === 'analytics' && <AnalyticsTab stats={stats} songs={songs} />}
+                  {activeTab === 'analytics' && <AnalyticsTab stats={stats} songs={songs} userProfile={userProfile} setActiveTab={setActiveTab} />}
                   {activeTab === 'songs' && <SongsTab songs={songs} onRefresh={fetchData} setActiveTab={setActiveTab} />}
-                  {activeTab === 'albums' && <AlbumsTab albums={albums} songs={songs} onRefresh={fetchData} setActiveTab={setActiveTab} />}
-                  {activeTab === 'upload' && <UploadTab onComplete={fetchData} albums={albums} />}
-                  {activeTab === 'wallet' && <WalletTab balance={userProfile?.wallet_balance || 0} userProfile={userProfile} />}
+                  {activeTab === 'albums' && <AlbumsTab albums={albums} songs={songs} onRefresh={fetchData} setActiveTab={setActiveTab} userProfile={userProfile} />}
+                  {activeTab === 'upload' && <UploadTab onComplete={fetchData} albums={albums} songs={songs} setActiveTab={setActiveTab} />}
+                  {activeTab === 'wallet' && <WalletTab balance={userProfile?.wallet_balance || 0} userProfile={userProfile} setActiveTab={setActiveTab} />}
                   {activeTab === 'profile' && <ProfileTab userProfile={userProfile} />}
-                  {activeTab === 'subscription' && <SubscriptionTab userProfile={userProfile} />}
+                  {activeTab === 'subscription' && <SubscriptionTab userProfile={userProfile} isPending={isPending} />}
                   {activeTab === 'admin' && <AdminTab />}
                 </motion.div>
             </AnimatePresence>
@@ -286,7 +309,10 @@ export default function ArtistHub() {
   );
 }
 
-const AnalyticsTab = ({ stats, songs }: any) => (
+const AnalyticsTab = ({ stats, songs, userProfile, setActiveTab }: any) => {
+  const limits = getTierLimits(userProfile);
+
+  return (
   <div className="space-y-8">
      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-3xl font-studio font-black flex items-center gap-3 uppercase italic"><TrendingUp className="text-smash-purple" /> Analytics</h2>
@@ -304,14 +330,26 @@ const AnalyticsTab = ({ stats, songs }: any) => (
         <MetricCard label="Revenue" value={`MK ${stats.revenue.toLocaleString()}`} icon={<DollarSign size={18} />} />
      </div>
 
-     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-white/5 border border-white/5 rounded-3xl min-h-[300px] flex items-center justify-center">
+     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
+        {!limits.hasFullAnalytics && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-smash-black/80 backdrop-blur-sm rounded-3xl">
+            <Lock size={32} className="text-smash-purple mb-3" />
+            <p className="font-black text-white uppercase tracking-widest text-sm mb-2">Full Analytics</p>
+            <p className="text-smash-gray text-xs font-bold text-center max-w-xs">
+              Detailed charts, revenue breakdown, and listener demographics unlock with Standard plan.
+            </p>
+            <button onClick={() => setActiveTab('subscription')} className="mt-4 px-5 py-2 bg-smash-purple text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-white hover:text-smash-purple transition-all">
+              Upgrade →
+            </button>
+          </div>
+        )}
+        <div className={`p-6 bg-white/5 border border-white/5 rounded-3xl min-h-[300px] flex items-center justify-center ${!limits.hasFullAnalytics ? 'blur-sm pointer-events-none' : ''}`}>
            <div className="text-center">
              <BarChart3 size={40} className="mx-auto mb-4 text-smash-gray/30" />
              <p className="text-sm font-medium text-smash-gray">Growth charts loading...</p>
            </div>
         </div>
-        <div className="p-6 bg-white/5 border border-white/5 rounded-3xl min-h-[300px] flex items-center justify-center">
+        <div className={`p-6 bg-white/5 border border-white/5 rounded-3xl min-h-[300px] flex items-center justify-center ${!limits.hasFullAnalytics ? 'blur-sm pointer-events-none' : ''}`}>
            <div className="text-center">
              <DollarSign size={40} className="mx-auto mb-4 text-smash-gray/30" />
              <p className="text-sm font-medium text-smash-gray">Revenue charts loading...</p>
@@ -320,6 +358,7 @@ const AnalyticsTab = ({ stats, songs }: any) => (
      </div>
   </div>
 );
+};
 
 const MetricCard = ({ label, value, icon }: any) => (
   <div className="bg-white/5 border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
@@ -434,14 +473,22 @@ const SongsTab = ({ songs, onRefresh, setActiveTab }: any) => {
   );
 };
 
-const AlbumsTab = ({ albums, songs, onRefresh, setActiveTab }: any) => {
+const AlbumsTab = ({ albums, songs, onRefresh, setActiveTab, userProfile }: any) => {
+  const limits = getTierLimits(userProfile);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-3xl font-studio font-black flex items-center gap-3 uppercase italic"><Disc className="text-smash-purple" /> Albums</h2>
-        <button onClick={() => setActiveTab('upload')} className="px-6 py-2.5 bg-smash-purple text-white font-black text-xs uppercase tracking-widest rounded-full flex items-center gap-2 hover:bg-white hover:text-smash-purple transition-all shadow-lg active:scale-95">
-          <Plus size={16} /> New Album
-        </button>
+        {limits.canCreateAlbums ? (
+          <button onClick={() => setActiveTab('upload')} className="px-6 py-2.5 bg-smash-purple text-white font-black text-xs uppercase tracking-widest rounded-full flex items-center gap-2 hover:bg-white hover:text-smash-purple transition-all shadow-lg active:scale-95">
+            <Plus size={16} /> New Album
+          </button>
+        ) : (
+          <button onClick={() => setActiveTab('subscription')} className="px-6 py-2.5 bg-smash-purple/50 border border-smash-purple/30 text-white/50 font-black text-xs uppercase tracking-widest rounded-full flex items-center gap-2 hover:bg-smash-purple hover:text-white transition-all shadow-lg">
+            <Lock size={14} /> Unlock Albums
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -460,8 +507,12 @@ const AlbumsTab = ({ albums, songs, onRefresh, setActiveTab }: any) => {
         {albums.length === 0 && (
           <div className="col-span-full p-12 text-center bg-white/5 border border-white/5 rounded-3xl">
              <Disc className="mx-auto mb-3 text-smash-gray/50" size={32} />
-             <p className="text-sm font-medium text-smash-gray mb-3">No albums created.</p>
-             <button onClick={() => setActiveTab('upload')} className="px-4 py-2 border border-white/10 rounded-full text-xs font-bold hover:bg-white/5 mx-auto">Create First Album</button>
+             <p className="text-sm font-medium text-smash-gray mb-3">
+               {limits.canCreateAlbums ? "No albums created yet." : "Albums unlock with Rising Star plan."}
+             </p>
+             <button onClick={() => setActiveTab(limits.canCreateAlbums ? 'upload' : 'subscription')} className="px-4 py-2 border border-white/10 rounded-full text-xs font-bold hover:bg-white/5 mx-auto">
+               {limits.canCreateAlbums ? "Create First Album" : "Upgrade to Unlock"}
+             </button>
           </div>
         )}
       </div>
@@ -469,13 +520,22 @@ const AlbumsTab = ({ albums, songs, onRefresh, setActiveTab }: any) => {
   );
 };
 
-const UploadTab = ({ onComplete, albums }: any) => {
+const UploadTab = ({ onComplete, albums, songs, setActiveTab }: any) => {
   const [mode, setMode] = useState<'single'|'album'|'snippet'>('single');
   const [uploading, setUploading] = useState(false);
   const [songFile, setSongFile] = useState<File|null>(null);
   const [albumFiles, setAlbumFiles] = useState<File[]>([]);
   const [coverFile, setCoverFile] = useState<File|null>(null);
   const { userProfile } = useAuth();
+  
+  const limits = getTierLimits(userProfile);
+  const isPending = userProfile?.artist_role === 'pending';
+  const isFree = getArtistTier(userProfile) === 'free';
+  const songsUploadedThisMonth = getSongsUploadedThisMonth(songs, userProfile?.id);
+  const totalSongsUploaded = songs.length;
+  
+  const hasReachedLimit = (limits.songLimit !== null && totalSongsUploaded >= limits.songLimit) || 
+                          (limits.monthlyLimit !== null && songsUploadedThisMonth >= limits.monthlyLimit);
   
   const handleUploadSingle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -609,12 +669,41 @@ const UploadTab = ({ onComplete, albums }: any) => {
 
       <div className="flex flex-wrap bg-white/5 p-1 rounded-full w-fit mx-auto md:mx-0 mb-6 gap-1 border border-white/5">
         <button onClick={()=>setMode('single')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${mode==='single'?'bg-smash-purple text-white shadow-lg':'text-smash-gray hover:text-white'}`}>Single Track</button>
-        <button onClick={()=>setMode('album')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${mode==='album'?'bg-smash-purple text-white shadow-lg':'text-smash-gray hover:text-white'}`}>Full Album</button>
-        <button onClick={()=>setMode('snippet')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode==='snippet'?'bg-smash-purple text-white shadow-lg':'text-smash-gray hover:text-white'}`}><Flame size={14}/> Feed Snippet</button>
+        <button onClick={()=>{
+          if (!limits.canCreateAlbums) {
+            toast.error('Album uploads are available on Rising Star plan and above.');
+            return;
+          }
+          setMode('album');
+        }} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode==='album'?'bg-smash-purple text-white shadow-lg':'text-smash-gray hover:text-white'} ${!limits.canCreateAlbums ? 'opacity-50 cursor-not-allowed' : ''}`}>
+           {!limits.canCreateAlbums && <Lock size={12}/>} Full Album
+        </button>
+        <button onClick={()=>{
+          if (!limits.canPostSnippets) {
+            toast.error('Moto Feed snippets are available on Rising Star plan and above.');
+            return;
+          }
+          setMode('snippet');
+        }} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode==='snippet'?'bg-smash-purple text-white shadow-lg':'text-smash-gray hover:text-white'} ${!limits.canPostSnippets ? 'opacity-50 cursor-not-allowed' : ''}`}>
+           {!limits.canPostSnippets ? <Lock size={12}/> : <Flame size={14}/>} Feed Snippet
+        </button>
       </div>
 
       <div className="bg-white/5 border border-white/5 rounded-[40px] p-6 md:p-10 shadow-2xl">
-         {mode === 'album' ? (
+         {hasReachedLimit && mode === 'single' ? (
+           <div className="text-center p-10 bg-smash-red/10 border border-smash-red/20 rounded-3xl">
+             <AlertCircleIcon className="mx-auto mb-4 text-smash-red" size={40} />
+             <h3 className="text-xl font-bold text-white mb-2">Upload Limit Reached</h3>
+             <p className="text-sm text-smash-gray mb-6 max-w-md mx-auto">
+              {isFree 
+                ? "You've used all 3 free upload slots. Subscribe to Rising Star or higher to unlock more uploads and premium features."
+                : `You've reached your monthly limit of ${limits.monthlyLimit} songs for the Rising Star plan.`}
+             </p>
+             <button onClick={() => setActiveTab('subscription')} className="px-6 py-3 bg-smash-purple text-white font-black uppercase tracking-widest text-[10px] rounded-full hover:bg-white hover:text-smash-purple transition-colors">
+               View Subscription Plans
+             </button>
+           </div>
+         ) : mode === 'album' ? (
            <form onSubmit={handleUploadAlbum} className="space-y-6 grid md:grid-cols-5 gap-10 text-left">
               <div className="md:col-span-3 space-y-6">
                  <div>
@@ -709,14 +798,23 @@ const UploadTab = ({ onComplete, albums }: any) => {
                  <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-[10px] text-smash-purple font-black uppercase tracking-[0.2em] block mb-3">Release Type</label>
-                      <select name="forsale" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none focus:border-smash-purple transition-all appearance-none cursor-pointer">
+                      <select name="forsale" 
+                              className={`w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none transition-all appearance-none cursor-pointer ${!limits.canSellSongs ? 'opacity-50 border-smash-red/30 cursor-not-allowed' : 'focus:border-smash-purple'}`}
+                              disabled={!limits.canSellSongs}
+                              onChange={(e) => {
+                                if (e.target.value === 'true' && !limits.canSellSongs) {
+                                  toast.error('Selling songs is available on Rising Star plan and above.');
+                                }
+                              }}
+                      >
                         <option value="false">Free Stream Only</option>
-                        <option value="true">Paid Download (Buy)</option>
+                        {limits.canSellSongs && <option value="true">Paid Download (Buy)</option>}
                       </select>
+                      {!limits.canSellSongs && <p className="text-[10px] text-smash-red/70 mt-2 font-bold uppercase tracking-widest"><Lock size={10} className="inline mr-1"/> Unlock paid downloads</p>}
                     </div>
                     <div>
                       <label className="text-[10px] text-smash-purple font-black uppercase tracking-[0.2em] block mb-3">Set Price (MWK)</label>
-                      <input name="price" type="number" placeholder="2500" min="100" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none focus:border-smash-purple transition-all placeholder:text-white/20" />
+                      <input name="price" type="number" placeholder="2500" min="100" disabled={!limits.canSellSongs} className={`w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold focus:outline-none transition-all placeholder:text-white/20 ${!limits.canSellSongs ? 'opacity-50 cursor-not-allowed' : 'focus:border-smash-purple'}`} />
                     </div>
                  </div>
                  )}
@@ -762,21 +860,22 @@ const UploadTab = ({ onComplete, albums }: any) => {
   );
 };
 
-const WalletTab = ({ balance, userProfile }: any) => {
+const WalletTab = ({ balance, userProfile, setActiveTab }: any) => {
   const [history, setHistory] = useState<any[]>([]);
   const [stats, setStats] = useState({ sales: 0, donations: 0, total: 0, withdrawn: 0 });
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(0);
   const [requesting, setRequesting] = useState(false);
   const [filter, setFilter] = useState('all');
+  const limits = getTierLimits(userProfile);
 
   useEffect(() => {
     const fetchHist = async () => {
       const { data } = await supabase.from('transactions').select('*').eq('artist_id', userProfile?.id).order('created_at', { ascending: false });
       if (data) {
         setHistory(data);
-        const salesTotal = data.filter(t => t.type === 'sale').reduce((acc, curr) => acc + Number(curr.amount), 0);
-        const donationsTotal = data.filter(t => t.type === 'donation').reduce((acc, curr) => acc + Number(curr.amount), 0);
-        const withdrawnTotal = data.filter(t => t.type === 'withdrawal' && t.status === 'completed').reduce((acc, curr) => acc + Number(curr.amount), 0);
+        const salesTotal = data.filter(t => t.type === 'sale').reduce((acc, curr) => acc + Number(curr.net_amount || curr.amount || 0), 0);
+        const donationsTotal = data.filter(t => t.type === 'donation').reduce((acc, curr) => acc + Number(curr.net_amount || curr.amount || 0), 0);
+        const withdrawnTotal = data.filter(t => t.type === 'withdrawal' && t.status === 'completed').reduce((acc, curr) => acc + Number(curr.gross_amount || curr.amount || 0), 0);
         setStats({ 
           sales: salesTotal, 
           donations: donationsTotal, 
@@ -790,44 +889,74 @@ const WalletTab = ({ balance, userProfile }: any) => {
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (balance <= 0) return toast.error('No funds to withdraw.');
     if (withdrawalAmount < 5000) return toast.error('Minimum withdrawal is MK 5,000.');
-    if (withdrawalAmount > balance) return toast.error('Insufficient balance.');
+    if (withdrawalAmount > balance) return toast.error('Amount exceeds available balance.');
 
     const network = prompt('Enter network (Airtel/TNM)?', 'Airtel');
     if (!network) return;
     const phone = prompt('Enter mobile number for payment?', userProfile?.phone || '');
     if (!phone) return;
 
+    // Calculate the 3% withdrawal fee
+    const withdrawalFee = Math.round(withdrawalAmount * 0.03);
+    const amountAfterFee = withdrawalAmount - withdrawalFee;
+
+    // Show the breakdown clearly before they confirm
+    const confirmed = window.confirm(
+      `Withdrawal Summary:\n\n` +
+      `Requested:        MWK ${withdrawalAmount.toLocaleString()}\n` +
+      `Processing fee (3%): -MWK ${withdrawalFee.toLocaleString()}\n` +
+      `─────────────────────\n` +
+      `You will receive:  MWK ${amountAfterFee.toLocaleString()}\n\n` +
+      `Payment to: ${network} — ${phone}\n\n` +
+      `Confirm withdrawal?`
+    );
+    if (!confirmed) return;
+
     setRequesting(true);
-    const toastId = toast.loading('Processing request...');
+    const toastId = toast.loading('Submitting withdrawal request...');
+
     try {
+      // 1. Log the payout request — manual team will process this
       const { error: payoutError } = await supabase.from('payout_requests').insert({
         artist_id: userProfile?.id,
-        amount: withdrawalAmount,
+        requested_amount: withdrawalAmount,   // what artist asked for
+        withdrawal_fee: withdrawalFee,         // 3% fee
+        payout_amount: amountAfterFee,         // what they actually get
         mobile_number: phone,
         network: network,
-        status: 'pending'
+        status: 'pending'                     // manual team changes to 'completed'
       });
 
       if (payoutError) throw payoutError;
 
+      // 2. Record as a pending transaction (fee breakdown included)
       await supabase.from('transactions').insert({
         artist_id: userProfile?.id,
         type: 'withdrawal',
-        amount: withdrawalAmount,
+        gross_amount: withdrawalAmount,
+        platform_fee: withdrawalFee,
+        net_amount: amountAfterFee,
         status: 'pending',
-        description: `Withdrawal to ${network} (${phone})`
+        description: `Withdrawal to ${network} (${phone}) — MWK ${amountAfterFee.toLocaleString()} after 3% fee`
       });
 
+      // 3. Deduct the FULL requested amount from wallet immediately
+      // (artist requested it — it's reserved, even if processing takes time)
       const { error: updateError } = await supabase.from('profiles')
         .update({ wallet_balance: balance - withdrawalAmount })
         .eq('id', userProfile?.id);
 
       if (updateError) throw updateError;
 
-      toast.success('Payout requested successfully!', { id: toastId });
-      setTimeout(() => window.location.reload(), 1500);
+      toast.success(
+        `Request submitted! You'll receive MWK ${amountAfterFee.toLocaleString()} to your ${network} number.`,
+        { id: toastId, duration: 6000 }
+      );
+
+      setTimeout(() => window.location.reload(), 2000);
     } catch (err: any) {
       toast.error('Failed to request payout: ' + err.message, { id: toastId });
     } finally {
@@ -870,6 +999,26 @@ const WalletTab = ({ balance, userProfile }: any) => {
              <DollarSign size={14} className="text-smash-green" /> Withdraw Funds
           </h4>
           
+          <div className="p-5 bg-white/5 border border-white/5 rounded-2xl text-left space-y-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-smash-gray">
+              Platform Fee Schedule
+            </p>
+            <div className="space-y-2 text-xs font-bold">
+              <div className="flex justify-between gap-4">
+                <span className="text-smash-gray line-clamp-1">Song sales & donations</span>
+                <span className="text-white shrink-0">10% platform fee — you keep 90%</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-smash-gray line-clamp-1">Payout withdrawals</span>
+                <span className="text-white shrink-0">3% processing fee on withdrawal</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-smash-gray line-clamp-1">Payouts processed</span>
+                <span className="text-smash-orange shrink-0">Manually within 48 hours</span>
+              </div>
+            </div>
+          </div>
+          
           <div className="space-y-4">
              <div className="flex flex-wrap gap-2">
                 {[5000, 10000, 25000, 50000].map(amt => (
@@ -897,24 +1046,31 @@ const WalletTab = ({ balance, userProfile }: any) => {
              </div>
 
              {withdrawalAmount >= 5000 && (
-               <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-2">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-smash-gray">
-                     <span>Platform Fee (3%)</span>
-                     <span className="text-smash-red">-MK {(withdrawalAmount * 0.03).toLocaleString()}</span>
+               <div className="p-4 bg-black/30 rounded-2xl border border-white/5 space-y-2 text-sm font-bold">
+                  <div className="flex justify-between text-smash-gray">
+                     <span>Requested</span>
+                     <span>MWK {withdrawalAmount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white border-t border-white/5 pt-2">
-                     <span>You Receive</span>
-                     <span className="text-smash-green">MK {(withdrawalAmount * 0.97).toLocaleString()}</span>
+                  <div className="flex justify-between text-smash-red">
+                     <span>Processing fee (3%)</span>
+                     <span>− MWK {Math.round(withdrawalAmount * 0.03).toLocaleString()}</span>
+                  </div>
+                  <div className="h-px bg-white/10" />
+                  <div className="flex justify-between text-white text-base">
+                     <span>You receive</span>
+                     <span className="text-smash-green">
+                        MWK {(withdrawalAmount - Math.round(withdrawalAmount * 0.03)).toLocaleString()}
+                     </span>
                   </div>
                </div>
              )}
 
              <button 
-               onClick={handleWithdraw}
-               disabled={requesting || balance < 5000 || withdrawalAmount < 5000 || withdrawalAmount > balance}
-               className="w-full py-5 bg-smash-purple text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-white hover:text-smash-purple transition-all shadow-xl shadow-smash-purple/30 active:scale-95 disabled:opacity-50"
+               onClick={limits.canWithdraw ? handleWithdraw : () => { toast.error('Withdrawals require Rising Star plan.'); setActiveTab('subscription'); }}
+               disabled={limits.canWithdraw && (requesting || balance < 5000 || withdrawalAmount < 5000 || withdrawalAmount > balance)}
+               className="w-full py-5 bg-smash-purple text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-white hover:text-smash-purple transition-all shadow-xl shadow-smash-purple/30 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
              >
-               {requesting ? 'Processing...' : 'Request Payout'}
+               {!limits.canWithdraw && <Lock size={14} />} {requesting ? 'Processing...' : 'Request Payout'}
              </button>
              <p className="text-[9px] text-center text-smash-gray font-bold uppercase tracking-widest leading-relaxed">Funds arrive via Airtel/Mpamba within 5-30 minutes.</p>
           </div>
@@ -973,7 +1129,7 @@ const WalletTab = ({ balance, userProfile }: any) => {
                               </td>
                               <td className="p-6">
                                  <span className={`text-sm font-studio font-black italic ${tx.type === 'withdrawal' ? 'text-smash-orange' : 'text-white'}`}>
-                                    {tx.type === 'withdrawal' ? '-' : '+'} MK {tx.amount.toLocaleString()}
+                                    {tx.type === 'withdrawal' ? '-' : '+'} MK {(tx.gross_amount || tx.amount || 0).toLocaleString()}
                                  </span>
                               </td>
                               <td className="p-6 text-right text-[10px] font-black tracking-widest text-smash-gray">
@@ -1179,35 +1335,63 @@ const ProfileTab = ({ userProfile }: any) => {
   );
 };
 
-const SubscriptionTab = ({ userProfile }: any) => {
+import { subscribeArtist } from '../lib/paychangu';
+
+const SubscriptionTab = ({ userProfile, isPending }: any) => {
+  const currentTier = userProfile?.subscription_tier || 'free';
+  const { refreshProfile } = useAuth();
+  
+  const handleSubscribe = (plan: 'rising_star' | 'standard' | 'elite') => {
+    if (isPending && !userProfile?.approved) {
+      toast.error('Your application must be approved before subscribing.');
+      return;
+    }
+    
+    subscribeArtist({
+      plan,
+      user: userProfile,
+      onSuccess: () => {
+        toast.success(`Subscription activated! Unlimited uploads unlocked.`);
+        refreshProfile();
+      }
+    });
+  };
+
   return (
-    <div className="space-y-12 max-w-5xl mx-auto">
+    <div className={`space-y-12 max-w-5xl mx-auto ${isPending ? 'opacity-80' : ''}`}>
       <div className="text-center">
         <h2 className="text-4xl font-studio font-black mb-4 uppercase italic"><Sparkles className="inline text-smash-purple mr-3 mb-2"/> Studio Access</h2>
         <p className="text-smash-gray text-lg font-medium">Choose a level that matches your career goals.</p>
+        {isPending && <div className="mt-4 inline-flex items-center gap-2 bg-smash-purple/20 text-smash-purple px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest"><Lock size={14} /> Available after approval</div>}
       </div>
 
       <div className="p-5 bg-smash-green/10 border border-smash-green/20 rounded-2xl text-center shadow-inner">
-         <p className="text-xs font-black uppercase tracking-[0.2em] text-smash-green"><i className="fas fa-check-circle mr-2"></i> Current Status: <strong>{userProfile?.subscription_tier || 'UNLIMITED ARTIST'}</strong></p>
+         <p className="text-xs font-black uppercase tracking-[0.2em] text-smash-green"><i className="fas fa-check-circle mr-2"></i> Current Status: <strong>{currentTier === 'free' ? 'FREE PENDING' : currentTier.replace('_', ' ').toUpperCase()}</strong></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-20">
-         <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 hover:border-smash-purple/30 transition-all flex flex-col group">
+         <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 hover:border-smash-purple/30 transition-all flex flex-col group relative overflow-hidden">
             <h4 className="font-studio font-black text-xl mb-4 italic uppercase tracking-tight group-hover:text-smash-purple transition-colors text-left">🚀 RISING STAR</h4>
             <div className="flex items-baseline gap-1 mb-8">
                <span className="text-[10px] font-black text-smash-gray uppercase tracking-widest">MWK</span>
                <span className="text-5xl font-studio font-black italic">15,000</span>
                <span className="text-[10px] font-black text-smash-gray uppercase tracking-widest">/YR</span>
             </div>
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Upload up to 10 songs/month</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Basic analytics</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Airtel/TNM withdrawals</li>
             </ul>
-            <button className="w-full py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-smash-orange hover:text-white transition-colors">Subscribe</button>
+            <button 
+              onClick={() => handleSubscribe('rising_star')} 
+              disabled={currentTier === 'rising_star'}
+              className="w-full py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-smash-orange hover:text-white transition-colors disabled:opacity-50 disabled:bg-white/10 disabled:text-white/50"
+            >
+              {currentTier === 'rising_star' ? 'Current Plan' : 'Subscribe — MWK 15,000/yr'}
+            </button>
          </div>
          
-         <div className="bg-white/5 border-2 border-smash-orange rounded-3xl p-8 relative">
+         <div className="bg-white/5 border-2 border-smash-orange rounded-3xl p-10 relative flex flex-col">
             <div className="absolute top-0 right-6 -translate-y-1/2 bg-smash-orange text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 rounded-full">Most Popular</div>
             <h4 className="font-display font-black text-lg mb-2">⭐ Standard</h4>
             <div className="flex items-baseline gap-1 mb-6">
@@ -1215,28 +1399,40 @@ const SubscriptionTab = ({ userProfile }: any) => {
                <span className="text-4xl font-display font-black">25,000</span>
                <span className="text-xs font-bold text-smash-gray">/yr</span>
             </div>
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Unlimited uploads</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Full analytics dashboard</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Priority support</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Album creation</li>
             </ul>
-            <button className="w-full py-3 bg-smash-orange text-white font-bold uppercase tracking-widest text-xs rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-smash-orange/20">Subscribe</button>
+            <button 
+              onClick={() => handleSubscribe('standard')}
+              disabled={currentTier === 'standard'}
+              className="w-full py-3 bg-smash-orange text-white font-bold uppercase tracking-widest text-xs rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-smash-orange/20 disabled:opacity-50 disabled:bg-smash-orange/50"
+            >
+              {currentTier === 'standard' ? 'Current Plan' : 'Subscribe — MWK 25,000/yr'}
+            </button>
          </div>
 
-         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:border-white/30 transition-colors">
+         <div className="bg-white/5 border border-white/10 rounded-3xl p-10 hover:border-white/30 transition-colors flex flex-col">
             <h4 className="font-display font-black text-lg mb-2">👑 Elite/Label</h4>
             <div className="flex items-baseline gap-1 mb-6">
                <span className="text-sm font-bold text-smash-gray">MK</span>
                <span className="text-4xl font-display font-black">45,000</span>
                <span className="text-xs font-bold text-smash-gray">/yr</span>
             </div>
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Everything in Standard</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Multiple artist management</li>
                <li className="flex items-start gap-2 text-sm text-smash-gray"><CheckCircle2 size={16} className="text-smash-orange mt-0.5" /> Dedicated account manager</li>
             </ul>
-            <button className="w-full py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-smash-orange hover:text-white transition-colors">Subscribe</button>
+            <button 
+              onClick={() => handleSubscribe('elite')}
+              disabled={currentTier === 'elite'}
+              className="w-full py-3 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-smash-orange hover:text-white transition-colors disabled:opacity-50 disabled:bg-white/10 disabled:text-white/50"
+            >
+              {currentTier === 'elite' ? 'Current Plan' : 'Subscribe — MWK 45,000/yr'}
+            </button>
          </div>
       </div>
     </div>
