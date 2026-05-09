@@ -166,13 +166,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!currentSong) return;
 
-    if ('mediaSession' in navigator && typeof window.MediaMetadata === 'function') {
-      navigator.mediaSession.metadata = new window.MediaMetadata({
-        title: currentSong.title,
-        artist: currentSong.artist_name,
-        album: 'Smashify',
-        artwork: [{ src: currentSong.cover_url || '', sizes: '512x512', type: 'image/jpeg' }]
-      });
+    if ('mediaSession' in navigator && typeof (window as any).MediaMetadata === 'function') {
+      try {
+        navigator.mediaSession.metadata = new (window as any).MediaMetadata({
+          title: currentSong.title,
+          artist: currentSong.artist_name,
+          album: 'Smashify',
+          artwork: [{ src: currentSong.cover_url || '', sizes: '512x512', type: 'image/jpeg' }]
+        });
+      } catch (err) {
+        console.warn('MediaMetadata failed:', err);
+      }
     }
 
     if ('mediaSession' in navigator) {

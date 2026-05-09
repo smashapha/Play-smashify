@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, 
   ChevronDown, ListMusic, Heart, Shuffle, Repeat, Info, Zap, 
-  Wifi, WifiOff, Clock, Headphones, Music2, Gauge, X, Download, Lock,
+  Wifi, WifiOff, Clock, Headphones, Music2, Gauge, X, Download, Lock as LockIcon,
   ShoppingBag
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -398,7 +398,7 @@ const ExpandedPlayer = ({ onClose }: { onClose: () => void }) => {
                    }} 
                    className={`flex items-center gap-2 font-black uppercase transition-colors ${!getListenerLimits(userProfile).canDownload ? 'text-smash-red/80' : 'text-smash-gray hover:text-white'}`}
                  >
-                   {!getListenerLimits(userProfile).canDownload ? <Lock size={15} className="mr-1" /> : <Download size={18} />} Download
+                   {!getListenerLimits(userProfile).canDownload ? <LockIcon size={15} className="mr-1" /> : <Download size={18} />} Download
                  </button>
               </div>
            </div>
