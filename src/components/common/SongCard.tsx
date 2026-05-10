@@ -172,8 +172,14 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout
 
   if (layout === 'grid') {
     return (
-       <div className={`group relative bento-card p-4 bg-smash-dark/40 ${isCurrent && isPlaying ? 'ring-2 ring-smash-orange shadow-lg shadow-smash-orange/20 border-smash-orange/50' : 'border-white/5 hover:border-smash-orange/30'} transition-all cursor-pointer ${className}`} onClick={handlePlay}>
-         <h3 className="text-white truncate">{song.title}</h3>
+       <div className={`group relative flex flex-col gap-3 p-4 bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl transition-all cursor-pointer ${className}`} onClick={handlePlay}>
+         <div className="aspect-square rounded-xl overflow-hidden shadow-2xl">
+           <img src={song.cover_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={song.title} />
+         </div>
+         <div className="space-y-0.5">
+           <h3 className="text-white font-black uppercase truncate">{song.title}</h3>
+           <p className="text-xs text-smash-gray font-bold uppercase tracking-widest truncate">{song.artist_name}</p>
+         </div>
        </div>
     );
   }

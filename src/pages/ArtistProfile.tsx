@@ -290,7 +290,7 @@ const ArtistProfile: React.FC = () => {
                               </div>
                               <div className="space-y-4">
                                  {popularTracks.map((song) => (
-                                    <SongCard key={`popular-${song.id}`} song={song} queue={popularTracks} variant="list" />
+                                    <SongCard key={`popular-${song.id}`} song={song} queue={popularTracks} layout="list" />
                                  ))}
                               </div>
                            </section>
@@ -304,7 +304,7 @@ const ArtistProfile: React.FC = () => {
                            </div>
                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                               {songs.map((song) => (
-                                 <SongCard key={`all-${song.id}`} song={song} queue={songs} variant="list" />
+                                 <SongCard key={`all-${song.id}`} song={song} queue={songs} layout="list" />
                               ))}
                            </div>
                         </section>
