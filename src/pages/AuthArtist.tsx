@@ -93,7 +93,7 @@ const AuthArtist: React.FC = () => {
     setError(null);
 
     try {
-      // STEP 1 — Create auth account
+      // STEP 1 — Create auth account with role: pending
       const { data, error: signUpErr } = await supabase.auth.signUp({
         email,
         password,
@@ -112,7 +112,9 @@ const AuthArtist: React.FC = () => {
       const userId = data.user.id;
 
       // STEP 2 — Upload ID photo
-      // We use the userId we just got — bucket path: {userId}/id-document.{ext}
+      // Wrapped in its own try/catch — upload failure is
+      // NON-FATAL. Application saves without photo.
+      // Admin can request re-upload via admin notes.
       let idUrl: string | null = null;
       try {
         const fileExt = idPhoto.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -127,51 +129,59 @@ const AuthArtist: React.FC = () => {
 
         if (uploadError) throw uploadError;
 
-        // Use getPublicUrl only if bucket is public
-        // Since bucket is PRIVATE use signed URL instead
-        const { data: signedData, error: signedErr } = await supabase.storage
-          .from('artist-verifications')
-          .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year expiry
+        // Bucket is private — use signed URL (1 year expiry)
+        const { data: signedData, error: signedErr } =
+          await supabase.storage
+            .from('artist-verifications')
+            .createSignedUrl(fileName, 60 * 60 * 24 * 365);
 
         if (!signedErr && signedData) {
           idUrl = signedData.signedUrl;
         }
 
       } catch (uploadErr: any) {
-        // Upload failed — save application without photo
-        // Admin can request re-upload via admin notes
         console.error('ID upload error:', uploadErr.message);
-        toast('ID photo could not be uploaded. Your application will be saved without it. Please contact support to re-upload.', 
-          { icon: '⚠️', duration: 6000 });
+        toast(
+          'ID photo upload failed. Application saved without it. Contact support to re-upload.',
+          { icon: '⚠️', duration: 5000 }
+        );
+        // Do NOT return — continue to save the application
       }
 
-      // STEP 3 — Insert into artist_applications
-      // ALL fields from the form go here
+      // STEP 3 — Insert into artist_applications FIRST
+      // Every field from steps 1 and 2 goes here
       const { error: appError } = await supabase
         .from('artist_applications')
         .insert({
-          profile_id: userId,       // ← from auth signup
-          full_name: fullName,      // ← step 1 form
-          stage_name: stageName,    // ← step 1 form
-          email: email,             // ← step 1 form
-          genre: genre,             // ← step 2 form
-          city: city,               // ← step 2 form
-          phone: phone,             // ← step 2 form
-          id_document_url: idUrl,   // ← from upload (nullable)
+          profile_id: userId,
+          user_id: userId,
+          full_name: fullName,
+          stage_name: stageName,
+          email: email,
+          genre: genre,
+          city: city,
+          phone: phone,
+          id_document_url: idUrl,
           status: 'pending',
         });
 
       if (appError) {
         console.error('artist_applications insert failed:', appError);
-        // Specific message for null violation
         if (appError.code === '23502') {
-          throw new Error('A required field is missing. Please go back and fill all fields.');
+          throw new Error(
+            'A required field is missing. Please go back and fill all fields.'
+          );
+        }
+        if (appError.code === '42501') {
+          throw new Error(
+            'Permission denied saving application. Please try again or contact support.'
+          );
         }
         throw new Error(`Application could not be saved: ${appError.message}`);
       }
 
       // STEP 4 — Insert into profiles
-      // Only runs if artist_applications insert succeeded
+      // Only runs after artist_applications succeeds
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -188,7 +198,7 @@ const AuthArtist: React.FC = () => {
         });
 
       if (profileError) {
-        // Non-fatal — fetchProfile() will recreate on next login
+        // Non-fatal — fetchProfile() recreates on next login
         console.error('profiles insert failed:', profileError.message);
       }
 

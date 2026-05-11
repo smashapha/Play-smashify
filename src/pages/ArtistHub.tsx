@@ -511,30 +511,33 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
 
       {/* KPI Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-         <MetricCard 
-            label="Total Streams" 
-            value={stats.streams.toLocaleString()} 
-            icon={<Play size={18} />} 
-            trend={12} 
-            trendLabel="vs last month" 
+         <MetricCard
+            label="TOTAL PLAYS"
+            value={stats.streams.toLocaleString()}
+            icon={<Play size={20} />}
+            color="text-smash-cyan"
+            sub="This is play count only — NOT tied to earnings"
          />
-         <MetricCard 
-            label="Earnings" 
-            value={`MK ${stats.revenue.toLocaleString()}`} 
-            icon={<DollarSign size={18} />} 
-            trend={8} 
-            trendLabel="vs last month" 
+         <MetricCard
+            label="THIS MONTH"
+            value={`MK ${(stats.revenue || 0).toLocaleString()}`}
+            icon={<DollarSign size={20} />}
+            color="text-smash-green"
+            sub="Tips + Sales + Subscriptions"
          />
-         <MetricCard 
-            label="Followers" 
-            value={stats.followers.toLocaleString()} 
-            icon={<Users size={18} />} 
-            trend={5} 
+         <MetricCard
+            label="SUPPORTERS"
+            value={(stats.followers || 0).toLocaleString()}
+            icon={<Heart size={20} />}
+            color="text-smash-purple"
+            sub="Active monthly fans"
          />
-         <MetricCard 
-            label="Live Tracks" 
-            value={stats.songs} 
-            icon={<Music2 size={18} />} 
+         <MetricCard
+            label="TRACKS"
+            value={stats.songs || 0}
+            icon={<Music2 size={20} />}
+            color="text-white"
+            sub="Uploaded"
          />
       </div>
 
@@ -620,23 +623,19 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
   );
 };
 
-const MetricCard = ({ label, value, icon, trend, trendLabel }: any) => (
+const MetricCard = ({ label, value, icon, sub, color }: any) => (
   <div className="bg-white/5 border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-colors group">
      <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-smash-gray group-hover:text-smash-purple transition-colors">
+        <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center ${color || 'text-smash-gray'} group-hover:text-white transition-colors`}>
            {icon}
         </div>
-        {trend !== undefined && (
-          <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${trend >= 0 ? 'text-smash-green' : 'text-smash-red'}`}>
-            {trend >= 0 ? '+' : ''}{trend}%
-          </div>
-        )}
      </div>
      <div className="space-y-1">
         <div className="text-3xl font-studio font-black italic tracking-tighter">{value}</div>
         <div className="text-[10px] text-smash-gray font-black uppercase tracking-widest">
-           {label} {trendLabel && <span className="opacity-40 italic lowercase ml-1">({trendLabel})</span>}
+           {label}
         </div>
+        {sub && <div className="text-[9px] text-white/50 font-bold tracking-tight">{sub}</div>}
      </div>
   </div>
 );
