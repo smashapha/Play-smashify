@@ -168,13 +168,25 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout
 
   if (layout === 'grid') {
     return (
-       <div className={`group relative flex flex-col gap-3 p-4 bg-bg-surface border border-border-default hover:border-smash-purple/30 rounded-[14px] transition-all cursor-pointer shadow-sm ${className}`} onClick={handlePlay}>
-         <div className="aspect-square rounded-[10px] overflow-hidden shadow-default">
-           <img src={song.cover_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={song.title} />
+       <div className={`group relative flex flex-col gap-3 p-2 hover:bg-white/5 rounded-2xl transition-all cursor-pointer ${className}`} onClick={handlePlay}>
+         <div className="relative aspect-square w-full rounded-xl overflow-hidden shadow-2xl border border-white/5">
+           <img src={song.cover_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={song.title} />
+           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform">
+               <Play size={24} fill="white" className="text-white ml-1" />
+             </div>
+           </div>
+           
+           {/* Buy Badge for Grid */}
+           {song.is_for_sale && !song.is_purchased && (
+             <div className="absolute top-2 right-2 bg-smash-orange text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg shadow-lg">
+                MK {song.price}
+             </div>
+           )}
          </div>
-         <div className="space-y-0.5">
-           <h3 className="text-text-primary font-sans font-semibold text-[14px] truncate">{song.title}</h3>
-           <p className="text-[12px] text-text-muted font-sans font-medium truncate">{song.artist_name}</p>
+         <div className="space-y-0.5 mt-0.5 px-0.5">
+           <h3 className="text-white font-studio font-bold text-[13px] md:text-[14px] truncate leading-tight uppercase">{song.title}</h3>
+           <p className="text-[10px] md:text-[11px] text-text-muted font-display font-medium uppercase tracking-tighter truncate opacity-70 italic">{song.artist_name}</p>
          </div>
        </div>
     );

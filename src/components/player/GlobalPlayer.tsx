@@ -194,10 +194,20 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
       transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-      className="fixed inset-0 z-[100] bg-bg-page flex flex-col md:flex-row touch-none"
+      className="fixed inset-0 z-[100] bg-bg-page flex flex-col md:flex-row touch-none overflow-hidden"
     >
+      {/* Search/Queue Toggler for Mobile Player */}
+      <div className="md:hidden absolute top-12 right-6 z-[120] flex flex-col gap-4">
+        <button 
+           onClick={() => setShowQueue(!showQueue)}
+           className={`p-3 rounded-full backdrop-blur-md transition-all ${showQueue ? 'bg-smash-orange text-white shadow-lg' : 'bg-white/5 text-text-muted hover:text-text-primary'}`}
+        >
+           <ListMusic size={24} />
+        </button>
+      </div>
+
       {/* Drag Handle for Mobile */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-border-default rounded-full z-[110] md:hidden" />
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full z-[110] md:hidden" />
 
       {/* Background Blur */}
       <div className="absolute inset-0 z-0 overflow-hidden hidden md:block">
@@ -233,11 +243,47 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
            )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center py-4">
+        <div className="flex-1 flex flex-col items-center justify-center py-2 md:py-4 relative overflow-hidden">
+           {/* Queue Overlay for Mobile */}
+           <AnimatePresence>
+             {showQueue && (
+               <motion.div 
+                 initial={{ opacity: 0, x: 100 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: 100 }}
+                 className="absolute inset-0 z-[90] bg-bg-page/95 backdrop-blur-xl p-6 pt-16 md:hidden flex flex-col"
+               >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-studio font-bold">Up Next</h3>
+                    <button onClick={() => setShowQueue(false)} className="p-2 bg-white/5 rounded-full"><X size={20} /></button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 pb-20">
+                    {usePlayer().queue.map((song, i) => (
+                      <div 
+                        key={`${song.id}-${i}`} 
+                        onClick={() => { playSong(song); setShowQueue(false); }} 
+                        className={`p-3 rounded-xl flex items-center gap-3 transition-colors ${currentSong?.id === song.id ? 'bg-smash-orange/10 border border-smash-orange/20' : 'hover:bg-white/5'}`}
+                      >
+                         <img src={song.cover_url} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                         <div className="min-w-0 flex-1">
+                            <p className={`text-sm font-bold truncate ${currentSong?.id === song.id ? 'text-smash-orange' : ''}`}>{song.title}</p>
+                            <p className="text-xs text-text-muted truncate">{song.artist_name}</p>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+
            <motion.div 
-             animate={{ scale: isPlaying ? [1, 1.02, 1] : 1 }}
-             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-             className={`relative aspect-square w-full max-w-[280px] sm:max-w-[300px] md:max-w-[380px] rounded-[24px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-border-subtle cursor-pointer ${isPlaying ? `shadow-[0_0_80px_rgba(var(--color-${accentColor.replace('text-', '')}),0.2)]` : ''}`}
+             animate={{ 
+               scale: isPlaying ? [1, 1.02, 1] : 1,
+               opacity: showQueue ? 0.3 : 1,
+               filter: showQueue ? 'blur(8px)' : 'blur(0px)'
+             }}
+             transition={{ scale: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
+             className={`relative aspect-square w-full max-w-[260px] xs:max-w-[280px] sm:max-w-[300px] md:max-w-[380px] rounded-[24px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-border-subtle cursor-pointer ${isPlaying ? `shadow-[0_0_80px_rgba(var(--color-${accentColor.replace('text-', '')}),0.2)]` : ''}`}
              onClick={togglePlay}
            >
               <img src={currentSong?.cover_url} className="w-full h-full object-cover" alt={currentSong?.title} />
@@ -343,24 +389,24 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
               </div>
            </div>
                      {/* Bottom Toolbar */}
-           <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-6 border-t border-border-default relative">
-              <div className="flex items-center gap-3 md:gap-4 flex-1">
+           <div className="flex flex-wrap items-center justify-between gap-4 mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/5 relative">
+              <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                  {!currentSong?.is_purchased && currentSong?.is_for_sale && (
                    <button 
                      onClick={(e: any) => handleBuy(e)}
-                     className={`flex items-center gap-2 px-6 py-3 text-white rounded-full font-display font-bold uppercase text-sm tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-md mr-4 ${accentColor.replace('text-', 'bg-')}`}
+                     className={`flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 text-white rounded-full font-display font-bold uppercase text-[11px] md:text-sm tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-md shrink-0 ${accentColor.replace('text-', 'bg-')}`}
                    >
-                     <ShoppingBag size={20} />
-                     Buy MK {currentSong.price}
+                     <ShoppingBag size={18} />
+                     MK {currentSong.price}
                    </button>
                  )}
                  <button 
                    onClick={handleLike}
-                   className={`transition-colors p-2 rounded-full hover:bg-bg-elevated ${isLiked ? 'text-smash-red' : 'text-text-muted hover:text-text-primary'}`}
+                   className={`transition-colors p-2 rounded-full hover:bg-white/5 ${isLiked ? 'text-smash-red' : 'text-text-muted hover:text-text-primary'}`}
                  >
                    <Heart size={24} fill={isLiked ? "currentColor" : "none"} />
                  </button>
-                 <div className="flex items-center gap-3 flex-1 max-w-[120px] md:max-w-[200px]">
+                 <div className="hidden sm:flex items-center gap-3 flex-1 max-w-[120px] md:max-w-[200px]">
                    <button onClick={toggleMute} className="text-text-muted hover:text-text-primary transition-colors">
                       {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
                    </button>
@@ -368,12 +414,12 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
                      type="range" 
                      min="0" max="1" step="0.01" value={volume}
                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                     className={`w-full accent-${accentColor.replace('text-', '')} bg-border-default h-1.5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-${accentColor.replace('text-', '')}`}
+                     className={`w-full accent-${accentColor.replace('text-', '')} bg-white/10 h-1.5 rounded-full appearance-none`}
                    />
                  </div>
               </div>
 
-              <div className="flex text-xs font-display font-medium items-center gap-4 md:gap-6">
+              <div className="flex text-[10px] md:text-xs font-display font-medium items-center gap-3 md:gap-6 ml-auto">
                  {/* Speed Selector */}
                  <div className="relative">
                    <button 

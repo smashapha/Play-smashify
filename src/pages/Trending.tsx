@@ -67,7 +67,7 @@ const Trending: React.FC = () => {
 
    return (
       <div 
-         className="space-y-12 pb-24"
+         className="space-y-12 pb-24 px-4 md:px-8 max-w-7xl mx-auto pt-6"
          onTouchStart={handleTouchStart}
          onTouchEnd={handleTouchEnd}
       >
@@ -77,22 +77,22 @@ const Trending: React.FC = () => {
            </div>
          )}
          {/* Hero Header */}
-         <div className="relative p-12 rounded-[40px] overflow-hidden bg-gradient-to-br from-smash-orange to-smash-red text-white shadow-2xl">
-            <div className="absolute top-0 right-0 p-12 opacity-10">
-               <Trophy size={200} strokeWidth={1} />
+         <div className="relative p-6 md:p-12 rounded-[24px] md:rounded-[40px] overflow-hidden bg-gradient-to-br from-smash-orange to-smash-red text-white shadow-2xl">
+            <div className="absolute top-0 right-0 p-6 md:p-12 opacity-10">
+               <Trophy className="w-32 h-32 md:w-[200px] md:h-[200px]" strokeWidth={1} />
             </div>
-            <div className="relative z-10 space-y-6">
+            <div className="relative z-10 space-y-4 md:space-y-6">
                <div className="flex items-center gap-3">
                   <div className="p-2 bg-white/10 backdrop-blur-md rounded-xl">
-                     <Flame size={24} />
+                     <Flame size={20} className="md:w-6 md:h-6" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-[0.4em]">Charts</span>
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em]">Charts</span>
                </div>
-               <h1 className="text-6xl md:text-8xl font-black font-display italic uppercase tracking-tighter leading-none translate-x-[-4px]">
+               <h1 className="text-4xl md:text-8xl font-black font-display italic uppercase tracking-tighter leading-[0.9] translate-x-[-2px] md:translate-x-[-4px]">
                   SMASHIFY <br />
                   <span className="text-smash-black font-outline text-transparent" style={{ WebkitTextStroke: '1px white' }}>HOT 20</span>
                </h1>
-               <p className="max-w-md font-bold text-lg opacity-80">The most played anthems in Malawi right now. Updated daily based on community streams.</p>
+               <p className="max-w-md font-bold text-sm md:text-lg opacity-80 leading-relaxed">The most played anthems in Malawi right now. Updated daily based on community streams.</p>
             </div>
          </div>
 
@@ -100,8 +100,8 @@ const Trending: React.FC = () => {
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-3 space-y-8">
                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-3xl font-black font-display italic uppercase tracking-tighter flex items-center gap-4">
-                     <TrendingUp className="text-smash-orange" /> Current Standings
+                  <h2 className="text-xl md:text-3xl font-black font-display italic uppercase tracking-tighter flex items-center gap-4">
+                     <TrendingUp className="text-smash-orange shrink-0" /> Current Standings
                   </h2>
 
                   <div className="flex items-center gap-4">

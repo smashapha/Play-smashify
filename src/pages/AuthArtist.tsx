@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mail, Lock as AppLockIcon, User, Check, ArrowRight, ShieldCheck, 
   Mic2, AlertCircle, Phone, MapPin, 
-  Music, ChevronLeft, Disc, Chrome
+  Music, ChevronLeft, Disc, Chrome, Eye, EyeOff, Headphones
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import Logo from '../components/common/Logo';
 import { useAuth } from '../context/AuthContext';
 import { upgradeArtistTier } from '../lib/paychangu';
 import toast from 'react-hot-toast';
@@ -54,8 +53,8 @@ const AuthArtist: React.FC = () => {
 
   if (loading && !user) {
     return (
-       <div className="min-h-screen bg-smash-black flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-smash-purple border-t-transparent rounded-full animate-spin" />
+       <div className="min-h-screen bg-[#0a0a0d] flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
        </div>
     );
   }
@@ -93,7 +92,6 @@ const AuthArtist: React.FC = () => {
     setError(null);
 
     try {
-      // STEP 1 — Create auth account with role: pending
       const { data, error: signUpErr } = await supabase.auth.signUp({
         email,
         password,
@@ -111,10 +109,6 @@ const AuthArtist: React.FC = () => {
 
       const userId = data.user.id;
 
-      // STEP 2 — Upload ID photo
-      // Wrapped in its own try/catch — upload failure is
-      // NON-FATAL. Application saves without photo.
-      // Admin can request re-upload via admin notes.
       let idUrl: string | null = null;
       try {
         const fileExt = idPhoto.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -129,7 +123,6 @@ const AuthArtist: React.FC = () => {
 
         if (uploadError) throw uploadError;
 
-        // Bucket is private — use signed URL (1 year expiry)
         const { data: signedData, error: signedErr } =
           await supabase.storage
             .from('artist-verifications')
@@ -145,11 +138,8 @@ const AuthArtist: React.FC = () => {
           'ID photo upload failed. Application saved without it. Contact support to re-upload.',
           { icon: '⚠️', duration: 5000 }
         );
-        // Do NOT return — continue to save the application
       }
 
-      // STEP 3 — Insert into artist_applications FIRST
-      // Every field from steps 1 and 2 goes here
       const { error: appError } = await supabase
         .from('artist_applications')
         .insert({
@@ -180,8 +170,6 @@ const AuthArtist: React.FC = () => {
         throw new Error(`Application could not be saved: ${appError.message}`);
       }
 
-      // STEP 4 — Insert into profiles
-      // Only runs after artist_applications succeeds
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -198,7 +186,6 @@ const AuthArtist: React.FC = () => {
         });
 
       if (profileError) {
-        // Non-fatal — fetchProfile() recreates on next login
         console.error('profiles insert failed:', profileError.message);
       }
 
@@ -272,213 +259,207 @@ const AuthArtist: React.FC = () => {
   const prevArtistStep = () => setArtistStep(prev => (prev - 1) as ArtistStep);
 
   return (
-    <div className="min-h-screen bg-smash-black flex flex-col md:flex-row relative overflow-hidden">
-      {/* Loading Overlay */}
-      <AnimatePresence>
-         {loadingState && (
-            <motion.div 
-               initial={{ opacity: 0 }} 
-               animate={{ opacity: 1 }} 
-               exit={{ opacity: 0 }}
-               className="fixed inset-0 z-[100] bg-smash-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
-            >
-               <div className="relative mb-8">
-                  <div className="w-24 h-24 border-b-4 border-smash-purple rounded-full animate-spin" />
-                  <Disc className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-smash-purple animate-pulse" size={32} />
-               </div>
-               <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Powering up the Studio...</h2>
-               <p className="text-smash-gray font-medium">Securing your session and preparing your artist dashboard.</p>
-            </motion.div>
-         )}
-      </AnimatePresence>
-
-      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-smash-purple/5 rounded-full blur-[140px] -ml-64 -mt-64" />
-      <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-smash-orange/5 rounded-full blur-[140px] -mr-64 -mb-64" />
-
-      <div className="w-full md:w-[40%] bg-smash-dark/50 p-12 md:p-20 flex flex-col justify-between border-r border-white/5 relative z-10">
-         <div>
-            <button onClick={() => navigate('/artists')} className="mb-12 flex items-center gap-2 text-smash-gray hover:text-white transition-colors group">
-               <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-               <span className="font-black text-[10px] uppercase tracking-widest">Back to Artists</span>
-            </button>
-            <Logo size="lg" className="mb-20" />
-            <AnimatePresence mode="wait">
-               {mode === 'login' ? (
-                  <motion.div key="l" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                     <h2 className="text-6xl md:text-8xl font-black font-studio italic uppercase tracking-tighter leading-none mb-10">STUDIO<br/><span className="text-smash-purple">ACCESS</span></h2>
-                     <p className="text-smash-gray text-xl md:text-2xl font-medium tracking-tight">Sign in to your artist hub to manage tracks, view analytics, and withdraw earnings.</p>
-                  </motion.div>
-               ) : (
-                  <motion.div key="sa" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                     <h2 className="text-6xl md:text-8xl font-black font-studio italic uppercase tracking-tighter leading-none mb-10">BUILD AN<br/><span className="text-smash-purple">EMPIRE</span></h2>
-                     <p className="text-smash-gray text-xl md:text-2xl font-medium tracking-tight">The most artist-friendly platform in Malawi. Payouts to mobile money. Instant analytics.</p>
-                  </motion.div>
-               )}
-            </AnimatePresence>
-         </div>
+    <div className="min-h-screen bg-[#0a0a0d] flex items-center justify-center relative overflow-hidden px-4">
+      {/* Background radial gradient */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,95,0,0.07), transparent)'
+        }}
+      />
+      {/* Background SVG Waveforms */}
+      <div className="absolute inset-0 pointer-events-none opacity-40 flex items-center justify-center">
+        <svg viewBox="0 0 1000 400" className="w-[150vw] max-w-none text-smash-orange/5" preserveAspectRatio="none">
+           <path d="M0,200 C200,100 300,300 500,200 C700,100 800,300 1000,200" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="10 10"/>
+           <path d="M0,250 C200,150 300,350 500,250 C700,150 800,350 1000,250" fill="none" stroke="currentColor" strokeWidth="1" />
+           <path d="M0,150 C200,50 300,250 500,150 C700,50 800,250 1000,150" fill="none" stroke="currentColor" strokeWidth="1" />
+           <path d="M0,220 C250,50 400,350 600,150 C800,-50 900,250 1000,220" fill="none" stroke="currentColor" strokeWidth="0.5" />
+           <path d="M0,180 C150,300 350,50 550,250 C750,450 850,150 1000,180" fill="none" stroke="currentColor" strokeWidth="0.5" />
+        </svg>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-6 py-20 md:px-24 md:py-32 relative z-10 overflow-y-auto">
-         <div className="max-w-xl w-full mx-auto">
-            <h1 className="text-4xl font-black font-display uppercase italic tracking-tighter mb-8 text-smash-purple">Artist Studio</h1>
-            
-            <div className="flex gap-4 mb-12">
-               <button onClick={() => { setMode('login'); setArtistStep(1); }} className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${mode === 'login' ? 'bg-smash-purple text-white shadow-xl shadow-smash-purple/20' : 'bg-white/5 text-smash-gray hover:bg-white/10'}`}>Artist Mission Control</button>
-               <button onClick={() => setMode('signup')} className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${mode === 'signup' ? 'bg-smash-purple text-white shadow-xl shadow-smash-purple/20' : 'bg-white/5 text-smash-gray hover:bg-white/10'}`}>Apply for Studio</button>
-            </div>
+      {loadingState && (
+        <div className="absolute inset-0 z-[100] bg-[#0a0a0d]/80 backdrop-blur-md flex flex-col items-center justify-center">
+           <div className="w-12 h-12 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
 
-            <AnimatePresence mode="wait">
-               {mode === 'login' ? (
-                  <motion.form key="login" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8" onSubmit={handleLogin}>
-                     <div className="space-y-6">
-                        <AuthInput icon={<Mail size={20} />} type="email" placeholder="Artist Email" value={email} onChange={setEmail} />
-                        <AuthInput icon={<AppLockIcon size={20} />} type="password" placeholder="Password" value={password} onChange={setPassword} />
+      <div className="w-full max-w-[420px] bg-[#141418]/85 backdrop-blur-[24px] saturate-180 border border-white/10 rounded-[24px] p-8 md:p-10 relative z-10 mx-auto shadow-2xl pb-16 h-[85vh] overflow-y-auto no-scrollbar">
+        <div className="text-center mb-8">
+           <h1 className="font-display font-extrabold text-[28px] text-smash-orange tracking-tight uppercase">SMASHIFY</h1>
+           <p className="font-sans text-[13px] text-text-muted mt-1">Artist Studio</p>
+        </div>
+
+        <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-[12px]">
+           <button onClick={() => { setMode('login'); setArtistStep(1); }} className={`flex-1 py-2 rounded-[8px] font-sans font-medium text-[13px] transition-all ${mode === 'login' ? 'bg-bg-elevated text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>Log In</button>
+           <button onClick={() => setMode('signup')} className={`flex-1 py-2 rounded-[8px] font-sans font-medium text-[13px] transition-all ${mode === 'signup' ? 'bg-bg-elevated text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>Apply</button>
+        </div>
+
+        <AnimatePresence mode="wait">
+           {mode === 'login' ? (
+              <motion.form key="login" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleLogin} className="space-y-4">
+                 <AuthInput icon={Mail} type="email" placeholder="Artist Email" value={email} onChange={setEmail} disabled={loadingState} />
+                 <AuthInput icon={AppLockIcon} type="password" placeholder="Password" value={password} onChange={setPassword} disabled={loadingState} />
+                 
+                 <div className="flex justify-between items-center py-1">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                       <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-white/5 text-smash-orange focus:ring-smash-orange focus:ring-offset-0 transition-all cursor-pointer" />
+                       <span className="text-[13px] font-sans text-text-muted group-hover:text-text-primary transition-colors">Remember me</span>
+                    </label>
+                    <button type="button" onClick={handleForgotPassword} className="text-[13px] font-sans text-text-muted hover:text-text-primary transition-colors">Forgot password?</button>
+                 </div>
+
+                 <button type="submit" disabled={loadingState} className="w-full h-[52px] rounded-[14px] font-display font-bold text-[15px] uppercase tracking-wide text-white shadow-sm transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.98] mt-2" style={{ background: 'linear-gradient(135deg, #ff5f00, #ff8c00)' }}>
+                    LOG IN TO STUDIO
+                 </button>
+
+                 <div className="relative flex items-center py-4">
+                    <div className="flex-grow border-t border-white/10"></div>
+                 </div>
+
+                 <button type="button" onClick={() => navigate('/auth/listener')} className="w-full h-[52px] border border-white/10 hover:border-smash-orange/50 rounded-[14px] flex items-center justify-center gap-3 font-sans font-medium text-[14px] hover:bg-smash-orange/10 text-text-muted hover:text-smash-orange transition-colors">
+                    <Headphones size={18} /> I'm a Listener
+                 </button>
+              </motion.form>
+           ) : (
+              <motion.div key="artist" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                 
+                 {artistStep === 1 && (
+                     <div className="grid grid-cols-2 gap-3 mb-2">
+                        <button type="button" onClick={() => navigate('/auth/listener?mode=signup')} className="h-[72px] border border-white/10 bg-white/5 rounded-[14px] flex flex-col items-center justify-center gap-1 hover:border-white/20 transition-all hover:bg-white/10">
+                           <Headphones size={20} className="text-text-muted" />
+                           <span className="font-sans font-medium text-[12px] text-text-muted">I'm a Listener</span>
+                        </button>
+                        <button type="button" className="h-[72px] border border-smash-orange bg-smash-orange/10 rounded-[14px] flex flex-col items-center justify-center gap-1 transition-all">
+                           <Mic2 size={20} className="text-smash-orange" />
+                           <span className="font-sans font-medium text-[12px] text-text-primary">I'm an Artist</span>
+                        </button>
                      </div>
-                     <button type="submit" disabled={loadingState} className="w-full py-6 bg-smash-purple text-white rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl shadow-smash-purple/30 hover:scale-[1.02] active:scale-95 transition-all italic">
-                        {loadingState ? 'Connecting...' : 'Unlock Studio'}
-                     </button>
-                     <div className="flex justify-between px-2">
-                        <button type="button" onClick={handleForgotPassword} className="text-[10px] font-black text-smash-gray uppercase tracking-widest hover:text-white transition-colors">Forgot Password?</button>
-                     </div>
-                     <div className="pt-4 border-t border-white/5 space-y-4">
-                        <button type="button" onClick={() => navigate('/auth/listener')} className="w-full text-center text-[10px] font-black text-smash-gray uppercase tracking-widest hover:text-smash-orange transition-colors">Listener Login &rarr;</button>
-                     </div>
-                  </motion.form>
-               ) : (
-                  <motion.div key="artist" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-12">
-                     {/* Stepper */}
-                     {artistStep < 4 && (
-                        <div className="flex items-center gap-4">
-                           {[1, 2, 3].map(s => (
-                              <div key={s} className="h-2 flex-1 rounded-full overflow-hidden bg-white/5">
-                                 <motion.div initial={{ width: 0 }} animate={{ width: artistStep >= s ? '100%' : '0%' }} className="h-full bg-smash-purple shadow-[0_0_15px_rgba(155,93,229,0.5)]" />
-                              </div>
-                           ))}
-                        </div>
-                     )}
+                 )}
 
-                     <AnimatePresence mode="wait">
-                        {artistStep === 1 && (
-                           <motion.div key="as1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                              <div className="space-y-6">
-                                 <AuthInput icon={<User size={20} />} type="text" placeholder="Legal Full Name" value={fullName} onChange={setFullName} />
-                                 <AuthInput icon={<Mic2 size={20} />} type="text" placeholder="Stage Name" value={stageName} onChange={setStageName} />
-                                 <AuthInput icon={<Mail size={20} />} type="email" placeholder="Professional Email" value={email} onChange={setEmail} />
-                              </div>
-                              <button onClick={nextArtistStep} className="w-full py-6 bg-white text-smash-black rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl hover:bg-smash-purple hover:text-white transition-all">Next: Business Details <ArrowRight size={24} className="inline ml-2" /></button>
-                           </motion.div>
-                        )}
-                        {artistStep === 2 && (
-                           <motion.div key="as2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                              <div className="space-y-6">
-                                 <AuthInput icon={<Disc size={20} />} type="text" placeholder="Primary Genre" value={genre} onChange={setGenre} />
-                                 <AuthInput icon={<Phone size={20} />} type="text" placeholder="TNM / Airtel Phone" value={phone} onChange={setPhone} />
-                                 <AuthInput icon={<MapPin size={20} />} type="text" placeholder="City" value={city} onChange={setCity} />
-                                 <div className="relative group p-6 rounded-[32px] bg-white/5 border border-white/5 space-y-4 hover:border-smash-purple/30 transition-all text-left">
-                                    <div className="flex items-center gap-3">
-                                       <User size={20} className="text-smash-gray group-hover:text-white transition-colors" />
-                                       <p className="text-[10px] font-black text-white uppercase tracking-widest">ID Verification (Req.)</p>
-                                    </div>
-                                    <input 
-                                       type="file" 
-                                       accept="image/*"
-                                       onChange={(e) => setIdPhoto(e.target.files?.[0] || null)}
-                                       className="w-full text-sm font-bold text-smash-gray file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-white/10 file:text-white hover:file:bg-smash-purple hover:file:text-white transition-all cursor-pointer" 
-                                    />
-                                 </div>
-                              </div>
-                              <div className="flex gap-4">
-                                 <button onClick={prevArtistStep} className="p-6 bg-white/5 text-white rounded-[32px] hover:bg-white/10 transition-all"><ChevronLeft size={32} /></button>
-                                 <button onClick={nextArtistStep} className="flex-1 py-6 bg-white text-smash-black rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl hover:bg-smash-purple hover:text-white transition-all">Review & Finalize</button>
-                              </div>
-                           </motion.div>
-                        )}
-                        {artistStep === 3 && (
-                           <motion.div key="as3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                              <div className="space-y-6">
-                                 <AuthInput icon={<AppLockIcon size={20} />} type="password" placeholder="Secure Password" value={password} onChange={setPassword} />
-                                 <div className="p-6 rounded-[32px] bg-white/5 border border-white/5 space-y-4 text-left">
-                                    <div className="flex items-center gap-3">
-                                       <ShieldCheck className="text-smash-purple" size={20} />
-                                       <p className="text-[10px] font-black text-white uppercase tracking-widest">Verification Policy</p>
-                                    </div>
-                                    <p className="text-xs text-smash-gray font-bold tracking-tight">Applications are reviewed within 48 hours. By applying, you agree to our Artist Terms of Service.</p>
-                                 </div>
-                              </div>
-                              <div className="flex gap-4">
-                                 <button onClick={prevArtistStep} className="p-6 bg-white/5 text-white rounded-[32px] hover:bg-white/10 transition-all"><ChevronLeft size={32} /></button>
-                                 <button onClick={submitApplication} disabled={loadingState} className="flex-1 py-6 bg-smash-purple text-white rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl shadow-smash-purple/20 hover:scale-[1.02] transition-all italic">
-                                    {loadingState ? 'Launching Studio...' : 'Submit Application'}
-                                 </button>
-                              </div>
-                           </motion.div>
-                        )}
-                        {artistStep === 4 && (
-                           <motion.div key="as4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                              <h3 className="text-xl font-black uppercase tracking-widest text-center mb-6">Choose Your Studio Plan</h3>
-                              
-                              <div onClick={() => handlePlanSelection('Free')} className="p-6 rounded-3xl border border-white/10 bg-white/5 hover:border-white transition-all cursor-pointer group">
-                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-black text-xl">Free Studio</h4>
-                                    <span className="text-smash-gray font-bold group-hover:text-white transition-colors">MK 0</span>
-                                 </div>
-                                 <p className="text-sm text-smash-gray mb-4">5 Uploads, 15% fee, basic analytics. Requires manual review.</p>
-                              </div>
+                 {/* Stepper */}
+                 {artistStep < 4 && (
+                    <div className="flex items-center gap-2 mb-4">
+                       {[1, 2, 3].map(s => (
+                          <div key={s} className="h-1 flex-1 bg-white/10 rounded-full overflow-hidden">
+                             <motion.div initial={{ width: 0 }} animate={{ width: artistStep >= s ? '100%' : '0%' }} className="h-full bg-smash-orange" />
+                          </div>
+                       ))}
+                    </div>
+                 )}
 
-                              <div onClick={() => handlePlanSelection('RisingStar')} className="p-6 rounded-3xl border border-smash-purple/30 bg-smash-purple/10 hover:border-smash-purple transition-all cursor-pointer">
-                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-black text-xl text-smash-purple">Rising Star</h4>
-                                    <span className="font-bold text-white">MK 15,000 /yr</span>
-                                 </div>
-                                 <p className="text-sm text-smash-gray mb-4">30 Uploads, 10% fee, fan subscriptions, Auto-Approve.</p>
-                              </div>
+                 <AnimatePresence mode="wait">
+                    {artistStep === 1 && (
+                       <motion.div key="as1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                          <AuthInput icon={User} type="text" placeholder="Full Legal Name" value={fullName} onChange={setFullName} />
+                          <AuthInput icon={Mic2} type="text" placeholder="Stage Name" value={stageName} onChange={setStageName} />
+                          <AuthInput icon={Mail} type="email" placeholder="Professional Email" value={email} onChange={setEmail} />
+                          <button onClick={nextArtistStep} className="w-full h-[52px] rounded-[14px] bg-bg-elevated text-text-primary font-display font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-2 mt-4 hover:bg-white/10 transition-colors">
+                             Next Step <ArrowRight size={16} />
+                          </button>
+                       </motion.div>
+                    )}
+                    {artistStep === 2 && (
+                       <motion.div key="as2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                          <AuthInput icon={Disc} type="text" placeholder="Primary Genre" value={genre} onChange={setGenre} />
+                          <AuthInput icon={Phone} type="text" placeholder="Phone" value={phone} onChange={setPhone} />
+                          <AuthInput icon={MapPin} type="text" placeholder="City" value={city} onChange={setCity} />
+                          <div className="relative group p-4 rounded-[14px] bg-white/5 border border-white/10 space-y-2">
+                             <div className="flex items-center gap-2">
+                                <User size={16} className="text-text-muted" />
+                                <p className="text-[11px] font-display font-medium text-text-primary uppercase tracking-wide">ID Photo</p>
+                             </div>
+                             <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={(e) => setIdPhoto(e.target.files?.[0] || null)}
+                                className="w-full text-[12px] font-sans text-text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-[6px] file:border-0 file:text-[11px] file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer" 
+                             />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                             <button onClick={prevArtistStep} className="w-[52px] h-[52px] flex items-center justify-center bg-white/5 text-white rounded-[14px] hover:bg-white/10 transition-all"><ChevronLeft size={20} /></button>
+                             <button onClick={nextArtistStep} className="flex-1 h-[52px] bg-bg-elevated text-text-primary rounded-[14px] font-display font-bold text-[13px] uppercase tracking-wide hover:bg-white/10 transition-all">Review</button>
+                          </div>
+                       </motion.div>
+                    )}
+                    {artistStep === 3 && (
+                       <motion.div key="as3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                          <AuthInput icon={AppLockIcon} type="password" placeholder="Create Password" value={password} onChange={setPassword} />
+                          <div className="p-4 rounded-[14px] bg-white/5 border border-white/10 space-y-2 text-left">
+                             <div className="flex items-center gap-2">
+                                <ShieldCheck className="text-smash-orange" size={16} />
+                                <p className="text-[11px] font-display font-medium text-text-primary uppercase tracking-wide">Verification</p>
+                             </div>
+                             <p className="text-[12px] text-text-muted font-sans font-medium">Applications are reviewed within 48 hours. By applying, you agree to our Terms.</p>
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                             <button onClick={prevArtistStep} className="w-[52px] h-[52px] flex items-center justify-center bg-white/5 text-white rounded-[14px] hover:bg-white/10 transition-all"><ChevronLeft size={20} /></button>
+                             <button onClick={submitApplication} disabled={loadingState} className="flex-1 h-[52px] text-white rounded-[14px] font-display font-bold text-[15px] uppercase tracking-wide transition-all shadow-sm hover:brightness-110 active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #ff5f00, #ff8c00)' }}>
+                                {loadingState ? 'Submitting...' : 'Submit Application'}
+                             </button>
+                          </div>
+                       </motion.div>
+                    )}
+                    {artistStep === 4 && (
+                       <motion.div key="as4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                          <h3 className="text-[16px] font-display font-bold text-center mb-6 text-smash-orange">Choose Plan</h3>
+                          
+                          <div onClick={() => handlePlanSelection('Free')} className="p-4 rounded-[16px] border border-white/10 bg-white/5 hover:border-white/20 transition-all cursor-pointer">
+                             <div className="flex justify-between items-center mb-1">
+                                <h4 className="font-sans font-semibold text-[14px]">Free Studio</h4>
+                                <span className="text-[12px] text-text-muted">MK 0</span>
+                             </div>
+                             <p className="text-[12px] text-text-muted">5 Uploads, 15% fee, basic analytics.</p>
+                          </div>
 
-                              <div onClick={() => handlePlanSelection('Standard')} className="p-6 rounded-3xl border-2 border-smash-orange bg-smash-orange/10 hover:bg-smash-orange/20 transition-all cursor-pointer relative overflow-hidden">
-                                 <div className="absolute top-4 right-4 bg-smash-orange text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Recommended</div>
-                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-black text-xl text-smash-orange">Standard</h4>
-                                    <span className="font-bold text-white mt-4">MK 25,000 /yr</span>
-                                 </div>
-                                 <p className="text-sm text-smash-gray mb-4">Unlimited uploads, 7% fee, advanced analytics, featured placements.</p>
-                              </div>
+                          <div onClick={() => handlePlanSelection('Standard')} className="p-4 rounded-[16px] border-[2px] border-smash-orange bg-smash-orange/10 hover:bg-smash-orange/15 transition-all cursor-pointer relative overflow-hidden">
+                             <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-smash-orange text-white text-[9px] font-semibold px-2 py-[2px] rounded-b-[4px] uppercase tracking-widest">Popular</div>
+                             <div className="flex justify-between items-center mb-1 mt-2">
+                                <h4 className="font-sans font-semibold text-[14px] text-smash-orange">Standard</h4>
+                                <span className="font-sans font-semibold text-[13px] text-white">MK 25,000 /yr</span>
+                             </div>
+                             <p className="text-[12px] text-text-muted">Unlimited uploads, 7% fee, advanced analytics.</p>
+                          </div>
+                       </motion.div>
+                    )}
+                 </AnimatePresence>
+              </motion.div>
+           )}
+        </AnimatePresence>
 
-                              <div onClick={() => handlePlanSelection('Elite')} className="p-6 rounded-3xl border border-white/10 bg-white/5 hover:border-white transition-all cursor-pointer">
-                                 <div className="flex justify-between items-center mb-2">
-                                    <h4 className="font-black text-xl">Elite Label</h4>
-                                    <span className="font-bold text-white">MK 45,000 /yr</span>
-                                 </div>
-                                 <p className="text-sm text-smash-gray mb-4">Multiple profiles, 5% fee, dedicated API and management.</p>
-                              </div>
-                           </motion.div>
-                        )}
-                     </AnimatePresence>
-                  </motion.div>
-               )}
-            </AnimatePresence>
-
-            {error && (
-               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-4 bg-smash-red/10 border border-smash-red/20 rounded-2xl flex items-center gap-3 text-smash-red font-bold text-sm">
-                  <AlertCircle size={18} /> {error}
-               </motion.div>
-            )}
-         </div>
+        {error && (
+           <div className="mt-4 p-3 bg-smash-red/10 border border-smash-red/20 rounded-[10px] flex items-center gap-2 text-smash-red font-sans font-medium text-[13px]">
+              <AlertCircle size={16} /> {error}
+           </div>
+        )}
       </div>
     </div>
   );
 };
 
-const AuthInput = ({ icon, value, onChange, ...props }: any) => (
-   <div className="relative group">
-      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-white transition-colors">
-         {icon}
+const AuthInput = ({ icon: Icon, value, onChange, type, ...props }: any) => {
+   const [showPass, setShowPass] = useState(false);
+   const isPassword = type === 'password';
+   
+   return (
+      <div className="relative group">
+         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-smash-orange transition-colors pointer-events-none">
+            {isPassword ? null : <Icon size={18} strokeWidth={1.5} />}
+         </div>
+         <input 
+            type={isPassword ? (showPass ? 'text' : 'password') : type}
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            {...props} 
+            className="w-full h-[52px] pl-4 pr-12 bg-white/5 border border-white/10 rounded-[14px] text-[14px] font-sans text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-smash-orange/60 focus:ring-[3px] focus:ring-smash-orange/12 transition-all"
+         />
+         {isPassword && (
+            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+               {showPass ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+            </button>
+         )}
       </div>
-      <input 
-         value={value || ""}
-         onChange={(e) => onChange(e.target.value)}
-         {...props} 
-         className="w-full pl-16 pr-8 py-5 bg-white/5 border border-white/10 rounded-[28px] text-lg font-bold placeholder:text-smash-gray/30 focus:outline-none focus:border-white transition-all"
-      />
-   </div>
-);
+   );
+};
 
 export default AuthArtist;

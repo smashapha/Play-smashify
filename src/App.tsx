@@ -251,8 +251,8 @@ function AppContent() {
         <Route path="privacy" element={<Privacy />} />
         <Route path="contact" element={<Contact />} />
         <Route path="admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
     </Routes>
   );
 }

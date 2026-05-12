@@ -9,13 +9,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAiRecommendations } from '../services/aiService';
 
-const GENRES = ['Afropop', 'Hip Hop', 'Gospel', 'Amapiano', 'Reggae', 'R&B', 'Dancehall', 'Jazz', 'Electronic', 'Acoustic', 'Rock', 'Alternative', 'Soul', 'House'];
+const GENRES = [
+  { name: 'Afropop', icon: Music2, color: 'text-smash-orange' },
+  { name: 'Hip Hop', icon: Sparkles, color: 'text-smash-purple' },
+  { name: 'Amapiano', icon: Disc, color: 'text-smash-green' },
+  { name: 'Gospel', icon: Music2, color: 'text-text-primary' },
+  { name: 'Reggae', icon: Music2, color: 'text-text-primary' },
+  { name: 'R&B', icon: Music2, color: 'text-text-primary' }
+];
 
 const Discover: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { userProfile } = useAuth();
-  const initialQuery = searchParams.get('q') || '';
+  const initialQuery = searchParams.get('search') || searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [results, setResults] = useState<{ songs: Song[], artists: UserProfile[] }>({ songs: [], artists: [] });
@@ -41,7 +48,7 @@ const Discover: React.FC = () => {
   };
 
   useEffect(() => {
-    const q = searchParams.get('q');
+    const q = searchParams.get('search') || searchParams.get('q');
     if (q !== null) {
       setSearchQuery(q);
     }
@@ -69,7 +76,6 @@ const Discover: React.FC = () => {
           profiles: s.profiles
         }));
 
-        // Get user likes from localStorage for now as context
         let likedSongs: string[] = [];
         try {
           const likedIds = JSON.parse(localStorage.getItem('smash_liked_songs') || '[]');
@@ -168,7 +174,7 @@ const Discover: React.FC = () => {
 
   return (
     <div 
-      className="space-y-12 pb-24"
+      className="space-y-6 md:space-y-8 pb-32 pt-4 md:pt-6 px-4 md:px-8 max-w-7xl mx-auto"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -177,51 +183,42 @@ const Discover: React.FC = () => {
           <div className="w-6 h-6 border-2 border-smash-orange border-t-transparent rounded-full animate-spin" />
         </div>
       )}
+      
       {/* Header & Search */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-smash-orange/20 to-transparent blur-3xl rounded-full" />
-        <div className="relative pt-8 space-y-8">
-          <h1 className="text-5xl md:text-7xl font-black font-display italic uppercase tracking-tighter leading-none translate-x-[-4px]">
-             EXPLORE <br />
-             <span className="text-smash-orange">THE SOUNDS</span>
-          </h1>
-
-          <div className="relative max-w-2xl group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-smash-orange transition-colors" size={24} />
-            <input 
-              type="text" 
-              placeholder="Search songs, artists, genres..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-[32px] pl-16 pr-8 py-6 text-xl font-medium outline-none focus:border-smash-orange transition-all shadow-2xl backdrop-blur-md"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-6 top-1/2 -translate-y-1/2 p-1 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="relative group max-w-2xl">
+         <Search className="absolute left-[16px] top-1/2 -translate-y-1/2 text-text-muted transition-colors opacity-70" size={16} strokeWidth={2.5} />
+         <input 
+            type="text" 
+            placeholder="Artists, tracks, genres..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-[40px] md:h-[44px] bg-white/5 border border-white/10 rounded-full md:rounded-[14px] pl-11 pr-10 text-[13px] md:text-[14px] font-display text-text-primary placeholder:text-text-muted focus:outline-none focus:border-smash-orange/40 transition-all focus:bg-white/10"
+         />
+         {searchQuery && (
+            <button 
+               onClick={() => setSearchQuery('')}
+               className="absolute right-[14px] top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-white transition-colors"
+            >
+               <X size={14} />
+            </button>
+         )}
       </div>
 
       {/* Genres Chips */}
-      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 md:-mx-0 md:px-0">
          <button 
            onClick={() => setSelectedGenre(null)}
-           className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${!selectedGenre ? 'bg-smash-orange text-white shadow-xl shadow-smash-orange/20' : 'bg-white/5 text-smash-gray hover:text-white'}`}
+           className={`px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-[11px] font-display font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${!selectedGenre ? 'bg-smash-purple text-white border-transparent' : 'bg-white/5 text-text-muted hover:text-white border-white/10 hover:bg-white/10'}`}
          >
            All
          </button>
          {GENRES.map(genre => (
            <button 
-             key={genre}
-             onClick={() => setSelectedGenre(genre === selectedGenre ? null : genre)}
-             className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedGenre === genre ? 'bg-smash-orange text-white shadow-xl shadow-smash-orange/20' : 'bg-white/5 text-smash-gray hover:text-white'}`}
+             key={genre.name}
+             onClick={() => setSelectedGenre(genre.name === selectedGenre ? null : genre.name)}
+             className={`px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-[11px] font-display font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${selectedGenre === genre.name ? 'bg-smash-purple text-white border-transparent' : 'bg-white/5 text-text-muted hover:text-white border-white/10 hover:bg-white/10'}`}
            >
-             {genre}
+             {genre.name}
            </button>
          ))}
       </div>
@@ -233,83 +230,85 @@ const Discover: React.FC = () => {
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              exit={{ opacity: 0 }}
-             className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 animate-pulse mt-8"
+             className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-pulse mt-8"
            >
              {[1, 2, 3, 4, 5, 6].map(n => (
                <div key={n} className="flex flex-col gap-3">
-                 <div className="w-full aspect-square bg-white/10 rounded-2xl"></div>
-                 <div className="h-4 w-3/4 bg-white/10 rounded"></div>
-                 <div className="h-3 w-1/2 bg-white/10 rounded"></div>
+                 <div className="w-full aspect-square bg-white/5 rounded-[16px]"></div>
+                 <div className="h-4 w-3/4 bg-white/5 rounded-md"></div>
+                 <div className="h-3 w-1/2 bg-white/5 rounded-md"></div>
                </div>
              ))}
            </motion.div>
         ) : (searchQuery || selectedGenre) ? (
              <motion.div 
              key="results"
-             initial={{ opacity: 0, y: 20 }}
+             initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
              className="space-y-8"
            >
-             <div className="flex gap-4 border-b border-white/10 pb-2 mb-6">
+             {/* iOS Segmented Control equivalent */}
+             <div className="flex p-1 bg-white/5 rounded-full max-w-[240px]">
                 <button 
                   onClick={() => setActiveTab('songs')}
-                  className={`text-sm font-black uppercase tracking-widest pb-2 border-b-2 transition-colors ${activeTab === 'songs' ? 'border-smash-orange text-white' : 'border-transparent text-smash-gray hover:text-white'}`}
+                  className={`flex-1 text-[11px] font-display font-semibold uppercase tracking-widest py-2 rounded-full transition-all ${activeTab === 'songs' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}
                 >
                   Songs
                 </button>
                 <button 
                   onClick={() => setActiveTab('artists')}
-                  className={`text-sm font-black uppercase tracking-widest pb-2 border-b-2 transition-colors ${activeTab === 'artists' ? 'border-smash-orange text-white' : 'border-transparent text-smash-gray hover:text-white'}`}
+                  className={`flex-1 text-[11px] font-display font-semibold uppercase tracking-widest py-2 rounded-full transition-all ${activeTab === 'artists' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}
                 >
                   Artists
                 </button>
              </div>
 
              {activeTab === 'songs' ? (
-               <div className="space-y-8">
+               <div className="space-y-6">
                  <div className="flex items-center justify-between">
-                   <h2 className="text-3xl font-black font-display italic uppercase tracking-tighter">Tracks Found</h2>
-                   <p className="text-xs font-black text-smash-gray uppercase tracking-widest">{results.songs.length} results</p>
+                   <h2 className="text-[20px] font-studio font-bold text-text-primary">Tracks Found</h2>
+                   <p className="text-[12px] font-display font-medium text-text-muted">{results.songs.length} results</p>
                  </div>
                  {results.songs.length > 0 ? (
-                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                       {results.songs.map((song, i) => (
-                        <SongCard key={`discover-song-${song.id}-${i}`} song={song} queue={results.songs} />
+                        <SongCard key={`discover-song-${song.id}-${i}`} song={song} queue={results.songs} layout="grid" />
                       ))}
                    </div>
                  ) : (
-                   <div className="p-12 bg-white/5 rounded-[32px] border border-white/10 text-center">
-                      <Music2 size={48} className="mx-auto mb-4 text-smash-gray/30" />
-                      <p className="text-smash-gray font-bold uppercase tracking-widest text-xs">No tracks match your search</p>
+                   <div className="p-10 bg-white/5 rounded-[24px] border border-white/5 text-center">
+                      <Music2 size={32} className="mx-auto mb-3 text-text-muted/40" />
+                      <p className="text-text-muted font-display font-medium text-[13px]">No tracks match your search</p>
                    </div>
                  )}
                </div>
              ) : (
-               <div className="space-y-8">
+               <div className="space-y-6">
                  <div className="flex items-center justify-between">
-                   <h2 className="text-3xl font-black font-display italic uppercase tracking-tighter">Artists Found</h2>
-                   <p className="text-xs font-black text-smash-gray uppercase tracking-widest">{results.artists.length} results</p>
+                   <h2 className="text-[20px] font-studio font-bold text-text-primary">Artists Found</h2>
+                   <p className="text-[12px] font-display font-medium text-text-muted">{results.artists.length} results</p>
                  </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                    {results.artists.map((artist, i) => (
                      <motion.div 
                        key={`discover-artist-${artist.id}-${i}`}
-                       whileHover={{ x: 10 }}
+                       whileHover={{ scale: 1.02 }}
                        onClick={() => navigate(`/artist/${artist.id}`)}
-                       className="p-4 bg-white/5 border border-white/10 rounded-[24px] flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors"
+                       className="p-3 bg-bg-surface border border-white/5 rounded-[16px] flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-all shadow-sm"
                      >
-                       <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-smash-orange/20">
-                          <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-full h-full" />
-                       </div>
+                       <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-12 h-12 rounded-full border border-white/10" />
                        <div className="flex-1 min-w-0">
-                          <h4 className="font-display font-black italic uppercase text-lg truncate leading-none mb-1">{artist.stage_name || artist.full_name}</h4>
-                          <p className="text-xs text-smash-gray font-bold uppercase tracking-widest">{artist.genre || 'Various'}</p>
+                          <h4 className="font-display font-bold text-[14px] text-text-primary truncate mb-0.5">{artist.stage_name || artist.full_name}</h4>
+                          <p className="text-[11px] text-text-muted font-display font-medium uppercase tracking-wider">{artist.genre || 'Artist'}</p>
                        </div>
-                       <ChevronRight className="text-smash-gray" size={20} />
+                       <ChevronRight className="text-smash-purple/50 opacity-0 group-hover:opacity-100 transition-opacity" size={16} />
                      </motion.div>
                    ))}
                    {results.artists.length === 0 && (
-                      <div className="col-span-full text-center text-smash-gray py-12 font-bold uppercase tracking-widest text-[10px]">No artists found</div>
+                      <div className="col-span-full p-10 bg-white/5 rounded-[24px] border border-white/5 text-center">
+                         <User size={32} className="mx-auto mb-3 text-text-muted/40" />
+                         <p className="text-text-muted font-display font-medium text-[13px]">No artists match your search</p>
+                      </div>
                    )}
                  </div>
                </div>
@@ -320,68 +319,55 @@ const Discover: React.FC = () => {
              key="initial"
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
-             className="space-y-16"
+             className="space-y-12"
            >
               {/* Featured / Trending Section */}
-             <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                   <Sparkles className="text-smash-orange" size={32} />
-                   <h2 className="text-4xl font-black font-display italic uppercase tracking-tighter leading-none">TRENDING SLAPS</h2>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+             <div className="space-y-5">
+                <h2 className="text-[20px] font-studio font-bold text-text-primary">Trending Hits</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                    {trending.map((song, i) => (
-                      <SongCard key={`discover-trending-${song.id}-${i}`} song={song} queue={trending} />
+                      <SongCard key={`discover-trending-${song.id}-${i}`} song={song} queue={trending} layout="grid" />
                    ))}
                 </div>
              </div>
 
              {/* AI Recommendations Section */}
              {recommendedSongs.length > 0 && (
-                <div className="space-y-8">
+                <div className="space-y-5">
                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                         <Zap className="text-smash-orange" size={32} />
-                         <h2 className="text-4xl font-black font-display italic uppercase tracking-tighter leading-none">FOR YOU <span className="text-smash-orange text-xs align-top bg-smash-orange/10 px-2 py-1 rounded-lg ml-2">AI POWERED</span></h2>
+                      <div className="flex items-center gap-2">
+                         <h2 className="text-[20px] font-studio font-bold text-text-primary">For You</h2>
+                         <span className="bg-smash-orange/10 text-smash-orange text-[10px] font-display font-bold px-2 py-0.5 rounded-[6px] uppercase tracking-wider">AI Pick</span>
                       </div>
-                      <button onClick={fetchRecommendations} className="text-[10px] font-black uppercase tracking-[0.2em] text-smash-gray hover:text-smash-orange transition-colors">Refresh Mix</button>
+                      <button onClick={fetchRecommendations} className="text-[11px] font-display font-semibold uppercase tracking-widest text-text-muted hover:text-smash-orange transition-colors">Refresh</button>
                    </div>
 
-                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                       {recommendedSongs.map((song, i) => (
-                         <div key={`discover-rec-${song.id}-${i}`} className="relative group">
-                            <SongCard song={song} queue={recommendedSongs} />
-                            <div className="absolute top-2 left-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                               <span className="bg-smash-black/80 backdrop-blur-md text-[8px] font-black uppercase px-2 py-1 rounded-md border border-white/10 text-smash-orange">Mixed for you</span>
-                            </div>
-                         </div>
+                         <SongCard key={`discover-rec-${song.id}-${i}`} song={song} queue={recommendedSongs} layout="grid" />
                       ))}
                    </div>
                 </div>
              )}
-               {/* Browse Categories */}
-              <div className="space-y-8">
-                 <h2 className="text-4xl font-black font-display italic uppercase tracking-tighter leading-none">CATEGORIES</h2>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                       { name: 'Afropop', color: 'from-smash-orange to-red-500', icon: Music2 },
-                       { name: 'Hip Hop', color: 'from-purple-600 to-blue-500', icon: Sparkles },
-                       { name: 'Amapiano', color: 'from-green-500 to-teal-400', icon: Disc }
-                    ].map((cat) => (
-                       <div 
-                         key={cat.name}
-                         onClick={() => setSelectedGenre(cat.name)}
-                         className={`relative h-48 rounded-[32px] overflow-hidden cursor-pointer group shadow-2xl`}
-                       >
-                          <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-80 group-hover:opacity-100 transition-opacity`} />
-                          <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
-                             <cat.icon size={48} className="text-white/20 group-hover:scale-110 transition-transform" />
-                             <h3 className="text-3xl font-black font-display italic uppercase text-white drop-shadow-lg">{cat.name}</h3>
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-              </div>
+             
+             {/* Browse Categories */}
+             <div className="space-y-5">
+                <h2 className="text-[20px] font-studio font-bold text-text-primary">Browse Categories</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                   {GENRES.map((cat) => (
+                      <div 
+                        key={`cat-grid-${cat.name}`}
+                        onClick={() => setSelectedGenre(cat.name)}
+                        className="bg-bg-surface border border-white/5 rounded-[16px] p-5 cursor-pointer hover:border-white/10 hover:bg-white/5 transition-all flex flex-col items-start gap-4 shadow-sm"
+                      >
+                         <div className={`w-10 h-10 rounded-full bg-white/5 flex items-center justify-center ${cat.color}`}>
+                            <cat.icon size={20} />
+                         </div>
+                         <h3 className="text-[14px] font-display font-bold text-text-primary">{cat.name}</h3>
+                      </div>
+                   ))}
+                </div>
+             </div>
            </motion.div>
         )}
       </AnimatePresence>

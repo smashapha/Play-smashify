@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Mail, Lock as AppLockIcon, User, ChevronLeft, Chrome, AlertCircle, Headphones, Phone, Check
+  Mail, Lock as AppLockIcon, User, Chrome, AlertCircle, Headphones, Phone, Eye, EyeOff, Mic2
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import Logo from '../components/common/Logo';
 import { useAuth } from '../context/AuthContext';
 import { upgradeListenerPlan } from '../lib/paychangu';
 import toast from 'react-hot-toast';
 
 type AuthMode = 'login' | 'signup';
-type SignupStep = 1 | 2;
 type PlanChoice = 'Free' | 'Premium' | 'Family';
 
 const AuthListener: React.FC = () => {
@@ -44,12 +42,10 @@ const AuthListener: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  
-  const [signupStep, setSignupStep] = useState<SignupStep>(1);
 
   if (loading && !user) {
     return (
-       <div className="min-h-screen bg-smash-black flex items-center justify-center">
+       <div className="min-h-screen bg-[#0a0a0d] flex items-center justify-center">
           <div className="w-12 h-12 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
        </div>
     );
@@ -88,7 +84,6 @@ const AuthListener: React.FC = () => {
     setLoadingState(true);
     setError(null);
     try {
-      // 1. Create User
       const { data, error } = await supabase.auth.signUp({ 
           email, 
           password,
@@ -98,13 +93,12 @@ const AuthListener: React.FC = () => {
       
       if (!data.user) throw new Error("Registration failed");
       
-      // 2. Set base listener profile
       const { error: profileError } = await supabase.from('user_profiles').insert({
         id: data.user.id,
         full_name: fullName,
         email: email,
         phone: phone,
-        phone_verified: true, // Auto-verified for this prompt's requirement
+        phone_verified: true,
         subscription_tier: 'Free',
         user_type: 'listener'
       });
@@ -117,7 +111,6 @@ const AuthListener: React.FC = () => {
         await refreshProfile();
         navigate('/');
       } else {
-        // Pop Paychangu for Premium/Family
         upgradeListenerPlan({
             plan: plan as any,
             user: userProfileObj
@@ -166,136 +159,134 @@ const AuthListener: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-smash-black flex flex-col md:flex-row relative overflow-hidden">
-      {/* Loading Overlay */}
-      <AnimatePresence>
-         {loadingState && (
-            <motion.div 
-               initial={{ opacity: 0 }} 
-               animate={{ opacity: 1 }} 
-               exit={{ opacity: 0 }}
-               className="fixed inset-0 z-[100] bg-smash-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
-            >
-               <div className="relative mb-8">
-                  <div className="w-24 h-24 border-b-4 border-smash-orange rounded-full animate-spin" />
-                  <Headphones className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-smash-orange animate-pulse" size={32} />
-               </div>
-               <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Setting up your vibe...</h2>
-               <p className="text-smash-gray font-medium">Sit tight, we're crafting your personalized experience.</p>
-            </motion.div>
-         )}
-      </AnimatePresence>
-
-      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-smash-orange/5 rounded-full blur-[140px] -ml-64 -mt-64" />
-      <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-smash-cyan/5 rounded-full blur-[140px] -mr-64 -mb-64" />
-
-      <div className="w-full md:w-[40%] bg-smash-dark/50 p-12 md:p-20 flex flex-col justify-between border-r border-white/5 relative z-10">
-         <div>
-            <button onClick={() => navigate('/')} className="mb-12 flex items-center gap-2 text-smash-gray hover:text-white transition-colors group">
-               <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-               <span className="font-black text-[10px] uppercase tracking-widest">Back to Home</span>
-            </button>
-            <Logo size="lg" className="mb-20" />
-            <AnimatePresence mode="wait">
-               {mode === 'login' ? (
-                  <motion.div key="l" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                     <h2 className="text-6xl md:text-8xl font-black font-studio italic uppercase tracking-tighter leading-none mb-10">HEAR<br/><span className="text-smash-orange">MORE</span></h2>
-                     <p className="text-smash-gray text-xl md:text-2xl font-medium tracking-tight">Sign in to access your library, playlists, and personalized picks.</p>
-                  </motion.div>
-               ) : (
-                  <motion.div key="sl" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                     <h2 className="text-6xl md:text-8xl font-black font-studio italic uppercase tracking-tighter leading-none mb-10">HEAR THE<br/><span className="text-smash-cyan">FUTURE</span></h2>
-                     <p className="text-smash-gray text-xl md:text-2xl font-medium tracking-tight">Join 50k+ Malawians discovering the next local superstars every day.</p>
-                  </motion.div>
-               )}
-            </AnimatePresence>
-         </div>
+    <div className="min-h-screen bg-[#0a0a0d] flex items-center justify-center relative overflow-hidden px-4">
+      {/* Background radial gradient */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,95,0,0.07), transparent)'
+        }}
+      />
+      {/* Background SVG Waveforms */}
+      <div className="absolute inset-0 pointer-events-none opacity-40 flex items-center justify-center">
+        <svg viewBox="0 0 1000 400" className="w-[150vw] max-w-none text-smash-orange/5" preserveAspectRatio="none">
+           <path d="M0,200 C200,100 300,300 500,200 C700,100 800,300 1000,200" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="10 10"/>
+           <path d="M0,250 C200,150 300,350 500,250 C700,150 800,350 1000,250" fill="none" stroke="currentColor" strokeWidth="1" />
+           <path d="M0,150 C200,50 300,250 500,150 C700,50 800,250 1000,150" fill="none" stroke="currentColor" strokeWidth="1" />
+           <path d="M0,220 C250,50 400,350 600,150 C800,-50 900,250 1000,220" fill="none" stroke="currentColor" strokeWidth="0.5" />
+           <path d="M0,180 C150,300 350,50 550,250 C750,450 850,150 1000,180" fill="none" stroke="currentColor" strokeWidth="0.5" />
+        </svg>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-6 py-20 md:px-24 md:py-32 relative z-10">
-         <div className="max-w-xl w-full mx-auto">
-            <h1 className="text-4xl font-black font-display uppercase italic tracking-tighter mb-8 bg-gradient-to-r from-smash-orange to-smash-cyan bg-clip-text text-transparent">Listener Portal</h1>
-            
-            <div className="flex gap-4 mb-12">
-               <button onClick={() => { setMode('login'); setSignupStep(1); }} className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${mode === 'login' ? 'bg-white text-black shadow-xl' : 'bg-white/5 text-smash-gray hover:bg-white/10'}`}>Log In</button>
-               <button onClick={() => setMode('signup')} className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${mode === 'signup' ? 'bg-white text-black shadow-xl' : 'bg-white/5 text-smash-gray hover:bg-white/10'}`}>Sign Up</button>
-            </div>
+      {loadingState && (
+        <div className="absolute inset-0 z-50 bg-[#0a0a0d]/80 backdrop-blur-md flex flex-col items-center justify-center">
+           <div className="w-12 h-12 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
 
-            <AnimatePresence mode="wait">
-                {mode === 'login' ? (
-                  <motion.form key="login" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8" onSubmit={handleLogin}>
-                     <div className="space-y-6">
-                        <AuthInput icon={<Mail size={20} />} type="email" placeholder="Email Address" value={email} onChange={setEmail} disabled={loadingState} />
-                        <AuthInput icon={<AppLockIcon size={20} />} type="password" placeholder="Password" value={password} onChange={setPassword} disabled={loadingState} />
-                     </div>
-                     <button type="submit" disabled={loadingState} className="w-full py-6 bg-white text-smash-black rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl hover:bg-smash-orange hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4">
-                        {loadingState ? (
-                           <>
-                              <div className="w-6 h-6 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
-                              Establishing...
-                           </>
-                        ) : 'Sign In'}
-                     </button>
-                     <div className="flex justify-between px-2">
-                        <button type="button" onClick={handleForgotPassword} disabled={loadingState} className="text-[10px] font-black text-smash-gray uppercase tracking-widest hover:text-white transition-colors disabled:opacity-50">Forgot Password?</button>
-                     </div>
-                     <div className="pt-4 border-t border-white/5 space-y-4">
-                        <button type="button" onClick={() => handleOAuth('google')} disabled={loadingState} className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 font-bold hover:bg-white/10 transition-all disabled:opacity-50">
-                           <Chrome size={20} /> Continue with Google
-                        </button>
-                        <button type="button" onClick={() => navigate('/auth/artist')} disabled={loadingState} className="w-full text-center text-[10px] font-black text-smash-gray uppercase tracking-widest hover:text-smash-purple transition-colors disabled:opacity-50">Are you an Artist? Studio Access &rarr;</button>
-                     </div>
-                  </motion.form>
-               ) : (
-                  <motion.div key="signup" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-                     <form onSubmit={handleSignup} className="space-y-6">
-                        <div className="space-y-6">
-                           <AuthInput icon={<User size={20} />} type="text" placeholder="Full Name" value={fullName} onChange={setFullName} disabled={loadingState} />
-                           <AuthInput icon={<Mail size={20} />} type="email" placeholder="Email Address" value={email} onChange={setEmail} disabled={loadingState} />
-                           <AuthInput icon={<Phone size={20} />} type="tel" placeholder="Phone (Airtel / TNM)" value={phone} onChange={setPhone} disabled={loadingState} />
-                           <AuthInput icon={<AppLockIcon size={20} />} type="password" placeholder="Create Password" value={password} onChange={setPassword} disabled={loadingState} />
-                        </div>
-                        <button type="submit" disabled={loadingState} className="w-full py-6 bg-white text-smash-black rounded-[32px] font-black text-2xl uppercase tracking-widest shadow-2xl hover:bg-smash-cyan hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4">
-                           {loadingState ? (
-                              <>
-                                 <div className="w-6 h-6 border-4 border-smash-cyan border-t-transparent rounded-full animate-spin" />
-                                 Creating...
-                              </>
-                           ) : 'Create Account'}
-                        </button>
-                        <div className="pt-4 border-t border-white/5">
-                           <button type="button" onClick={() => handleOAuth('google')} disabled={loadingState} className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 font-bold hover:bg-white/10 transition-all disabled:opacity-50">
-                              <Chrome size={20} /> Join with Google
-                           </button>
-                        </div>
-                     </form>
-                  </motion.div>
-               )}
-            </AnimatePresence>
+      <div className="w-full max-w-[420px] bg-[#141418]/85 backdrop-blur-[24px] saturate-180 border border-white/10 rounded-[24px] p-8 md:p-10 relative z-10 mx-auto shadow-2xl">
+        <div className="text-center mb-8">
+           <h1 className="font-display font-extrabold text-[28px] text-smash-orange">SMASHIFY</h1>
+           <p className="font-sans text-[13px] text-text-muted mt-1">Your music. Your stage.</p>
+        </div>
 
-            {error && (
-               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-4 bg-smash-red/10 border border-smash-red/20 rounded-2xl flex items-center gap-3 text-smash-red font-bold text-sm">
-                  <AlertCircle size={18} /> {error}
-               </motion.div>
-            )}
-         </div>
+        <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-[12px]">
+           <button onClick={() => setMode('login')} className={`flex-1 py-2 rounded-[8px] font-sans font-medium text-[13px] transition-all ${mode === 'login' ? 'bg-bg-elevated text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>Log In</button>
+           <button onClick={() => setMode('signup')} className={`flex-1 py-2 rounded-[8px] font-sans font-medium text-[13px] transition-all ${mode === 'signup' ? 'bg-bg-elevated text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>Sign Up</button>
+        </div>
+
+        <AnimatePresence mode="wait">
+           {mode === 'login' ? (
+              <motion.form key="login" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleLogin} className="space-y-4">
+                 <AuthInput icon={Mail} type="email" placeholder="Email" value={email} onChange={setEmail} disabled={loadingState} />
+                 <AuthInput icon={AppLockIcon} type="password" placeholder="Password" value={password} onChange={setPassword} disabled={loadingState} />
+                 
+                 <div className="flex justify-between items-center py-1">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                       <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-white/5 text-smash-orange focus:ring-smash-orange focus:ring-offset-0 transition-all cursor-pointer" />
+                       <span className="text-[13px] font-sans text-text-muted group-hover:text-text-primary transition-colors">Remember me</span>
+                    </label>
+                    <button type="button" onClick={handleForgotPassword} className="text-[13px] font-sans text-text-muted hover:text-text-primary transition-colors">Forgot password?</button>
+                 </div>
+
+                 <button type="submit" disabled={loadingState} className="w-full h-[52px] rounded-[14px] font-display font-bold text-[15px] uppercase tracking-wide text-white shadow-sm transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.98] mt-2" style={{ background: 'linear-gradient(135deg, #ff5f00, #ff8c00)' }}>
+                    LOG IN
+                 </button>
+
+                 <div className="relative flex items-center py-4">
+                    <div className="flex-grow border-t border-white/10"></div>
+                    <span className="flex-shrink-0 mx-4 text-text-muted text-[11px] font-display font-medium uppercase tracking-widest">or</span>
+                    <div className="flex-grow border-t border-white/10"></div>
+                 </div>
+
+                 <button type="button" onClick={() => handleOAuth('google')} className="w-full h-[52px] border border-white/10 rounded-[14px] flex items-center justify-center gap-3 font-sans font-medium text-[14px] hover:bg-white/5 transition-colors">
+                    <Chrome size={18} /> Continue with Google
+                 </button>
+              </motion.form>
+           ) : (
+              <motion.form key="signup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleSignup} className="space-y-4">
+                 
+                 {/* Role Selector BEFORE form */}
+                 <div className="grid grid-cols-2 gap-3 mb-2">
+                    <button type="button" className="h-[72px] border border-smash-orange bg-smash-orange/10 rounded-[14px] flex flex-col items-center justify-center gap-1 transition-all">
+                       <Headphones size={20} className="text-smash-orange" />
+                       <span className="font-sans font-medium text-[12px] text-text-primary">I'm a Listener</span>
+                    </button>
+                    <button type="button" onClick={() => navigate('/auth/artist?mode=signup')} className="h-[72px] border border-white/10 bg-white/5 rounded-[14px] flex flex-col items-center justify-center gap-1 hover:border-white/20 transition-all hover:bg-white/10">
+                       <Mic2 size={20} className="text-text-muted" />
+                       <span className="font-sans font-medium text-[12px] text-text-muted">I'm an Artist</span>
+                    </button>
+                 </div>
+
+                 <AuthInput icon={User} type="text" placeholder="Full Name" value={fullName} onChange={setFullName} disabled={loadingState} />
+                 <AuthInput icon={Mail} type="email" placeholder="Email Address" value={email} onChange={setEmail} disabled={loadingState} />
+                 <AuthInput icon={Phone} type="tel" placeholder="Phone" value={phone} onChange={setPhone} disabled={loadingState} />
+                 <AuthInput icon={AppLockIcon} type="password" placeholder="Create Password" value={password} onChange={setPassword} disabled={loadingState} />
+                 
+                 <button type="submit" disabled={loadingState} className="w-full h-[52px] rounded-[14px] font-display font-bold text-[15px] uppercase tracking-wide text-white shadow-sm transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.98] mt-2" style={{ background: 'linear-gradient(135deg, #ff5f00, #ff8c00)' }}>
+                    REGISTER
+                 </button>
+
+                 <button type="button" onClick={() => handleOAuth('google')} className="w-full h-[52px] border border-white/10 rounded-[14px] flex items-center justify-center gap-3 font-sans font-medium text-[14px] hover:bg-white/5 transition-colors mt-4">
+                    <Chrome size={18} /> Join with Google
+                 </button>
+              </motion.form>
+           )}
+        </AnimatePresence>
+
+        {error && (
+           <div className="mt-4 p-3 bg-smash-red/10 border border-smash-red/20 rounded-[10px] flex items-center gap-2 text-smash-red font-sans font-medium text-[13px]">
+              <AlertCircle size={16} /> {error}
+           </div>
+        )}
       </div>
     </div>
   );
 };
 
-const AuthInput = ({ icon, value, onChange, ...props }: any) => (
-   <div className="relative group">
-      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-white transition-colors">
-         {icon}
+const AuthInput = ({ icon: Icon, value, onChange, type, ...props }: any) => {
+   const [showPass, setShowPass] = useState(false);
+   const isPassword = type === 'password';
+   
+   return (
+      <div className="relative group">
+         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-smash-orange transition-colors pointer-events-none">
+            {isPassword ? null : <Icon size={18} strokeWidth={1.5} />}
+         </div>
+         <input 
+            type={isPassword ? (showPass ? 'text' : 'password') : type}
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            {...props} 
+            className="w-full h-[52px] pl-4 pr-12 bg-white/5 border border-white/10 rounded-[14px] text-[14px] font-sans text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-smash-orange/60 focus:ring-[3px] focus:ring-smash-orange/12 transition-all"
+         />
+         {isPassword && (
+            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+               {showPass ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+            </button>
+         )}
       </div>
-      <input 
-         value={value || ""}
-         onChange={(e) => onChange(e.target.value)}
-         {...props} 
-         className="w-full pl-16 pr-8 py-5 bg-white/5 border border-white/10 rounded-[28px] text-lg font-bold placeholder:text-smash-gray/30 focus:outline-none focus:border-white transition-all"
-      />
-   </div>
-);
+   );
+};
 
 export default AuthListener;

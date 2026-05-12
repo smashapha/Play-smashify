@@ -287,7 +287,7 @@ const MotoCard = ({ song, active, onSkip }: { song: Song; active: boolean; onSki
                  className="absolute bottom-6 left-6 right-6 bg-white/10 backdrop-blur-2xl border border-white/20 p-6 rounded-3xl z-40 shadow-2xl flex flex-col gap-4 text-center cursor-default"
                  onClick={(e: any) => e.stopPropagation()}
                >
-                  <p className="text-white font-black font-studio italic uppercase text-lg">30 sec preview ending</p>
+                  <p className="text-white font-studio font-bold uppercase text-[16px]">30 sec preview ending</p>
                   <p className="text-smash-gray text-xs font-bold uppercase tracking-widest pb-2">Buy to hear the rest</p>
                   <div className="flex gap-3">
                      <button 
@@ -310,7 +310,7 @@ const MotoCard = ({ song, active, onSkip }: { song: Song; active: boolean; onSki
          {isPreviewLimit && !song.is_unreleased && (
             <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-8 rounded-[40px] md:rounded-[60px] cursor-default" onClick={(e: any) => e.stopPropagation()}>
                <ShoppingBag size={48} className="text-smash-orange mb-4" />
-               <h3 className="text-2xl font-black font-display italic uppercase mb-2">Full Track Available</h3>
+               <h3 className="text-[24px] font-studio font-bold uppercase mb-2 text-white">Full Track Available</h3>
                <p className="text-sm text-smash-gray font-bold mb-6 italic tracking-tight">Buy this anthem to support {song.artist_name} and hear the rest.</p>
                <button 
                  onClick={handleBuy}
@@ -437,7 +437,7 @@ const MotoCard = ({ song, active, onSkip }: { song: Song; active: boolean; onSki
                {song.region && <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black rounded-full uppercase tracking-widest">{song.region}</span>}
             </div>
             <div>
-               <h2 className="text-4xl md:text-5xl font-black font-display italic uppercase tracking-tighter leading-none mb-2">{song.title}</h2>
+               <h2 className="text-[32px] md:text-[44px] font-studio font-bold uppercase tracking-tight leading-[1.1] mb-2 text-white">{song.title}</h2>
                <div className="flex items-center gap-2">
                   <p className="text-xl font-bold text-white/80">{song.artist_name || (song.profiles as any)?.stage_name || (song.profiles as any)?.full_name}</p>
                   {song.profiles?.verified && <div className="w-4 h-4 bg-smash-cyan rounded-full flex items-center justify-center"><Check size={10} className="text-black" /></div>}
@@ -602,7 +602,7 @@ const AudioAdCard = ({ ad, onFinish }: { ad: any, onFinish: () => void }) => {
             animate={{ scale: 1, opacity: 1 }}
             className="mb-12"
           >
-             <h2 className="text-5xl font-black font-display italic uppercase tracking-tighter mb-4 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+             <h2 className="text-[40px] font-studio font-bold uppercase tracking-tight mb-4 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                 {ad.advertiser_name || 'Smashify'}
              </h2>
              <p className="text-xl text-smash-gray font-bold italic tracking-tight uppercase">
@@ -868,7 +868,7 @@ const MotoFeed: React.FC = () => {
   if (songs.length === 0) return (
      <div className="h-screen bg-smash-black flex flex-col items-center justify-center p-8 text-center">
         <Disc className="text-smash-gray/20 animate-spin-slow mb-8" size={120} />
-        <h2 className="text-4xl font-black font-display italic uppercase tracking-tighter mb-4 text-white">The Feed is Cold</h2>
+        <h2 className="text-[32px] font-studio font-bold uppercase tracking-tight mb-4 text-white">The Feed is Cold</h2>
         <p className="text-smash-gray font-bold max-w-sm mx-auto mb-12">No anthems found in the warm heart today. Check back soon for fresh drops.</p>
         <button 
           onClick={() => navigate('/')}

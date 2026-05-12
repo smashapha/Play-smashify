@@ -28,7 +28,7 @@ interface InitiatePaymentParams {
 const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
 
 /**
- * Common function to initiate payment via Edge Function
+ * Common function to initiate payment via Express API
  */
 export async function initiatePayment(params: InitiatePaymentParams) {
   const toastId = toast.loading('Initializing secure payment...');
@@ -36,16 +36,25 @@ export async function initiatePayment(params: InitiatePaymentParams) {
   try {
     const tx_ref = `SMASH-${params.type.toUpperCase()}-${params.meta.userId || 'anon'}-${Date.now()}`;
     
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      body: {
+    // Get session for auth
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const response = await fetch(`${APP_URL}/api/functions/create-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`
+      },
+      body: JSON.stringify({
         ...params,
         tx_ref,
-        currency: 'MWK',
-        callback_url: `${APP_URL}/api/paychangu-webhook`,
-      }
+        currency: 'MWK'
+      })
     });
 
-    if (error) throw error;
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to initialize payment');
+    
     if (!data?.checkout_url) throw new Error('Failed to get checkout URL');
 
     toast.success('Redirecting to PayChangu...', { id: toastId });
@@ -191,7 +200,7 @@ export async function payForAdCampaign({ artist, plays, amount }: { artist: User
 
 /**
  * Withdraw funds (Payout)
- * This is a direct call to the process-payout function, not a checkout redirect
+ * This is a direct call to the local Express API
  */
 export async function requestPayout({ 
   amount, 
@@ -205,11 +214,20 @@ export async function requestPayout({
   const toastId = toast.loading('Processing withdrawal...');
   
   try {
-    const { data, error } = await supabase.functions.invoke('process-payout', {
-      body: { amount, phone, network }
+    // Get session for auth
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const response = await fetch(`${APP_URL}/api/functions/process-payout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`
+      },
+      body: JSON.stringify({ amount, phone, network })
     });
 
-    if (error) throw error;
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Withdrawal failed');
     
     toast.success('Withdrawal successful! Funds will land in your mobile wallet shortly.', { id: toastId });
     return data;

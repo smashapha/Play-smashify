@@ -6,7 +6,7 @@ import {
   Edit3, CheckCircle2, AlertCircle, Sparkles, ChevronRight,
   Smartphone, Image as ImageIcon, FileAudio, Info, Flame,
   Disc, LogOut, ArrowLeft, Menu, Clock, ExternalLink, ShieldCheck,
-  ShoppingBag, Heart, Lock as AppLockIcon, X, Bell
+  ShoppingBag, Heart, Lock as AppLockIcon, X, Bell, Rocket, Star
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -497,9 +497,9 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
   return (
     <div className="space-y-10 max-w-6xl">
       <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-        <div>
-           <h2 className="text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary"><TrendingUp className="text-smash-purple" /> Artist <span className="text-smash-purple">Growth</span></h2>
-           <p className="text-text-secondary text-[14px] font-sans mt-2">Real-time performance metrics</p>
+        <div className="flex-1 min-w-0">
+           <h2 className="text-[24px] md:text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary leading-tight"><TrendingUp className="text-smash-purple shrink-0" /> Artist <span className="text-smash-purple">Growth</span></h2>
+           <p className="text-text-secondary text-[12px] md:text-[14px] font-sans mt-1 md:mt-2">Real-time performance metrics</p>
         </div>
         <div className="flex gap-3">
            <button onClick={() => setActiveTab('music')} className="h-[44px] px-6 bg-border-default hover:bg-border-subtle text-text-primary rounded-[10px] font-display font-semibold uppercase text-[11px] tracking-widest transition-all inline-flex items-center justify-center">New Upload</button>
@@ -742,11 +742,11 @@ const PromotionTab = ({ userProfile }: { userProfile: any }) => {
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary">
-            <Flame className="text-smash-orange" /> Promote Your Music
+        <div className="flex-1 min-w-0">
+          <h2 className="text-[24px] md:text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary leading-tight">
+            <Flame className="text-smash-orange shrink-0" /> Promote Music
           </h2>
-          <p className="text-text-secondary text-[14px] font-sans mt-2">Audio ads play between songs. Radio-style promotion for Malawian artists.</p>
+          <p className="text-text-secondary text-[12px] md:text-[14px] font-sans mt-1 md:mt-2">Audio ads play between songs. Radio-style promotion for Malawian artists.</p>
         </div>
         {!showForm && (
           <button 
@@ -1017,9 +1017,9 @@ const SongsTab = ({ songs, onRefresh, setActiveTab }: any) => {
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-           <h2 className="text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary"><Music2 className="text-smash-purple" /> Track <span className="text-smash-purple">Inventory</span></h2>
-           <p className="text-text-secondary text-[14px] font-sans mt-2">Manage your distributed catalog</p>
+        <div className="flex-1 min-w-0">
+           <h2 className="text-[24px] md:text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary leading-tight"><Music2 className="text-smash-purple shrink-0" /> Track <span className="text-smash-purple">Inventory</span></h2>
+           <p className="text-text-secondary text-[12px] md:text-[14px] font-sans mt-1 md:mt-2">Manage your distributed catalog</p>
         </div>
         <button onClick={() => setActiveTab('upload')} className="h-[44px] px-6 bg-smash-purple text-white font-display font-semibold text-[11px] uppercase tracking-widest rounded-[10px] flex items-center justify-center gap-2 hover:bg-smash-purple/90 transition-all shadow-sm">
           <Plus size={18} /> New Release
@@ -1153,8 +1153,8 @@ const AlbumsTab = ({ albums, songs, onRefresh, setActiveTab, userProfile }: any)
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary"><Disc className="text-smash-purple" /> Albums</h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <h2 className="text-[24px] md:text-[32px] font-studio font-bold flex items-center gap-3 uppercase text-text-primary"><Disc className="text-smash-purple shrink-0" /> Albums</h2>
         {limits.canCreateAlbums ? (
           <button onClick={() => setActiveTab('upload')} className="h-[44px] px-6 bg-smash-purple text-white font-display font-semibold text-[11px] uppercase tracking-widest rounded-[10px] flex items-center justify-center gap-2 hover:bg-smash-purple/90 transition-all shadow-sm">
             <Plus size={16} /> New Album
@@ -1380,8 +1380,8 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="mb-4 text-center md:text-left">
-        <h2 className="text-[32px] font-studio font-bold flex items-center justify-center md:justify-start gap-3 mb-2 uppercase text-text-primary"><Upload className="text-smash-purple" /> Upload Music</h2>
-        <p className="text-text-secondary text-[14px] font-sans">Distribute your sounds to the world. High quality files only.</p>
+        <h2 className="text-[24px] md:text-[32px] font-studio font-bold flex items-center justify-center md:justify-start gap-3 mb-2 uppercase text-text-primary"><Upload className="text-smash-purple shrink-0" /> Upload Music</h2>
+        <p className="text-text-secondary text-[12px] md:text-[14px] font-sans">Distribute your sounds to the world. High quality files only.</p>
       </div>
 
       <div className="flex bg-bg-surface p-1 rounded-full w-fit mx-auto md:mx-0 mb-6 gap-1 border border-border-subtle shadow-sm">

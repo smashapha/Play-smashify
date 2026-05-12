@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Flame, Music, Disc, User, ChevronRight, TrendingUp, Sparkles, DollarSign, Clock, Crown, Heart } from 'lucide-react';
+import { Search, Flame, Sparkles, DollarSign, Clock, Crown, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Song, Artist } from '../types';
 import SongCard from '../components/common/SongCard';
@@ -193,19 +193,18 @@ const Home: React.FC = () => {
 
   if (loading) {
      return (
-        <div className="pb-32 px-4 md:px-12 pt-8 animate-pulse">
-           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
-              <div className="h-16 w-64 bg-white/10 rounded-2xl"></div>
-              <div className="w-full md:w-96 h-14 bg-white/10 rounded-2xl"></div>
+        <div className="pb-32 px-4 md:px-8 pt-6 animate-pulse bg-bg-page min-h-screen">
+           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+              <div className="h-[28px] w-48 bg-white/5 rounded-md"></div>
+              <div className="w-full md:w-[400px] h-[48px] bg-white/5 rounded-[14px]"></div>
            </div>
-           <div className="h-[400px] md:h-[500px] w-full bg-white/10 rounded-[40px] md:rounded-[60px] mb-16"></div>
+           <div className="h-[320px] w-full bg-white/5 rounded-[24px] mb-12"></div>
            <div className="space-y-4 mb-20">
-              <div className="h-10 w-48 bg-white/10 rounded-xl mb-8"></div>
-              <div className="flex gap-6 overflow-hidden">
-                 <div className="min-w-[280px] h-32 bg-white/10 rounded-3xl"></div>
-                 <div className="min-w-[280px] h-32 bg-white/10 rounded-3xl"></div>
-                 <div className="min-w-[280px] h-32 bg-white/10 rounded-3xl"></div>
-                 <div className="min-w-[280px] h-32 bg-white/10 rounded-3xl"></div>
+              <div className="h-[24px] w-40 bg-white/5 rounded-md mb-2"></div>
+              <div className="flex gap-4 overflow-hidden">
+                 <div className="min-w-[160px] h-40 bg-white/5 rounded-[16px]"></div>
+                 <div className="min-w-[160px] h-40 bg-white/5 rounded-[16px]"></div>
+                 <div className="min-w-[160px] h-40 bg-white/5 rounded-[16px]"></div>
               </div>
            </div>
         </div>
@@ -223,7 +222,7 @@ const Home: React.FC = () => {
 
   return (
     <div 
-      className="pb-32 px-4 md:px-12 pt-8"
+      className="pb-32 pt-6 px-4 md:px-8 max-w-7xl mx-auto"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -232,26 +231,29 @@ const Home: React.FC = () => {
           <div className="w-6 h-6 border-2 border-smash-orange border-t-transparent rounded-full animate-spin" />
         </div>
       )}
+      
       {/* Welcome Message & Search */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
-        {userProfile ? (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-3xl md:text-5xl font-black font-display italic tracking-tight leading-tight">
-              {getGreeting()}, <br/>
-              <span className="text-smash-orange">{userProfile.full_name?.split(' ')[0] || 'Listener'}</span>! 🎵
-            </h1>
-          </motion.div>
-        ) : (
-          <div>
-            <h1 className="text-3xl md:text-5xl font-black font-display italic tracking-tight uppercase">Smashify <span className="text-smash-purple">MW</span></h1>
-            <p className="text-smash-gray font-bold">The heartbeat of Malawian music.</p>
-          </div>
-        )}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-10">
+        <div className="space-y-1">
+          {userProfile ? (
+            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}>
+               <h1 className="text-[20px] md:text-[28px] font-studio font-black text-text-primary mb-0 leading-tight tracking-tight uppercase">
+                  {getGreeting()}, <span className="text-smash-orange">{userProfile.full_name?.split(' ')[0] || 'Listener'}</span>
+               </h1>
+               <p className="text-[11px] md:text-sm font-display font-medium text-text-muted uppercase tracking-widest opacity-60">Your rhythm, your rules.</p>
+            </motion.div>
+          ) : (
+            <div>
+               <h1 className="text-[20px] md:text-[28px] font-studio font-black text-text-primary mb-0 leading-tight uppercase">
+                  Welcome to <span className="text-smash-orange">Smashify</span>
+               </h1>
+               <p className="text-[11px] md:text-sm font-display font-medium text-text-muted uppercase tracking-widest opacity-60">Malaŵi's No.1 Music Choice</p>
+            </div>
+          )}
+        </div>
 
-        <div className="relative w-full md:w-96 group">
-          <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-smash-gray group-focus-within:text-smash-orange transition-colors" />
+        <div className="relative w-full lg:w-[400px] group">
+          <Search size={16} className="absolute left-[16px] top-1/2 -translate-y-1/2 text-text-muted transition-colors opacity-70" strokeWidth={2} />
           <input 
             type="text" 
             placeholder="Search artists or tracks..."
@@ -262,56 +264,54 @@ const Home: React.FC = () => {
                  navigate(`/discover?q=${encodeURIComponent(searchQuery)}`);
                }
             }}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-sm font-bold focus:outline-none focus:border-smash-orange transition-all shadow-2xl"
+            className="w-full h-[44px] bg-white/5 border border-white/10 rounded-[14px] pl-10 pr-4 text-[14px] font-display text-text-primary placeholder:text-text-muted focus:outline-none focus:border-white/20 transition-all focus:bg-white/10"
           />
           <AnimatePresence>
             {searchQuery.trim().length > 1 && (
               <motion.div 
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-smash-dark border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl"
+                exit={{ opacity: 0, y: 5 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-white/10 rounded-[16px] shadow-2xl z-50 overflow-hidden backdrop-blur-xl"
               >
-                <div className="p-4 space-y-4">
+                <div className="p-3 space-y-3">
                   {isSearching ? (
-                    <div className="py-8 flex justify-center">
-                      <div className="w-6 h-6 border-2 border-smash-orange border-t-transparent rounded-full animate-spin" />
+                    <div className="py-6 flex justify-center">
+                      <div className="w-5 h-5 border-2 border-smash-orange border-t-transparent rounded-full animate-spin" />
                     </div>
                   ) : (searchResults.songs.length === 0 && searchResults.artists.length === 0) ? (
-                    <p className="text-xs text-smash-gray font-bold text-center py-4 uppercase tracking-widest">No results found</p>
+                    <p className="text-[13px] font-sans text-text-muted text-center py-4">No results found</p>
                   ) : (
                     <>
                       {searchResults.artists.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest ml-2">Artists</p>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-display font-medium text-text-muted uppercase tracking-wider ml-2 mb-1">Artists</p>
                           {searchResults.artists.map((artist, i) => (
                             <div 
                               key={`search-artist-${artist.id}-${i}`}
                               onClick={() => { navigate(`/artist/${artist.id}`); setSearchQuery(''); }}
-                              className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer transition-colors"
+                              className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-[10px] cursor-pointer transition-colors"
                             >
-                              <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-10 h-10 rounded-full" />
-                              <div>
-                                <p className="text-sm font-bold truncate leading-tight">{(artist as any).name}</p>
-                                <p className="text-[10px] text-smash-gray font-bold uppercase tracking-widest">{artist.genre || 'Artist'}</p>
+                              <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-9 h-9 rounded-full" />
+                              <div className="min-w-0">
+                                <p className="text-[14px] font-sans font-medium text-text-primary truncate">{artist.stage_name || artist.full_name}</p>
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
                       {searchResults.songs.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest ml-2">Tracks</p>
+                        <div className="space-y-1 mt-3">
+                          <p className="text-[10px] font-display font-medium text-text-muted uppercase tracking-wider ml-2 mb-1">Tracks</p>
                           {searchResults.songs.map((song, i) => (
                             <div 
                               key={`search-song-${song.id}-${i}`}
-                              onClick={() => { /* Play song? */ }}
-                              className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer transition-colors"
+                              className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-[10px] cursor-pointer transition-colors"
                             >
-                              <img src={song.cover_url} className="w-10 h-10 rounded-lg object-cover" />
+                              <img src={song.cover_url} className="w-9 h-9 rounded-[6px] object-cover" />
                               <div className="min-w-0">
-                                <p className="text-sm font-bold truncate leading-tight uppercase italic">{song.title}</p>
-                                <p className="text-[10px] text-smash-gray font-bold uppercase tracking-widest">{song.artist_name}</p>
+                                <p className="text-[14px] font-sans font-medium text-text-primary truncate">{song.title}</p>
+                                <p className="text-[12px] font-sans text-text-muted truncate">{song.artist_name}</p>
                               </div>
                             </div>
                           ))}
@@ -319,7 +319,7 @@ const Home: React.FC = () => {
                       )}
                       <button 
                         onClick={() => navigate(`/discover?q=${encodeURIComponent(searchQuery)}`)}
-                        className="w-full py-3 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest text-center rounded-xl transition-colors"
+                        className="w-full mt-2 py-2.5 bg-white/5 hover:bg-white/10 text-[12px] font-sans font-semibold text-text-primary rounded-[10px] transition-colors"
                       >
                         View all results
                       </button>
@@ -335,36 +335,42 @@ const Home: React.FC = () => {
       {/* Featured Banner */}
       {featured && (
         <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative h-[400px] md:h-[500px] rounded-[40px] md:rounded-[60px] overflow-hidden mb-16 group cursor-pointer"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="relative h-[400px] md:h-[320px] bg-bg-surface rounded-3xl overflow-hidden mb-16 group cursor-pointer border border-white/5 flex flex-col md:flex-row shadow-2xl"
           onClick={() => navigate(`/artist/${featured.artist_id}`)}
         >
-           <img 
-             src={featured.cover_url} 
-             className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-[10s]" 
-             alt="" 
-             referrerPolicy="no-referrer"
-           />
-           <div className="absolute inset-0 bg-gradient-to-t from-smash-black via-smash-black/20 to-transparent" />
-           <div className="absolute inset-0 bg-gradient-to-r from-smash-black/60 to-transparent" />
+           {/* Background Image with optimized overlays */}
+           <div className="absolute inset-0">
+              <img 
+                src={featured.cover_url} 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[12s] ease-out" 
+                alt="" 
+                referrerPolicy="no-referrer"
+              />
+              {/* Complex gradient for readability on any image */}
+              <div className="absolute inset-0 bg-gradient-to-t from-bg-page via-bg-page/40 to-transparent md:hidden" />
+              <div className="absolute inset-0 bg-gradient-to-r from-bg-page via-bg-page/60 to-transparent hidden md:block" />
+              <div className="absolute inset-0 bg-black/20 opacity-40 group-hover:opacity-10 transition-opacity" />
+           </div>
            
-           <div className="absolute bottom-12 left-8 md:left-16 right-8 max-w-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                 <div className="px-4 py-1.5 bg-smash-orange text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-xl">TRENDING NOW</div>
-                 <div className="flex items-center gap-2 text-sm text-white/80 font-bold">
-                    <Sparkles size={14} className="text-smash-cyan" /> {(featured.plays || 0).toLocaleString()} STREAMS
+           {/* Content Overlay */}
+           <div className="relative z-10 w-full md:w-2/3 h-full flex flex-col justify-end md:justify-center p-8 md:p-12">
+              <div className="flex items-center gap-2 mb-3 md:mb-5">
+                 <div className="px-3 py-1 bg-smash-orange text-white text-[10px] font-display font-black rounded-lg uppercase tracking-[0.2em] shadow-lg animate-pulse">
+                    HOT DROPS
                  </div>
               </div>
-              <h1 className="text-5xl md:text-8xl font-black font-display italic uppercase tracking-tighter leading-none mb-6">
+              <h1 className="text-4xl md:text-6xl font-studio font-black tracking-tighter leading-[0.9] mb-3 text-white uppercase italic drop-shadow-2xl">
                  {featured.title}
               </h1>
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                    <Avatar src={featured.profiles?.avatar_url} name={featured.profiles?.stage_name || featured.profiles?.full_name} className="w-full h-full" />
-                 </div>
-                 <p className="text-2xl font-black font-display italic uppercase tracking-tight">{featured.artist_name}</p>
-                 {featured.profiles?.verified && <div className="w-6 h-6 bg-smash-cyan rounded-full flex items-center justify-center"><Check size={14} className="text-black" /></div>}
+              <p className="text-sm md:text-lg font-display text-text-muted mb-8 line-clamp-1 uppercase tracking-[0.15em] font-bold opacity-80">{featured.artist_name}</p>
+              
+              <div className="flex">
+                 <button className="px-8 py-4 bg-white text-black text-xs font-display font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-smash-orange hover:text-white transition-all transform hover:scale-105 flex items-center gap-3 shadow-2xl active:scale-95">
+                    <Flame size={18} fill="currentColor" /> Play Now
+                 </button>
               </div>
            </div>
         </motion.section>
@@ -372,138 +378,127 @@ const Home: React.FC = () => {
 
       {/* Sections */}
       {recentSongs.length > 0 && (
-        <HomeSection title="Recently Played" icon={<Clock className="text-smash-cyan" />} subtitle="Jump back into your recent jams.">
-           <div className="flex overflow-x-auto gap-6 pb-8 snap-x no-scrollbar">
+        <HomeSection title="Recently Played" subtitle="Jump back into your recent jams.">
+           <div className="flex overflow-x-auto gap-4 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
               {recentSongs.map((song, i) => (
-                <SongCard key={`recent-${song.id}-${i}`} song={song} queue={recentSongs} className="min-w-[280px] md:min-w-[320px] snap-start" />
+                <SongCard key={`recent-${song.id}-${i}`} song={song} queue={recentSongs} layout="grid" className="min-w-[140px] md:min-w-[170px] snap-start" />
               ))}
            </div>
         </HomeSection>
       )}
 
       {aiPicks.length > 0 && (
-        <HomeSection title="AI Picks For You" icon={<Sparkles className="text-smash-purple" />} subtitle="Powered by Gemini: tracks you'll love based on your likes.">
-           <div className="flex overflow-x-auto gap-6 pb-8 snap-x no-scrollbar">
+        <HomeSection title="AI Picks For You" subtitle="Tracks you'll love based on your listening history.">
+           <div className="flex overflow-x-auto gap-4 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
               {aiPicks.map((song, i) => (
-                <SongCard key={`aipicks-${song.id}-${i}`} song={song} queue={aiPicks} className="min-w-[280px] md:min-w-[320px] snap-start" />
+                <SongCard key={`aipicks-${song.id}-${i}`} song={song} queue={aiPicks} layout="grid" className="min-w-[140px] md:min-w-[170px] snap-start" />
               ))}
            </div>
         </HomeSection>
       )}
 
-      <HomeSection title="Trending Hits" icon={<Flame className="text-smash-orange" />} subtitle="The biggest tracks in the Warm Heart right now.">
-         <div className="flex overflow-x-auto gap-6 pb-8 snap-x no-scrollbar">
+      <HomeSection title="Trending Hits" subtitle="The biggest tracks right now.">
+         <div className="flex overflow-x-auto gap-4 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {trendingSongs.length > 0 ? trendingSongs.map((song, i) => (
-              <SongCard key={`trending-${song.id}-${i}`} song={song} queue={trendingSongs} className="min-w-[280px] md:min-w-[320px] snap-start" />
+              <SongCard key={`trending-${song.id}-${i}`} song={song} queue={trendingSongs} layout="grid" className="min-w-[140px] md:min-w-[170px] snap-start" />
             )) : (
-              <div className="py-12 px-8 bg-white/5 rounded-3xl border border-white/10 text-smash-gray font-bold uppercase tracking-widest text-xs">No trending tracks yet</div>
+              <div className="w-full py-8 text-center text-[13px] font-sans text-text-muted bg-white/5 border border-white/5 rounded-[16px]">No trending tracks yet</div>
             )}
          </div>
       </HomeSection>
 
-      <HomeSection title="New Releases" icon={<Sparkles className="text-white" />} subtitle="Fresh drops from your favorite local superstars.">
-         <div className="flex overflow-x-auto gap-6 pb-8 snap-x no-scrollbar">
+      <HomeSection title="New Releases" subtitle="Fresh drops from your favorite local artists.">
+         <div className="flex overflow-x-auto gap-4 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {newReleases.length > 0 ? newReleases.map((song, i) => (
-              <SongCard key={`new-${song.id}-${i}`} song={song} queue={newReleases} className="min-w-[280px] snap-start" />
+              <SongCard key={`new-${song.id}-${i}`} song={song} queue={newReleases} layout="grid" className="min-w-[140px] md:min-w-[170px] snap-start" />
             )) : (
-              <div className="py-12 px-8 bg-white/5 rounded-3xl border border-white/10 text-smash-gray font-bold uppercase tracking-widest text-xs">No new releases yet</div>
+              <div className="w-full py-8 text-center text-[13px] font-sans text-text-muted bg-white/5 border border-white/5 rounded-[16px]">No new releases yet</div>
             )}
          </div>
       </HomeSection>
 
-      <HomeSection title="For Sale" icon={<DollarSign className="text-smash-green" />} subtitle="Support artists directly by owning their music.">
-         <div className="flex overflow-x-auto gap-6 pb-8 snap-x no-scrollbar">
+      <HomeSection title="For Sale" subtitle="Support artists directly by owning their music.">
+         <div className="flex overflow-x-auto gap-4 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {forSaleSongs.length > 0 ? forSaleSongs.map((song, i) => (
-              <SongCard key={`sale-${song.id}-${i}`} song={song} queue={forSaleSongs} className="min-w-[280px] snap-start" />
+              <SongCard key={`sale-${song.id}-${i}`} song={song} queue={forSaleSongs} layout="grid" className="min-w-[140px] md:min-w-[170px] snap-start" />
             )) : (
-              <div className="py-12 px-8 bg-white/5 rounded-3xl border border-white/10 text-smash-gray font-bold uppercase tracking-widest text-xs">No tracks for sale yet</div>
+              <div className="w-full py-8 text-center text-[13px] font-sans text-text-muted bg-white/5 border border-white/5 rounded-[16px]">No tracks for sale yet</div>
             )}
          </div>
       </HomeSection>
 
-      <HomeSection title="Featured Artists" icon={<User className="text-white" />} subtitle="The visionaries shaping Malawian culture.">
-         <div className="flex overflow-x-auto gap-8 pb-8 snap-x no-scrollbar">
+      <HomeSection title="Featured Artists" subtitle="The visionaries shaping Malawian culture.">
+         <div className="flex overflow-x-auto gap-6 pb-6 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {topArtists.length > 0 ? topArtists.map((artist, i) => (
               <motion.div 
                 key={`artist-${artist.id}-${i}`}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -4 }}
                 onClick={() => navigate(`/artist/${artist.id}`)}
-                className="flex flex-col items-center gap-4 min-w-[160px] cursor-pointer snap-start group"
+                className="flex flex-col items-center gap-3 min-w-[120px] cursor-pointer snap-start group"
               >
-                 <div className="relative p-1 rounded-full bg-gradient-to-tr from-smash-orange to-smash-purple group-hover:p-1.5 transition-all">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-smash-black">
-                       <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-full h-full transform group-hover:scale-110 transition-transform" />
+                 <div className="relative p-[2px] rounded-full bg-gradient-to-tr from-smash-orange to-smash-purple group-hover:p-[3px] transition-all">
+                    <div className="w-[100px] h-[100px] rounded-full overflow-hidden border-[3px] border-[#0a0a0d]">
+                       <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-full h-full transform group-hover:scale-105 transition-transform" />
                     </div>
                     {artist.verified && (
-                       <div className="absolute bottom-1 right-1 w-8 h-8 bg-smash-cyan rounded-full border-4 border-smash-black flex items-center justify-center">
-                          <Check size={16} className="text-black" />
+                       <div className="absolute bottom-1 right-1 w-6 h-6 bg-smash-purple rounded-full border-[3px] border-[#0a0a0d] flex items-center justify-center">
+                          <Check className="text-white w-3 h-3" />
                        </div>
                     )}
                  </div>
                  <div className="text-center">
-                    <p className="font-display font-black text-lg italic uppercase truncate tracking-tight">{artist.stage_name || (artist as any).full_name || artist.name}</p>
-                    <p className="text-[10px] font-black text-smash-gray uppercase tracking-widest">{artist.genre || 'Artist'}</p>
+                    <p className="font-display font-bold text-[14px] truncate text-text-primary group-hover:text-smash-orange transition-colors">{artist.stage_name || (artist as any).full_name || artist.name}</p>
                  </div>
               </motion.div>
             )) : (
-              <div className="py-12 px-8 bg-white/5 rounded-3xl border border-white/10 text-smash-gray font-bold uppercase tracking-widest text-xs">No featured artists yet</div>
+              <div className="w-full py-8 text-center text-[13px] font-sans text-text-muted bg-white/5 border border-white/5 rounded-[16px]">No featured artists yet</div>
             )}
          </div>
       </HomeSection>
 
-      {/* Support Artists Banner (From Listener View) */}
-      <div className="mt-16 bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 mb-16 shadow-2xl relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-smash-orange/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-         <div className="relative z-10 flex-1">
-            <h3 className="text-3xl font-display font-black italic uppercase mb-2 flex items-center gap-3">
-               <Heart className="text-smash-red" fill="currentColor" /> Support Malawian Artists
-            </h3>
-            <p className="text-smash-gray font-bold text-lg max-w-2xl">
-               Your purchases and donations go directly to them via Mobile Money. Let's build the music industry together.
-            </p>
+      {/* Support Artists Banner */}
+      <div className="mt-12 bg-gradient-to-r from-[#1E1E24] to-[#111118] border border-white/5 rounded-[20px] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm relative overflow-hidden group">
+         <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-smash-orange/5 rounded-full blur-[60px] -mt-10 -mr-10 pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
+         <div className="relative z-10 flex-1 text-center md:text-left flex flex-col md:flex-row md:items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0 mx-auto md:mx-0 border border-yellow-500/30 shadow-sm">
+               <Crown className="text-yellow-500" size={24} />
+            </div>
+            <div>
+               <h3 className="text-[20px] font-studio font-bold mb-1 text-white">
+                  Support Local Artists
+               </h3>
+               <p className="text-[14px] font-sans text-text-muted max-w-lg">
+                  Direct purchases go directly to artists via mobile money. Buy tracks, build the industry.
+               </p>
+            </div>
          </div>
          <div className="relative z-10">
-            <button onClick={() => navigate('/pricing')} className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-full hover:bg-smash-orange hover:text-white transition-all shadow-xl flex items-center gap-2">
-               <Crown size={18} /> Go Premium
+            <button onClick={() => navigate('/pricing')} className="px-6 py-3 bg-smash-orange text-white font-display font-semibold uppercase tracking-widest text-[11px] rounded-[10px] hover:bg-smash-orange/90 transition-all shadow-sm">
+               Support your favorites directly
             </button>
          </div>
-      </div>
-
-      <div className="bento-card bg-gradient-to-r from-smash-orange to-smash-red p-12 text-center relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-         <h2 className="text-4xl md:text-6xl font-black font-display italic uppercase tracking-tighter mb-4 relative z-10">MOTO FEED PREVIEW</h2>
-         <p className="text-white/80 text-xl font-bold mb-10 max-w-xl mx-auto relative z-10">Experience the world's first swipeable music discovery feed. Discover your next favorite song in seconds.</p>
-         <button 
-           onClick={() => navigate('/moto-feed')}
-           className="px-12 py-5 bg-white text-smash-black rounded-[24px] font-black text-xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all relative z-10 shadow-2xl"
-         >
-            ENTERING THE FEED
-         </button>
       </div>
     </div>
   );
 };
 
-const HomeSection = ({ title, subtitle, icon, children }: any) => (
-  <section className="mb-20">
-    <div className="flex items-center justify-between mb-8">
+const HomeSection = ({ title, subtitle, children }: { title: string, subtitle: string, children: React.ReactNode }) => (
+  <section className="mb-10">
+    <div className="flex items-end justify-between mb-4">
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          {icon}
-          <h2 className="text-3xl md:text-4xl font-black font-display italic uppercase tracking-tighter">{title}</h2>
-        </div>
-        <p className="text-smash-gray font-bold tracking-tight">{subtitle}</p>
+        <h2 className="text-[22px] font-studio font-bold tracking-tight text-white leading-none mb-1">{title}</h2>
+        <p className="text-[13px] font-display font-normal text-text-muted">{subtitle}</p>
       </div>
-      <button className="flex items-center gap-2 text-xs font-black text-smash-gray hover:text-white uppercase tracking-widest transition-all group">
-         View All <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+      <button className="text-[12px] font-display font-medium uppercase tracking-widest text-text-muted hover:text-white transition-all">
+         View All
       </button>
     </div>
     {children}
   </section>
 );
 
-const Check = ({ size, className }: any) => (
-   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={className}>
+const Check = ({ className }: { className?: string }) => (
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <polyline points="20 6 9 17 4 12" />
    </svg>
 );

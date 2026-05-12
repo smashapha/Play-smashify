@@ -161,14 +161,14 @@ const ArtistProfile: React.FC = () => {
  
    if (loading) return (
       <div className="min-h-screen bg-smash-black flex justify-center items-center">
-         <div className="w-12 h-12 border-4 border-smash-purple border-t-transparent rounded-full animate-spin"></div>
+         <div className="w-10 h-10 border-4 border-smash-purple border-t-transparent rounded-full animate-spin"></div>
       </div>
    );
 
     if (!artist) return (
-      <div className="min-h-[60vh] flex flex-col justify-center items-center p-12 text-center">
-         <Users size={64} className="text-text-muted/30 mb-6" />
-         <h1 className="text-[32px] font-bold font-display uppercase tracking-tight text-text-primary mb-4">Artist Vault Empty</h1>
+      <div className="min-h-[60vh] flex flex-col justify-center items-center p-8 text-center">
+         <Users size={48} className="text-text-muted/30 mb-6" />
+         <h1 className="text-2xl font-bold font-display uppercase tracking-tight text-text-primary mb-4">Artist Vault Empty</h1>
          <button onClick={() => navigate(-1)} className="h-[44px] px-6 bg-smash-purple text-white rounded-[10px] font-display font-semibold uppercase tracking-widest text-[11px] hover:bg-smash-purple/90 transition-colors">Back to Discover</button>
       </div>
    );
@@ -178,9 +178,9 @@ const ArtistProfile: React.FC = () => {
    const latestRelease = songs[0];
 
    return (
-      <div className="space-y-12 pb-32">
+      <div className="space-y-8 md:space-y-12 pb-32">
          {/* Premium Cinematic Hero */}
-         <div className="relative h-[650px] overflow-hidden shadow-lg mt-4 group md:rounded-[20px]">
+         <div className="relative h-[480px] md:h-[650px] overflow-hidden shadow-lg mt-0 md:mt-4 group md:rounded-[20px]">
             <div className="absolute inset-0 bg-gradient-to-t from-bg-page via-bg-page/40 to-transparent z-10" />
             <motion.div 
                initial={{ scale: 1.15, opacity: 0 }}
@@ -193,59 +193,55 @@ const ArtistProfile: React.FC = () => {
                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
                  alt=""
                />
-               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] md:backdrop-blur-[1px]" />
             </motion.div>
             
             {/* Overlay Content */}
             <div className="relative z-20 h-full flex flex-col justify-end p-6 md:p-12 lg:p-20">
-               <div className="flex flex-col md:flex-row items-center md:items-end gap-8 md:gap-12">
+               <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-12">
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="w-32 h-32 md:w-56 md:h-56 rounded-full border-4 md:border-[8px] border-bg-page/40 backdrop-blur-md overflow-hidden shadow-xl shrink-0 group/av"
+                    className="w-28 h-28 md:w-56 md:h-56 rounded-full border-4 md:border-[8px] border-bg-page/20 backdrop-blur-xl overflow-hidden shadow-2xl shrink-0 group/av"
                   >
                      <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-full h-full scale-110 group-hover/av:scale-110 transition-all duration-700 object-cover" />
                   </motion.div>
                   
-                  <div className="flex-1 text-center md:text-left space-y-4 md:space-y-5">
+                  <div className="flex-1 text-center md:text-left space-y-4 md:space-y-6">
                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
                         {artist.verified && (
-                           <span className="px-3 py-1 bg-smash-cyan/10 text-smash-cyan border border-smash-cyan/20 rounded-full text-[10px] font-display font-semibold uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
-                             <CheckCircle2 size={12} /> Verified
+                           <span className="px-3 py-1 bg-smash-cyan text-white rounded-full text-[9px] md:text-[10px] font-studio font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                             <CheckCircle2 size={10} className="md:w-3 md:h-3" /> Verified
                            </span>
                         )}
-                        <StatPill icon={<Users size={12}/>} value={artist.followers_count || 0} label="Followers" />
+                        <StatPill icon={<Users size={12}/>} value={artist.followers_count || 0} label="Fans" />
                         <StatPill icon={<Music2 size={12}/>} value={songs.length} label="Tracks" />
-                        <StatPill icon={<Calendar size={12}/>} value="Est. 2024" label="Joined" />
                      </div>
                      
                      <motion.h1 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-[48px] sm:text-[72px] md:text-[100px] lg:text-[130px] font-display font-extrabold uppercase tracking-tighter leading-[0.8] text-white drop-shadow-lg"
+                        className="text-5xl md:text-[clamp(48px,8vw,130px)] font-studio font-black uppercase tracking-tighter leading-[0.8] text-white drop-shadow-2xl italic"
                      >
                         {artist.stage_name}
                      </motion.h1>
                      
-                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
+                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 pt-2">
                         <button 
                            onClick={handleFollow} 
                            disabled={followLoading}
-                           className={`h-[44px] px-6 rounded-[10px] font-display font-semibold uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm ${
+                           className={`h-11 md:h-[44px] px-6 md:px-8 rounded-xl font-studio font-black uppercase tracking-[0.2em] text-[10px] md:text-[12px] transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl ${
                               isFollowing 
-                                 ? 'bg-bg-elevated border border-border-default text-text-primary hover:bg-border-default' 
-                                 : 'bg-smash-purple text-white hover:bg-smash-purple/90'
+                                 ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white' 
+                                 : 'bg-smash-orange text-white hover:scale-105'
                            }`}
                         >
-                           {isFollowing ? <Check size={16} /> : <UserPlus size={16} />}
-                           {isFollowing ? 'Following' : 'Follow Artist'}
+                           {isFollowing ? <Check size={14} /> : <UserPlus size={14} />}
+                           {isFollowing ? 'Joined' : 'Join'}
                         </button>
-                        <button onClick={() => setShowSupportModal(true)} className="h-[44px] px-6 bg-bg-elevated/80 backdrop-blur-md border border-border-default text-text-primary rounded-[10px] font-display font-semibold uppercase tracking-widest text-[11px] hover:bg-bg-elevated hover:text-smash-orange transition-all flex items-center gap-2">
-                           <Heart size={16} className="text-smash-orange" /> Support
-                        </button>
-                        <button onClick={handleShare} className="w-[44px] h-[44px] bg-bg-elevated/80 backdrop-blur-md border border-border-default text-text-primary rounded-[10px] flex items-center justify-center hover:bg-bg-elevated transition-colors">
-                           <Share size={18} />
+                        <button onClick={() => setShowSupportModal(true)} className="h-11 md:h-[44px] px-6 bg-white/10 backdrop-blur-md border border-white/10 text-white rounded-xl font-studio font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/20 transition-all flex items-center gap-2">
+                           <Heart size={14} className="text-smash-red fill-current" /> Support
                         </button>
                      </div>
                   </div>
@@ -254,45 +250,44 @@ const ArtistProfile: React.FC = () => {
          </div>
 
          {/* Navigation Tabs */}
-         <div className="flex justify-center md:justify-start gap-2 border-b border-border-default pb-4 overflow-x-auto no-scrollbar md:px-0">
+         <div className="flex justify-start gap-2 border-b border-border-default pb-4 overflow-x-auto no-scrollbar px-4 md:px-0">
             <TabButton active={activeTab === 'tracks'} onClick={() => setActiveTab('tracks')} label="Music" icon={<Music2 size={16} />} />
             <TabButton active={activeTab === 'albums'} onClick={() => setActiveTab('albums')} label="Discography" icon={<Disc size={16} />} />
             <TabButton active={activeTab === 'community'} onClick={() => setActiveTab('community')} label="Community" icon={<Users size={16} />} />
-            <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} label="Creative Bio" icon={<Info size={16} />} />
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 px-4 md:px-0">
             <div className="lg:col-span-8">
                <AnimatePresence mode="wait">
                   {activeTab === 'tracks' && (
-                     <motion.div key="tracks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                     <motion.div key="tracks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 md:space-y-12">
                         {/* Featured popular tracks with Rank numbers */}
                         {popularTracks.length > 0 && (
                            <section>
-                              <div className="flex items-center gap-3 mb-6">
-                                 <div className="w-[4px] h-[24px] bg-smash-purple rounded-full" />
+                              <div className="flex items-center gap-3 mb-5 md:mb-6">
+                                 <div className="w-[3px] md:w-[4px] h-[20px] md:h-[24px] bg-smash-purple rounded-full" />
                                  <div>
-                                    <h2 className="text-[22px] font-display font-bold uppercase tracking-tight text-text-primary">Popular Demand</h2>
-                                    <p className="text-text-muted text-[11px] font-display font-medium uppercase tracking-widest">Most played across platform</p>
+                                    <h2 className="text-lg md:text-[22px] font-studio font-bold uppercase tracking-tight text-white">Popular Demand</h2>
+                                    <p className="text-text-muted text-[9px] md:text-[11px] font-display font-medium uppercase tracking-widest">Most played across platform</p>
                                  </div>
                               </div>
-                              <div className="bg-bg-surface border border-border-default rounded-[14px] overflow-hidden p-6 space-y-2 shadow-sm">
+                              <div className="bg-bg-surface border border-border-default rounded-[12px] md:rounded-[14px] overflow-hidden p-4 md:p-6 space-y-1 md:space-y-2 shadow-sm">
                                  {popularTracks.map((song, i) => (
-                                    <div key={song.id} className="group relative flex items-center gap-4 p-3 rounded-[10px] hover:bg-bg-elevated transition-all text-left">
-                                       <span className="w-6 text-[16px] font-display font-bold text-text-muted/40 group-hover:text-smash-purple transition-colors">{i+1}</span>
-                                       <div className="relative w-12 h-12 rounded-[10px] overflow-hidden shrink-0 shadow-sm">
+                                    <div key={song.id} className="group relative flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[10px] hover:bg-white/5 transition-all text-left">
+                                       <span className="w-5 md:w-6 text-xs md:text-[14px] font-display font-normal text-text-muted/40 transition-colors">{i+1}</span>
+                                       <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-[8px] md:rounded-[10px] overflow-hidden shrink-0 shadow-sm">
                                           <img src={song.cover_url} className="w-full h-full object-cover" />
-                                          <button onClick={() => playQueue(popularTracks, i)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                             <Play size={20} className="text-white" fill="currentColor" />
+                                          <button onClick={() => playQueue(popularTracks, i)} className="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                             <Play size={16} className="text-white md:w-5 md:h-5" fill="currentColor" />
                                           </button>
                                        </div>
                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                          <h4 className="text-[14px] font-display font-semibold text-text-primary truncate group-hover:text-smash-purple transition-colors">{song.title}</h4>
-                                          <p className="text-[12px] text-text-muted font-sans truncate">{song.genre}</p>
+                                          <h4 className="text-xs md:text-[14px] font-display font-semibold text-text-primary truncate group-hover:text-smash-purple transition-colors">{song.title}</h4>
+                                          <p className="text-[10px] md:text-[12px] text-text-muted font-sans truncate">{song.genre}</p>
                                        </div>
-                                       <div className="hidden md:flex flex-col items-end justify-center">
-                                          <span className="text-[14px] font-sans font-semibold text-text-primary">{(song.plays || 0).toLocaleString()}</span>
-                                          <span className="text-[11px] font-sans text-text-muted">Plays</span>
+                                       <div className="flex flex-col items-end justify-center">
+                                          <span className="text-xs md:text-[14px] font-sans font-semibold text-text-primary">{(song.plays || 0).toLocaleString()}</span>
+                                          <span className="text-[9px] md:text-[11px] font-sans text-text-muted">Plays</span>
                                        </div>
                                     </div>
                                  ))}
@@ -300,12 +295,12 @@ const ArtistProfile: React.FC = () => {
                            </section>
                         )}
 
-                        <section className="space-y-6">
+                        <section className="space-y-5 md:space-y-6">
                            <div className="flex items-center justify-between">
-                              <h2 className="text-[22px] font-display font-bold uppercase tracking-tight text-text-primary">Collection</h2>
-                              <button onClick={() => playQueue(songs, 0)} className="h-[36px] px-5 bg-bg-elevated border border-border-default text-text-primary rounded-[10px] text-[11px] font-display font-semibold uppercase tracking-widest hover:bg-border-default transition-all shadow-sm">Play All</button>
+                              <h2 className="text-lg md:text-[22px] font-studio font-bold uppercase tracking-tight text-white">Collection</h2>
+                              <button onClick={() => playQueue(songs, 0)} className="h-[32px] md:h-[36px] px-4 md:px-5 bg-bg-elevated border border-border-default text-text-primary rounded-[8px] md:rounded-[10px] text-[9px] md:text-[11px] font-display font-semibold uppercase tracking-widest hover:bg-border-default transition-all shadow-sm">Play All</button>
                            </div>
-                           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                               {songs.map((song, i) => (
                                  <SongCard key={song.id} song={song} queue={songs} layout="grid" />
                               ))}
@@ -315,29 +310,29 @@ const ArtistProfile: React.FC = () => {
                   )}
 
                   {activeTab === 'community' && (
-                     <motion.div key="community" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+                     <motion.div key="community" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 md:space-y-12">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
                            {/* Supporters Dashboard */}
-                           <section className="xl:col-span-2 p-6 md:p-10 bg-bg-surface border border-border-default rounded-[14px] space-y-8 relative overflow-hidden group shadow-sm min-h-[300px]">
-                              <div className="absolute top-0 right-0 w-64 h-64 bg-smash-orange/10 blur-[80px] rounded-full -mr-32 -mt-32 pointer-events-none" />
+                           <section className="xl:col-span-2 p-5 md:p-10 bg-bg-surface border border-border-default rounded-[12px] md:rounded-[14px] space-y-6 md:space-y-8 relative overflow-hidden group shadow-sm min-h-[300px]">
+                              <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-smash-orange/10 blur-[80px] rounded-full -mr-32 -mt-32 pointer-events-none" />
                               
                               <div className="flex items-center justify-between relative z-10">
                                  <div className="flex items-center gap-3">
-                                    <Crown className="text-smash-orange" size={24} />
-                                    <h3 className="text-[22px] font-display font-bold uppercase tracking-tight text-text-primary">Board of <span className="text-smash-orange">Patrons</span></h3>
+                                    <Crown className="text-smash-orange w-5 h-5 md:w-6 md:h-6" />
+                                    <h2 className="text-lg md:text-[22px] font-studio font-bold uppercase tracking-tight text-white">Board of <span className="text-smash-orange">Patrons</span></h2>
                                  </div>
-                                 <Trophy className="text-text-muted/30" size={24} />
+                                 <Trophy className="text-text-muted/30 w-5 h-5 md:w-6 md:h-6" />
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 relative z-10">
                                  {topSupporters.length > 0 ? topSupporters.map((s, i) => (
-                                    <div key={i} className="flex items-center gap-4 p-4 bg-bg-elevated rounded-[10px] group/item hover:border-border-subtle transition-all border border-border-default">
+                                    <div key={i} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-bg-elevated rounded-[10px] group/item hover:border-border-subtle transition-all border border-border-default">
                                        <div className="relative">
-                                          <div className="w-14 h-14 rounded-full border-2 border-border-default overflow-hidden shadow-sm">
+                                          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-border-default overflow-hidden shadow-sm">
                                              <Avatar src={s.avatar_url} name={s.name} className="w-full h-full scale-110 object-cover" />
                                           </div>
                                           {i < 3 && (
-                                            <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-display font-bold border-2 border-bg-elevated shadow-sm ${
+                                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-display font-bold border-2 border-bg-elevated shadow-sm ${
                                               i === 0 ? 'bg-smash-orange text-white' : i === 1 ? 'bg-white/90 text-black' : 'bg-orange-800 text-white'
                                             }`}>
                                               {i + 1}
@@ -345,19 +340,19 @@ const ArtistProfile: React.FC = () => {
                                           )}
                                        </div>
                                        <div className="flex-1 min-w-0">
-                                          <p className="font-display font-semibold text-[14px] text-text-primary truncate group-hover/item:text-smash-orange transition-colors">{s.name}</p>
+                                          <p className="font-display font-semibold text-xs md:text-[14px] text-text-primary truncate group-hover/item:text-smash-orange transition-colors">{s.name}</p>
                                           <div className="flex flex-col mt-0.5">
-                                             <p className="text-[10px] font-sans font-medium text-text-muted uppercase tracking-wider">Contribution</p>
-                                             <p className="text-[12px] font-sans font-semibold text-text-secondary">MK {s.total.toLocaleString()}</p>
+                                             <p className="text-[8px] md:text-[10px] font-display font-medium text-text-muted uppercase tracking-wider">Contribution</p>
+                                             <p className="text-[10px] md:text-[12px] font-sans font-semibold text-text-secondary">MK {s.total.toLocaleString()}</p>
                                           </div>
                                        </div>
-                                       <ArrowUpRight size={16} className="text-text-muted group-hover/item:text-text-primary transition-colors" />
+                                       <ArrowUpRight size={14} className="text-text-muted group-hover/item:text-text-primary transition-colors md:w-4 md:h-4" />
                                     </div>
                                  )) : (
-                                    <div className="col-span-full py-16 text-center border border-dashed border-border-default rounded-[10px] space-y-3">
-                                       <Users className="mx-auto text-text-muted/30" size={32} />
-                                       <p className="text-[13px] font-sans text-text-secondary">No top patrons recorded yet</p>
-                                       <button onClick={() => setShowSupportModal(true)} className="text-[11px] font-display font-semibold uppercase tracking-widest text-smash-purple hover:underline">Claim the first spot &rarr;</button>
+                                    <div className="col-span-full py-12 md:py-16 text-center border border-dashed border-border-default rounded-[10px] space-y-3">
+                                       <Users className="mx-auto text-text-muted/30" size={28} />
+                                       <p className="text-xs font-sans text-text-secondary">No top patrons recorded yet</p>
+                                       <button onClick={() => setShowSupportModal(true)} className="text-[10px] font-display font-semibold uppercase tracking-widest text-smash-purple hover:underline">Claim spot &rarr;</button>
                                     </div>
                                  )}
                               </div>
@@ -455,25 +450,22 @@ const ArtistProfile: React.FC = () => {
                         ))}
                      </motion.div>
                   )}
-
-                  {activeTab === 'about' && (
-                     <motion.div key="about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        <section className="bg-bg-surface border border-border-default p-8 md:p-12 rounded-[14px] space-y-8 shadow-sm">
-                           <div className="flex items-center gap-3">
-                              <MessageSquare className="text-smash-purple" size={24} />
-                              <h2 className="text-[28px] font-display font-bold uppercase tracking-tight text-text-primary">About {artist.stage_name}</h2>
-                           </div>
-                           <p className="text-[16px] text-text-secondary font-sans leading-relaxed max-w-3xl">
-                              "{artist.bio || "Crafting something legendary. Stay tuned for the official narrative."}"
-                           </p>
-                           <div className="flex gap-3 pt-8 border-t border-border-default flex-wrap">
-                              {artist.instagram && <SocialLink href={artist.instagram} icon={<Instagram size={16} />} label="Instagram" />}
-                              {artist.twitter && <SocialLink href={artist.twitter} icon={<Twitter size={16} />} label="X Studio" />}
-                           </div>
-                        </section>
-                     </motion.div>
-                  )}
                </AnimatePresence>
+
+               {/* About Section moved to bottom card */}
+               <section className="bg-bg-surface border border-border-default p-8 md:p-12 rounded-[14px] space-y-8 shadow-sm mt-12">
+                  <div className="flex items-center gap-3">
+                     <MessageSquare className="text-smash-purple" size={24} />
+                     <h2 className="text-[22px] font-studio font-bold uppercase tracking-tight text-white">About {artist.stage_name}</h2>
+                  </div>
+                  <p className="text-[14px] text-text-secondary font-sans leading-relaxed max-w-3xl">
+                     "{artist.bio || "Crafting something legendary. Stay tuned for the official narrative."}"
+                  </p>
+                  <div className="flex gap-3 pt-8 border-t border-border-default flex-wrap">
+                     {artist.instagram && <SocialLink href={artist.instagram} icon={<Instagram size={16} />} label="Instagram" />}
+                     {artist.twitter && <SocialLink href={artist.twitter} icon={<Twitter size={16} />} label="X Studio" />}
+                  </div>
+               </section>
             </div>
 
             <aside className="lg:col-span-4 space-y-8">
@@ -486,21 +478,21 @@ const ArtistProfile: React.FC = () => {
                   <div className="space-y-4">
                      <div className="flex justify-between items-end border-b border-border-default pb-4">
                         <div className="flex flex-col">
-                           <p className="text-[10px] font-sans font-medium text-text-muted uppercase tracking-widest mb-0.5">Monthly Reach</p>
+                           <p className="text-[10px] font-display font-medium text-text-muted uppercase tracking-widest mb-0.5">Monthly Reach</p>
                            <p className="text-[20px] font-display font-bold text-text-primary">{(artist.followers_count || 0) * 12 + 500}+</p>
                         </div>
                         <TrendingUp size={18} className="text-smash-green mb-1" />
                      </div>
                      <div className="flex justify-between items-end border-b border-border-default pb-4">
                         <div className="flex flex-col">
-                           <p className="text-[10px] font-sans font-medium text-text-muted uppercase tracking-widest mb-0.5">Total Impact</p>
+                           <p className="text-[10px] font-display font-medium text-text-muted uppercase tracking-widest mb-0.5">Total Impact</p>
                            <p className="text-[20px] font-display font-bold text-text-primary">{(artist.total_plays || 0).toLocaleString()}</p>
                         </div>
                         <Music2 size={18} className="text-smash-purple mb-1" />
                      </div>
                      <div className="flex justify-between items-end">
                         <div className="flex flex-col">
-                           <p className="text-[10px] font-sans font-medium text-text-muted uppercase tracking-widest mb-0.5">Catalog Size</p>
+                           <p className="text-[10px] font-display font-medium text-text-muted uppercase tracking-widest mb-0.5">Catalog Size</p>
                            <p className="text-[20px] font-display font-bold text-text-primary">{songs.length} Tracks</p>
                         </div>
                         <Disc size={18} className="text-smash-orange mb-1" />

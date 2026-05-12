@@ -74,25 +74,25 @@ const Profile: React.FC = () => {
   if (!userProfile) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-12 text-center">
-        <h2 className="text-4xl font-black font-display italic uppercase mb-4 text-smash-gray">Access Denied</h2>
+        <h2 className="text-[32px] font-studio font-bold uppercase mb-4 text-text-primary">Access Denied</h2>
         <p className="mb-8">Please sign in to view your profile.</p>
         <button onClick={() => navigate('/auth/listener')} className="btn-smash-orange">Sign In</button>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-24">
+   return (
+    <div className="max-w-6xl mx-auto space-y-8 md:space-y-12 pb-24 px-4 md:px-0">
       {/* Profile Header */}
-      <div className="relative group mb-16">
+      <div className="relative group mb-20 md:mb-16">
          <div 
-           className="w-full h-[160px] rounded-[14px] overflow-hidden" 
-           style={{ background: 'linear-gradient(135deg, rgba(255,95,0,0.15), rgba(124,58,237,0.08))' }} 
+           className="w-full h-[120px] md:h-[160px] rounded-b-[14px] md:rounded-[14px] overflow-hidden" 
+           style={{ background: 'linear-gradient(135deg, rgba(255,95,0,0.2), rgba(124,58,237,0.1))' }} 
          />
          
-         <div className="absolute -bottom-10 left-12 z-20 flex items-end gap-6">
+         <div className="absolute -bottom-12 left-1/2 md:left-12 -translate-x-1/2 md:translate-x-0 z-20 flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 w-full px-4 md:px-0">
             <div 
-              className="w-[96px] h-[96px] rounded-full border-[3px] border-bg-page overflow-hidden relative group cursor-pointer"
+              className="w-[100px] h-[100px] md:w-[110px] md:h-[110px] rounded-full border-[4px] border-bg-page overflow-hidden relative group cursor-pointer shadow-xl bg-bg-surface"
               onClick={() => fileInputRef.current?.click()}
             >
                <Avatar src={userProfile.avatar_url} name={userProfile.full_name} className="w-full h-full rounded-full" />
@@ -100,158 +100,162 @@ const Profile: React.FC = () => {
                   <Camera className="text-white" size={24} />
                </div>
             </div>
-            <div className="pb-2 space-y-1">
-               <div className="flex items-center gap-3">
-                  <h1 className="text-[24px] font-studio font-bold text-text-primary">{userProfile.full_name || 'Muzic Listener'}</h1>
-                  {role === 'artist' && <span className="px-2.5 py-0.5 bg-smash-purple text-white text-[11px] font-display font-medium rounded-full uppercase tracking-wide">Artist</span>}
+            <div className="md:pb-2 space-y-1 text-center md:text-left">
+               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
+                  <h1 className="text-[20px] md:text-[28px] font-studio font-bold text-text-primary uppercase tracking-tight">{userProfile.full_name || 'Listener'}</h1>
+                  {role === 'artist' && (
+                    <span className="px-2.5 py-0.5 bg-smash-purple text-white text-[9px] md:text-[11px] font-display font-medium rounded-full uppercase tracking-wide">
+                      Artist Account
+                    </span>
+                  )}
                </div>
-               <p className="text-[13px] font-display font-normal text-text-muted">{user?.email}</p>
+               <p className="text-[12px] md:text-[14px] font-display font-normal text-text-muted">{user?.email}</p>
             </div>
          </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-16 px-4 md:px-0">
-        {/* Account Details Form */}
-        <div className="lg:col-span-2 space-y-8">
-           <section className="bg-bg-surface border border-border-default rounded-[14px] p-6 md:p-8 space-y-8">
-              <div className="flex items-center justify-between">
-                 <h2 className="text-[20px] font-studio font-bold text-text-primary">PERSONAL INFO</h2>
-                 <User size={24} className="text-text-muted" />
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12 md:mt-16">
+         {/* Account Details Form */}
+         <div className="lg:col-span-2 space-y-6 md:space-y-8">
+            <section className="bg-bg-surface border border-border-default rounded-[12px] md:rounded-[14px] p-5 md:p-8 space-y-6 md:space-y-8">
+               <div className="flex items-center justify-between">
+                  <h2 className="text-lg md:text-[20px] font-studio font-bold text-text-primary">PERSONAL INFO</h2>
+                  <User size={20} className="text-text-muted md:w-6 md:h-6" />
+               </div>
 
-              <form onSubmit={handleUpdateProfile} className="space-y-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2 col-span-full">
-                        <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Profile Picture</label>
-                        <div 
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-4 p-4 bg-bg-elevated border border-border-default rounded-[10px] group hover:border-smash-orange/40 transition-all cursor-pointer min-h-[80px]"
-                        >
-                           <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
-                              <Avatar src={userProfile.avatar_url} name={userProfile.full_name} className="w-full h-full" />
-                           </div>
-                           <div className="flex-1">
-                              <p className="text-[14px] font-display font-semibold text-text-primary mb-1">Click to upload new image</p>
-                              <p className="text-[12px] font-sans text-text-muted">JPG, PNG or GIF up to 5MB</p>
-                              <input 
-                                ref={fileInputRef}
-                                name="avatar_file"
-                                type="file" 
-                                accept="image/*"
-                                className="hidden" 
-                              />
-                           </div>
-                           <Upload size={20} className="text-text-muted group-hover:text-smash-orange transition-colors mr-2" />
+               <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-2 col-span-full">
+                         <label className="block text-[10px] md:text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-1 md:mb-2">Profile Picture</label>
+                         <div 
+                           onClick={() => fileInputRef.current?.click()}
+                           className="flex items-center gap-4 p-4 bg-bg-elevated border border-border-default rounded-[10px] group hover:border-smash-orange/40 transition-all cursor-pointer min-h-[70px]"
+                         >
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden shrink-0">
+                               <Avatar src={userProfile.avatar_url} name={userProfile.full_name} className="w-full h-full" />
+                            </div>
+                            <div className="flex-1">
+                               <p className="text-xs md:text-[14px] font-display font-semibold text-text-primary mb-0.5">Change Avatar</p>
+                               <p className="text-[10px] md:text-[12px] font-sans text-text-muted leading-none">JPG, PNG or GIF up to 5MB</p>
+                               <input 
+                                 ref={fileInputRef}
+                                 name="avatar_file"
+                                 type="file" 
+                                 accept="image/*"
+                                 className="hidden" 
+                               />
+                            </div>
+                            <Upload size={18} className="text-text-muted group-hover:text-smash-orange transition-colors mr-1" />
+                         </div>
+                     </div>
+
+                     <div className="space-y-2">
+                        <label className="block text-[10px] md:text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-1 md:mb-2">Full Name</label>
+                        <input 
+                          name="full_name"
+                          defaultValue={userProfile.full_name}
+                          className="w-full h-[40px] md:h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-xs md:text-[14px] font-display text-text-primary outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all font-medium" 
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="block text-[10px] md:text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-1 md:mb-2">Email Address</label>
+                        <div className="w-full h-[40px] md:h-[44px] bg-bg-elevated/50 border border-border-default rounded-[10px] px-4 flex items-center text-xs md:text-[14px] font-display text-text-muted opacity-80 select-none">
+                           {user?.email}
                         </div>
-                    </div>
+                     </div>
+                     <div className="space-y-2">
+                        <label className="block text-[10px] md:text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-1 md:mb-2">Subscription Plan</label>
+                        <div className="w-full h-[40px] md:h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-xs md:text-[14px] font-display font-semibold text-text-primary flex items-center gap-2">
+                           <Sparkles size={14} className="text-smash-orange" />
+                           {userProfile.subscription_tier || 'Free'}
+                        </div>
+                     </div>
+                     <div className="space-y-2">
+                        <label className="block text-[10px] md:text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-1 md:mb-2">Account Type</label>
+                        <div className="w-full h-[40px] md:h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-xs md:text-[14px] font-display text-text-primary flex items-center gap-2">
+                           <Shield size={14} className={role === 'artist' ? "text-smash-purple" : "text-smash-orange"} />
+                           {role === 'artist' ? 'Professional Artist' : role === 'pending' ? 'Application Pending' : 'Standard Listener'}
+                        </div>
+                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                       <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Full Name</label>
-                       <input 
-                         name="full_name"
-                         defaultValue={userProfile.full_name}
-                         className="w-full h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-[14px] font-display text-text-primary outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all" 
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Email Address</label>
-                       <div className="w-full h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 flex items-center text-[14px] font-display text-text-muted opacity-70">
-                          {user?.email}
-                       </div>
-                    </div>
-                    <div className="space-y-2">
-                       <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Subscription Plan</label>
-                       <div className="w-full h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-[14px] font-display font-semibold text-text-primary flex items-center gap-2">
-                          <Sparkles size={16} className="text-smash-orange" />
-                          {userProfile.subscription_tier || 'Free'}
-                       </div>
-                    </div>
-                    <div className="space-y-2">
-                       <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Account Type</label>
-                       <div className="w-full h-[44px] bg-bg-elevated border border-border-default rounded-[10px] px-4 text-[14px] font-display text-text-primary flex items-center gap-2">
-                          <Shield size={16} className={role === 'artist' ? "text-smash-purple" : "text-smash-orange"} />
-                          {role === 'artist' ? 'Professional Artist' : role === 'pending' ? 'Application Pending' : 'Standard Listener'}
-                       </div>
-                    </div>
-                 </div>
+                  <button 
+                    disabled={loading || uploading}
+                    className="w-full h-[44px] md:h-[48px] bg-smash-orange text-white rounded-[10px] font-display font-semibold text-[11px] md:text-[13px] uppercase tracking-widest hover:bg-smash-orange/90 transition-colors disabled:opacity-50 mt-2"
+                  >
+                    {loading || uploading ? 'SAVING...' : 'UPDATE PROFILE'}
+                  </button>
+               </form>
+            </section>
 
-                 <button 
-                   disabled={loading || uploading}
-                   className="w-full h-[48px] bg-smash-orange text-white rounded-[10px] font-display font-semibold text-[13px] uppercase tracking-widest hover:bg-smash-orange/90 transition-colors disabled:opacity-50 mt-4"
-                 >
-                   {loading || uploading ? 'SAVING...' : 'UPDATE PROFILE'}
-                 </button>
-              </form>
-           </section>
+            <section className="bg-bg-surface border border-border-default rounded-[12px] md:rounded-[14px] p-5 md:p-8 space-y-5 md:space-y-6">
+               <h2 className="text-lg md:text-[20px] font-studio font-bold text-text-primary uppercase tracking-tight">Quick Actions</h2>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <button onClick={() => navigate('/library')} className="p-3 md:p-4 bg-bg-elevated border border-border-default rounded-[10px] flex items-center justify-between group hover:border-smash-orange/30 transition-all text-left">
+                     <div className="flex items-center gap-3">
+                        <ShoppingBag className="text-smash-orange shrink-0" size={18} />
+                        <span className="font-display font-medium text-xs md:text-[13px] text-text-primary">My Collection</span>
+                     </div>
+                     <ChevronRight size={16} className="text-text-muted group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  {role === 'artist' && (
+                     <button onClick={() => navigate('/artist-hub')} className="p-3 md:p-4 bg-smash-purple/10 border border-smash-purple/20 rounded-[10px] flex items-center justify-between group hover:bg-smash-purple/20 transition-all text-left">
+                        <div className="flex items-center gap-3">
+                           <Sparkles className="text-smash-purple shrink-0" size={18} />
+                           <span className="font-display font-medium text-xs md:text-[13px] text-smash-purple">Artist Dashboard</span>
+                        </div>
+                        <ExternalLink className="text-smash-purple" size={14} />
+                     </button>
+                  )}
+                  <button className="p-3 md:p-4 bg-bg-elevated border border-border-default rounded-[10px] flex items-center justify-between group hover:border-smash-orange/30 transition-all text-left">
+                     <div className="flex items-center gap-3">
+                        <CreditCard className="text-smash-green shrink-0" size={18} />
+                        <span className="font-display font-medium text-xs md:text-[13px] text-text-primary">Billing & Plans</span>
+                     </div>
+                     <ChevronRight size={16} className="text-text-muted group-hover:translate-x-1 transition-transform" />
+                  </button>
+               </div>
+            </section>
+         </div>
 
-           <section className="bg-bg-surface border border-border-default rounded-[14px] p-6 md:p-8 space-y-6">
-              <h2 className="text-[20px] font-studio font-bold text-text-primary">QUICK ACTIONS</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <button onClick={() => navigate('/library')} className="p-4 bg-bg-elevated border border-border-default rounded-[10px] flex items-center justify-between group hover:border-smash-orange/30 transition-all">
-                    <div className="flex items-center gap-3">
-                       <ShoppingBag className="text-smash-orange shrink-0" size={20} />
-                       <span className="font-display font-medium text-[13px] text-text-primary">View Purchases</span>
-                    </div>
-                    <ChevronRight size={18} className="text-text-muted group-hover:translate-x-1 transition-transform" />
-                 </button>
-                 {role === 'artist' && (
-                    <button onClick={() => navigate('/artist-hub')} className="p-4 bg-smash-purple/10 border border-smash-purple/20 rounded-[10px] flex items-center justify-between group hover:bg-smash-purple/20 transition-all">
-                       <div className="flex items-center gap-3">
-                          <Sparkles className="text-smash-purple shrink-0" size={20} />
-                          <span className="font-display font-medium text-[13px] text-smash-purple">Artist Dashboard</span>
-                       </div>
-                       <ExternalLink className="text-smash-purple" size={16} />
-                    </button>
-                 )}
-                 <button className="p-4 bg-bg-elevated border border-border-default rounded-[10px] flex items-center justify-between group hover:border-smash-orange/30 transition-all">
-                    <div className="flex items-center gap-3">
-                       <CreditCard className="text-smash-green shrink-0" size={20} />
-                       <span className="font-display font-medium text-[13px] text-text-primary">Billing & Subscription</span>
-                    </div>
-                    <ChevronRight size={18} className="text-text-muted group-hover:translate-x-1 transition-transform" />
-                 </button>
-              </div>
-           </section>
-        </div>
+         {/* Sidebar Controls */}
+         <div className="space-y-6">
+            <div className="bg-bg-surface border border-smash-orange/20 rounded-[12px] md:rounded-[14px] p-5 shadow-sm">
+               <h3 className="text-xs md:text-[14px] font-display font-semibold mb-3 flex items-center gap-2 text-text-primary">
+                  PLAN: <span className="text-smash-orange">{userProfile.subscription_tier || 'Free'}</span>
+               </h3>
+               <p className="text-[12px] md:text-[14px] text-text-secondary font-sans leading-relaxed mb-6">
+                  Experience MK 0% ads, high fidelity audio, and offline mode.
+               </p>
+               <button 
+                 onClick={() => navigate('/pricing')} 
+                 className="w-full h-[40px] md:h-[44px] px-5 bg-transparent border border-border-default text-text-primary rounded-[10px] font-display font-semibold text-[10px] md:text-[12px] uppercase tracking-widest hover:border-smash-orange hover:text-smash-orange transition-colors"
+               >
+                  UPGRADE NOW
+               </button>
+            </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-           <div className="bg-bg-surface border border-smash-orange/20 rounded-[14px] p-5">
-              <h3 className="text-[14px] font-display font-semibold mb-3 flex items-center gap-2 text-text-primary">
-                 Plan: <span className="text-smash-orange">{userProfile.subscription_tier || 'Free'}</span>
-              </h3>
-              <p className="text-[14px] text-text-secondary font-sans leading-[1.7] mb-6">
-                 Enjoy high fidelity audio, unlimited skips and offline listening by upgrading your plan.
-              </p>
-              <button 
-                onClick={() => navigate('/pricing')} 
-                className="w-full h-[44px] px-5 bg-transparent border border-border-default text-text-primary rounded-[10px] font-display font-semibold text-[12px] uppercase tracking-widest hover:border-smash-orange hover:text-smash-orange transition-colors"
-              >
-                 UPGRADE PLAN
-              </button>
-           </div>
+            <div className="bg-bg-surface border border-border-default rounded-[12px] md:rounded-[14px] p-5 space-y-4 md:space-y-5 shadow-sm">
+               <h4 className="text-[9px] md:text-[11px] font-display font-semibold uppercase tracking-widest text-text-muted">Settings</h4>
+               <button className="w-full flex items-center justify-between group">
+                  <span className="font-display font-medium text-xs md:text-[14px] text-text-primary">Security</span>
+                  <Settings size={16} className="text-text-muted group-hover:rotate-90 transition-transform" />
+               </button>
+               <button className="w-full flex items-center justify-between group">
+                  <span className="font-display font-medium text-xs md:text-[14px] text-text-primary">Notifications</span>
+                  <div className="w-8 h-4 md:w-10 md:h-5 bg-smash-orange rounded-full relative">
+                     <div className="absolute right-0.5 top-0.5 md:right-1 md:top-1 w-3 h-3 bg-white rounded-full shadow-sm" />
+                  </div>
+               </button>
+            </div>
 
-           <div className="bg-bg-surface border border-border-default rounded-[14px] p-5 space-y-5">
-              <h4 className="text-[11px] font-display font-semibold uppercase tracking-widest text-text-muted">Security</h4>
-              <button className="w-full flex items-center justify-between group">
-                 <span className="font-display font-medium text-[14px] text-text-primary">Change Password</span>
-                 <Settings size={18} className="text-text-muted group-hover:rotate-90 transition-transform" />
-              </button>
-              <button className="w-full flex items-center justify-between group">
-                 <span className="font-display font-medium text-[14px] text-text-primary">Email Notifications</span>
-                 <div className="w-10 h-5 bg-smash-orange rounded-full relative">
-                    <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm" />
-                 </div>
-              </button>
-           </div>
-
-           <button 
-             onClick={handleSignOut}
-             className="w-full h-[44px] border border-smash-red/20 text-smash-red hover:bg-smash-red hover:text-white rounded-[10px] font-display font-semibold text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-           >
-             <LogOut size={16} /> SIGN OUT
-           </button>
-        </div>
+            <button 
+              onClick={handleSignOut}
+              className="w-full h-[40px] md:h-[44px] border border-smash-red/20 text-smash-red hover:bg-smash-red hover:text-white rounded-[10px] font-display font-semibold text-[10px] md:text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <LogOut size={16} /> SIGN OUT
+            </button>
+         </div>
       </div>
     </div>
   );
