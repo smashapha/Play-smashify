@@ -17,19 +17,14 @@ const TopBar = () => {
   const accentColor = role === 'artist' ? 'text-smash-purple' : 'text-smash-orange';
 
   return (
-    <div className="h-16 flex items-center justify-between px-4 lg:px-8 bg-bg-page/80 backdrop-blur-xl sticky top-0 z-30 border-b border-border-subtle">
-      {/* Mobile Logo/Title */}
-      <div className="md:hidden flex items-center gap-2">
-         <span className={`font-studio font-black text-lg tracking-tighter ${role === 'artist' ? 'text-smash-purple' : 'text-smash-orange'}`}>SMASHIFY</span>
-      </div>
-
+    <div className="h-16 flex items-center justify-between px-4 lg:px-8 bg-bg-page/90 backdrop-blur-xl sticky top-0 z-30 border-b border-border-subtle">
       <div className="flex-1 max-w-xl hidden md:block">
         <form className="relative group" onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
           const q = formData.get('q');
           if (q) {
-             navigate(`/discover?search=${encodeURIComponent(q.toString())}`);
+             navigate(`/discover?q=${encodeURIComponent(q.toString())}`);
           }
         }}>
            <Search size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:${accentColor} transition-colors`} />
@@ -37,22 +32,13 @@ const TopBar = () => {
             type="text" 
             name="q"
             placeholder="Search artists, songs, podcasts..." 
-            className="w-full bg-border-subtle border border-border-default rounded-[10px] h-[40px] pl-12 pr-4 text-sm font-display focus:outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all placeholder:text-text-muted/50"
+            className="w-full bg-border-subtle border border-border-default rounded-[10px] h-[44px] pl-12 pr-4 text-sm font-display focus:outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all"
            />
         </form>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4 ml-auto">
-        <NavLink 
-          to="/discover" 
-          className="p-2.5 md:hidden text-text-muted hover:text-text-primary transition-colors"
-        >
-          <Search size={20} strokeWidth={2} />
-        </NavLink>
-        
-        <div className="hidden sm:block">
-          <ThemeToggle />
-        </div>
+      <div className="flex items-center gap-4 ml-auto">
+        <ThemeToggle />
         <button 
            onClick={toggleDataSaver}
            className="p-2.5 bg-bg-elevated border border-border-subtle rounded-[8px] text-text-muted hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-smash-orange focus:ring-offset-2 focus:ring-offset-bg-page"
@@ -306,22 +292,24 @@ const MainLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-bg-page text-text-primary flex relative">
+    <div className="min-h-screen bg-bg-page text-text-primary flex">
       {/* Sidebar navigation */}
       <div className="hidden md:block fixed left-0 top-0 bottom-0 z-40 transition-all duration-300">
         <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
       </div>
 
       {/* Main content area */}
-      <div 
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-          isSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[240px]'
-        }`}
+      <motion.div 
+        animate={{ 
+          marginLeft: typeof window !== 'undefined' && window.innerWidth < 768 ? 0 : (isSidebarCollapsed ? 72 : 240) 
+        }}
+        transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+        className="flex-1 flex flex-col min-w-0 md:ml-0 transition-all"
       >
         <TopBar />
         
         {/* Content container with padding for sticky player and mobile tab bar */}
-        <main className="flex-1 w-full pb-[150px] md:pb-[100px]">
+        <main className="flex-1 w-full pb-[144px] md:pb-[80px]">
           <AnimatePresence mode="wait">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -334,7 +322,7 @@ const MainLayout: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </main>
-      </div>
+      </motion.div>
 
       <GlobalPlayer />
       <BottomNav />

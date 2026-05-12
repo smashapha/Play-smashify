@@ -180,7 +180,7 @@ const ArtistProfile: React.FC = () => {
    return (
       <div className="space-y-8 md:space-y-12 pb-32">
          {/* Premium Cinematic Hero */}
-         <div className="relative h-[480px] md:h-[650px] overflow-hidden shadow-lg mt-0 md:mt-4 group md:rounded-[20px]">
+         <div className="relative h-[420px] md:h-[650px] overflow-hidden shadow-lg mt-0 md:mt-4 group md:rounded-[20px]">
             <div className="absolute inset-0 bg-gradient-to-t from-bg-page via-bg-page/40 to-transparent z-10" />
             <motion.div 
                initial={{ scale: 1.15, opacity: 0 }}
@@ -193,25 +193,25 @@ const ArtistProfile: React.FC = () => {
                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
                  alt=""
                />
-               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] md:backdrop-blur-[1px]" />
+               <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
             </motion.div>
             
             {/* Overlay Content */}
-            <div className="relative z-20 h-full flex flex-col justify-end p-6 md:p-12 lg:p-20">
-               <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-12">
+            <div className="relative z-20 h-full flex flex-col justify-end p-5 md:p-12 lg:p-20">
+               <div className="flex flex-col md:flex-row items-center md:items-end gap-5 md:gap-12">
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="w-28 h-28 md:w-56 md:h-56 rounded-full border-4 md:border-[8px] border-bg-page/20 backdrop-blur-xl overflow-hidden shadow-2xl shrink-0 group/av"
+                    className="w-24 h-24 md:w-56 md:h-56 rounded-full border-4 md:border-[8px] border-bg-page/40 backdrop-blur-md overflow-hidden shadow-xl shrink-0 group/av"
                   >
                      <Avatar src={artist.avatar_url} name={artist.stage_name || artist.full_name} className="w-full h-full scale-110 group-hover/av:scale-110 transition-all duration-700 object-cover" />
                   </motion.div>
                   
-                  <div className="flex-1 text-center md:text-left space-y-4 md:space-y-6">
+                  <div className="flex-1 text-center md:text-left space-y-3 md:space-y-5">
                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
                         {artist.verified && (
-                           <span className="px-3 py-1 bg-smash-cyan text-white rounded-full text-[9px] md:text-[10px] font-studio font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                           <span className="px-2 py-0.5 bg-smash-cyan/10 text-smash-cyan border border-smash-cyan/20 rounded-full text-[8px] md:text-[10px] font-display font-semibold uppercase tracking-widest flex items-center gap-1 shadow-sm">
                              <CheckCircle2 size={10} className="md:w-3 md:h-3" /> Verified
                            </span>
                         )}
@@ -222,26 +222,29 @@ const ArtistProfile: React.FC = () => {
                      <motion.h1 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-[clamp(48px,8vw,130px)] font-studio font-black uppercase tracking-tighter leading-[0.8] text-white drop-shadow-2xl italic"
+                        className="text-[32px] md:text-[clamp(48px,8vw,130px)] font-studio font-black uppercase tracking-tighter leading-[0.9] text-white drop-shadow-xl"
                      >
                         {artist.stage_name}
                      </motion.h1>
                      
-                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 pt-2">
+                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 pt-1">
                         <button 
                            onClick={handleFollow} 
                            disabled={followLoading}
-                           className={`h-11 md:h-[44px] px-6 md:px-8 rounded-xl font-studio font-black uppercase tracking-[0.2em] text-[10px] md:text-[12px] transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl ${
+                           className={`h-[40px] md:h-[44px] px-5 md:px-6 rounded-[8px] md:rounded-[10px] font-studio font-bold uppercase tracking-widest text-[10px] md:text-[12px] transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm ${
                               isFollowing 
-                                 ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white' 
-                                 : 'bg-smash-orange text-white hover:scale-105'
+                                 ? 'bg-bg-elevated border border-border-default text-text-primary hover:bg-border-default' 
+                                 : 'bg-smash-orange text-white hover:bg-smash-orange/90'
                            }`}
                         >
-                           {isFollowing ? <Check size={14} /> : <UserPlus size={14} />}
-                           {isFollowing ? 'Joined' : 'Join'}
+                           {isFollowing ? <Check size={14} className="md:w-4 md:h-4" /> : <UserPlus size={14} className="md:w-4 md:h-4" />}
+                           {isFollowing ? 'Following' : 'Follow'}
                         </button>
-                        <button onClick={() => setShowSupportModal(true)} className="h-11 md:h-[44px] px-6 bg-white/10 backdrop-blur-md border border-white/10 text-white rounded-xl font-studio font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/20 transition-all flex items-center gap-2">
-                           <Heart size={14} className="text-smash-red fill-current" /> Support
+                        <button onClick={() => setShowSupportModal(true)} className="h-[40px] md:h-[44px] px-5 md:px-6 bg-bg-elevated/80 backdrop-blur-md border border-border-default text-text-primary rounded-[8px] md:rounded-[10px] font-display font-semibold uppercase tracking-widest text-[10px] md:text-[11px] hover:bg-bg-elevated hover:text-smash-orange transition-all flex items-center gap-2">
+                           <Heart size={14} className="text-smash-orange md:w-4 md:h-4" /> Support
+                        </button>
+                        <button onClick={handleShare} className="w-[40px] h-[40px] md:w-[44px] md:h-[44px] bg-bg-elevated/80 backdrop-blur-md border border-border-default text-text-primary rounded-[8px] md:rounded-[10px] flex items-center justify-center hover:bg-bg-elevated transition-colors">
+                           <Share size={16} />
                         </button>
                      </div>
                   </div>

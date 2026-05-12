@@ -1,5 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+
+console.log('--- SERVER.TS BOOTING ---');
+
 import { createServer as createViteServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import path from 'path';
@@ -8,6 +12,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -15,18 +27,40 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  console.log(`NODE_ENV is: ${process.env.NODE_ENV}`);
+
   app.use(cors());
   app.use(express.json());
+
+  // Health check
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      time: new Date().toISOString(),
+      supabaseReady: !!supabaseAdmin,
+      env: process.env.NODE_ENV
+    });
+  });
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const PAYCHANGU_SECRET_KEY = process.env.PAYCHANGU_SECRET_KEY;
   const APP_URL = process.env.APP_URL || process.env.VITE_APP_URL || `http://localhost:${PORT}`;
 
-  const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+  let supabaseAdmin: any = null;
+  if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    } catch (err) {
+      console.error('Failed to initialize Supabase Admin:', err);
+    }
+  } else {
+    console.warn('Supabase credentials missing. Admin operations will fail.');
+  }
 
   // Helper to verify user
   const verifyUser = async (req: express.Request) => {
+    if (!supabaseAdmin) return null;
     const authHeader = req.headers.authorization;
     if (!authHeader) return null;
     const token = authHeader.replace('Bearer ', '');
@@ -199,6 +233,7 @@ async function startServer() {
   // 3. Payout Webhook
   app.post('/api/functions/payout-webhook', async (req, res) => {
     try {
+      if (!supabaseAdmin) throw new Error('Supabase Admin not initialized');
       const { reference, status, amount } = req.body;
 
       const { data: payout, error: payoutError } = await supabaseAdmin
@@ -290,6 +325,7 @@ async function startServer() {
   // 5. PayChangu Webhook (previously 3)
   app.post('/api/paychangu-webhook', async (req, res) => {
     try {
+      if (!supabaseAdmin) throw new Error('Supabase Admin not initialized');
       const payload = req.body;
       const { tx_ref, status, amount } = payload;
       
@@ -393,23 +429,34 @@ async function startServer() {
     }
   });
 
-  // --- VITE MIDDLEWARE ---
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
+  // --- VITE MIDDLEWARE OR STATIC SERVING ---
+  const distPath = path.resolve(__dirname, 'dist');
+  const indexHtmlExists = fs.existsSync(path.join(distPath, 'index.html'));
+
+  if (process.env.NODE_ENV === 'production' || indexHtmlExists) {
+    console.log('Serving static files from dist/');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
+  } else {
+    console.log('Starting Vite in middleware mode...');
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } catch (err) {
+      console.error('Vite failed to initialize:', err);
+      res.status(500).send('Vite failed to initialize');
+    }
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`--- SERVER READY ---`);
+    console.log(`URL: http://localhost:${PORT}`);
+    console.log(`MODE: ${indexHtmlExists ? 'Production (Static)' : 'Development (Vite)'}`);
   });
 }
 

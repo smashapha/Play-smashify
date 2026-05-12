@@ -51,16 +51,7 @@
   }
 
   body {
-    @apply bg-bg-page text-text-primary font-sans antialiased selection:bg-smash-orange/30 overflow-x-hidden;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    @apply bg-bg-page text-text-primary font-sans antialiased selection:bg-smash-orange/30;
   }
 
   h1, h2, h3, h4, h5, h6 {

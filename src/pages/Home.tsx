@@ -233,21 +233,19 @@ const Home: React.FC = () => {
       )}
       
       {/* Welcome Message & Search */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-10">
-        <div className="space-y-1">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
           {userProfile ? (
             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}>
-               <h1 className="text-[20px] md:text-[28px] font-studio font-black text-text-primary mb-0 leading-tight tracking-tight uppercase">
-                  {getGreeting()}, <span className="text-smash-orange">{userProfile.full_name?.split(' ')[0] || 'Listener'}</span>
+               <h1 className="text-[24px] font-studio font-bold text-text-primary mb-0 leading-tight">
+                  {getGreeting()}, <span className="text-smash-orange">{userProfile.full_name?.split(' ')[0] || 'Listener'}</span>.
                </h1>
-               <p className="text-[11px] md:text-sm font-display font-medium text-text-muted uppercase tracking-widest opacity-60">Your rhythm, your rules.</p>
             </motion.div>
           ) : (
             <div>
-               <h1 className="text-[20px] md:text-[28px] font-studio font-black text-text-primary mb-0 leading-tight uppercase">
+               <h1 className="text-[24px] font-studio font-bold text-text-primary mb-0 leading-tight">
                   Welcome to <span className="text-smash-orange">Smashify</span>
                </h1>
-               <p className="text-[11px] md:text-sm font-display font-medium text-text-muted uppercase tracking-widest opacity-60">Malaŵi's No.1 Music Choice</p>
             </div>
           )}
         </div>
@@ -335,41 +333,37 @@ const Home: React.FC = () => {
       {/* Featured Banner */}
       {featured && (
         <motion.section 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="relative h-[400px] md:h-[320px] bg-bg-surface rounded-3xl overflow-hidden mb-16 group cursor-pointer border border-white/5 flex flex-col md:flex-row shadow-2xl"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative h-[300px] bg-bg-surface rounded-[20px] overflow-hidden mb-12 group cursor-pointer border border-white/5 flex flex-col md:flex-row"
           onClick={() => navigate(`/artist/${featured.artist_id}`)}
         >
-           {/* Background Image with optimized overlays */}
-           <div className="absolute inset-0">
+           {/* Image on Right */}
+           <div className="absolute inset-0 md:left-1/2">
               <img 
                 src={featured.cover_url} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[12s] ease-out" 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[8s]" 
                 alt="" 
                 referrerPolicy="no-referrer"
               />
-              {/* Complex gradient for readability on any image */}
-              <div className="absolute inset-0 bg-gradient-to-t from-bg-page via-bg-page/40 to-transparent md:hidden" />
-              <div className="absolute inset-0 bg-gradient-to-r from-bg-page via-bg-page/60 to-transparent hidden md:block" />
-              <div className="absolute inset-0 bg-black/20 opacity-40 group-hover:opacity-10 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-bg-surface via-bg-surface/80 to-transparent" />
            </div>
            
-           {/* Content Overlay */}
-           <div className="relative z-10 w-full md:w-2/3 h-full flex flex-col justify-end md:justify-center p-8 md:p-12">
-              <div className="flex items-center gap-2 mb-3 md:mb-5">
-                 <div className="px-3 py-1 bg-smash-orange text-white text-[10px] font-display font-black rounded-lg uppercase tracking-[0.2em] shadow-lg animate-pulse">
-                    HOT DROPS
+           {/* Content on Left half */}
+           <div className="relative z-10 w-full md:w-1/2 h-full flex flex-col justify-center p-6 md:p-10">
+              <div className="flex items-center gap-2 mb-4">
+                 <div className="px-2.5 py-1 bg-smash-purple text-white text-[9px] font-display font-semibold rounded-sm uppercase tracking-widest shadow-sm">
+                    Featured
                  </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-studio font-black tracking-tighter leading-[0.9] mb-3 text-white uppercase italic drop-shadow-2xl">
+              <h1 className="text-[28px] md:text-[44px] font-studio font-extrabold tracking-tight leading-[1.1] mb-2 text-white line-clamp-2 uppercase">
                  {featured.title}
               </h1>
-              <p className="text-sm md:text-lg font-display text-text-muted mb-8 line-clamp-1 uppercase tracking-[0.15em] font-bold opacity-80">{featured.artist_name}</p>
+              <p className="text-[13px] md:text-[14px] font-display text-text-muted mb-6 md:mb-8 line-clamp-1 uppercase tracking-wider">{featured.artist_name}</p>
               
               <div className="flex">
-                 <button className="px-8 py-4 bg-white text-black text-xs font-display font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-smash-orange hover:text-white transition-all transform hover:scale-105 flex items-center gap-3 shadow-2xl active:scale-95">
-                    <Flame size={18} fill="currentColor" /> Play Now
+                 <button className="px-5 md:px-6 py-2.5 md:py-3 bg-white text-black text-[11px] md:text-[12px] font-display font-bold uppercase tracking-widest rounded-full hover:bg-white/90 transition-all flex items-center gap-2">
+                    <Flame size={16} /> Play Now
                  </button>
               </div>
            </div>

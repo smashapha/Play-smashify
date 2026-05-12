@@ -22,7 +22,7 @@ const Discover: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { userProfile } = useAuth();
-  const initialQuery = searchParams.get('search') || searchParams.get('q') || '';
+  const initialQuery = searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [results, setResults] = useState<{ songs: Song[], artists: UserProfile[] }>({ songs: [], artists: [] });
@@ -48,7 +48,7 @@ const Discover: React.FC = () => {
   };
 
   useEffect(() => {
-    const q = searchParams.get('search') || searchParams.get('q');
+    const q = searchParams.get('q');
     if (q !== null) {
       setSearchQuery(q);
     }
