@@ -1,37 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PlayerProvider } from './context/PlayerContext';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './components/common/MainLayout';
-import Home from './pages/Home';
-import ArtistHub from './pages/ArtistHub';
-import MotoFeed from './pages/MotoFeed';
-import AuthArtist from './pages/AuthArtist';
-import AuthListener from './pages/AuthListener';
-import Landing from './pages/Landing';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './lib/supabase';
 
-import About from './pages/About';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
 import ErrorBoundary from './components/common/ErrorBoundary';
-
-import Pricing from './pages/Pricing';
-
-// Placeholder components for the new routes
-import ArtistProfile from './pages/ArtistProfile';
-import ArtistLanding from './pages/ArtistLanding';
-import Discover from './pages/Discover';
-import Library from './pages/Library';
-import Profile from './pages/Profile';
-import Trending from './pages/Trending';
-import ApplicationPending from './pages/ApplicationPending';
-import Admin from './pages/Admin';
 
 import { Mail, Phone, MessageSquare, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const Home = React.lazy(() => import('./pages/Home'));
+const ArtistHub = React.lazy(() => import('./pages/ArtistHub'));
+const MotoFeed = React.lazy(() => import('./pages/MotoFeed'));
+const AuthArtist = React.lazy(() => import('./pages/AuthArtist'));
+const AuthListener = React.lazy(() => import('./pages/AuthListener'));
+const Landing = React.lazy(() => import('./pages/Landing'));
+const About = React.lazy(() => import('./pages/About'));
+const Terms = React.lazy(() => import('./pages/Terms'));
+const Privacy = React.lazy(() => import('./pages/Privacy'));
+const Pricing = React.lazy(() => import('./pages/Pricing'));
+const ArtistProfile = React.lazy(() => import('./pages/ArtistProfile'));
+const ArtistLanding = React.lazy(() => import('./pages/ArtistLanding'));
+const Discover = React.lazy(() => import('./pages/Discover'));
+const Library = React.lazy(() => import('./pages/Library'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Trending = React.lazy(() => import('./pages/Trending'));
+const ApplicationPending = React.lazy(() => import('./pages/ApplicationPending'));
+const Admin = React.lazy(() => import('./pages/Admin'));
+const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess'));
+const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed'));
 
 const ArtistRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, role, loading } = useAuth();
@@ -165,8 +165,11 @@ const NotFound = () => {
   );
 };
 
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailed from './pages/PaymentFailed';
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-smash-black flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-smash-purple border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 function AppContent() {
   const { user, role, loading } = useAuth();
@@ -197,7 +200,8 @@ function AppContent() {
   }
 
   return (
-    <Routes>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
       <Route path="/auth" element={<Navigate to="/auth/listener" replace />} />
       
       {/* Public Landing or Dashboard Redirect */}
@@ -261,6 +265,7 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 }
 

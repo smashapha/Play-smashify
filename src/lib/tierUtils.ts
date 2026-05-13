@@ -46,13 +46,22 @@ export const getSongsUploadedThisMonth = async (userProfile: any, supabaseClient
   return 0;
 };
 
-export const canUploadTrack = (artist: any): boolean => {
-  if (!artist) return false;
-  const tier: ArtistTier = artist.artist_tier || 'Free';
-  if (tier === 'Free') {
-    return (artist.total_plays || 0) >= 0; // The logic will need true upload count instead of total_plays, but assuming UI gate
+export const canUploadTrack = async (artist: any, supabaseClient: any): Promise<boolean> => {
+  if (!artist || !artist.id) return false;
+  const tier: ArtistTier = artist.artist_tier || artist.subscription_tier || 'Free';
+  const limits = getTierLimits(artist);
+
+  const { count, error } = await supabaseClient
+    .from('songs')
+    .select('*', { count: 'exact', head: true })
+    .eq('artist_id', artist.id);
+
+  if (error) {
+    console.error("Error checking upload limits:", error);
+    return false;
   }
-  return true;
+
+  return (count || 0) < limits.maxUploads;
 };
 
 export const canReceiveFanSubscriptions = (artist: any): boolean => {
