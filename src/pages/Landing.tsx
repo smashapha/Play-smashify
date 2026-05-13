@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabase';
 const Nav = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 80);
@@ -22,39 +23,78 @@ const Nav = () => {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-6 md:px-12 transition-all duration-200 border-b ${isScrolled ? 'bg-[#0A0A0D]/92 backdrop-blur-xl border-white/5' : 'bg-transparent border-transparent'}`}>
-      <div className="flex items-center gap-8">
-        <Logo size="md" className="cursor-pointer" onClick={() => navigate('/')} />
-        <div className="hidden lg:flex items-center gap-8">
-          {['Discover', 'Artists', 'Pricing', 'About'].map((link) => (
-            <Link key={link} to={`/${link.toLowerCase()}`} className="font-display font-medium text-[13px] text-white/60 hover:text-white transition-colors uppercase tracking-wider">{link}</Link>
-          ))}
-          <div className="bg-smash-purple/15 border border-smash-purple/25 text-smash-purple text-[10px] rounded-full px-3 py-1 font-black uppercase tracking-widest">
-            FOR ARTISTS
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center justify-between px-6 md:px-12 transition-all duration-200 border-b ${isScrolled || mobileMenuOpen ? 'bg-[#0A0A0D]/92 backdrop-blur-xl border-white/5' : 'bg-transparent border-transparent'}`}>
+        <div className="flex items-center gap-8">
+          <Logo size="md" className="cursor-pointer" onClick={() => navigate('/')} />
+          <div className="hidden lg:flex items-center gap-8">
+            {['Discover', 'Artists', 'Pricing', 'About'].map((link) => (
+              <Link key={link} to={`/${link.toLowerCase()}`} className="font-display font-medium text-[13px] text-white/60 hover:text-white transition-colors uppercase tracking-wider">{link}</Link>
+            ))}
+            <div className="bg-smash-purple/15 border border-smash-purple/25 text-smash-purple text-[10px] rounded-full px-3 py-1 font-black uppercase tracking-widest">
+              FOR ARTISTS
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="flex items-center gap-6">
-        <div className="hidden md:flex items-center gap-4">
-          <button onClick={() => navigate('/auth/listener')} className="font-display font-medium text-[13px] text-white/50 hover:text-white transition-colors uppercase tracking-widest">Log In</button>
-          <div className="h-4 w-px bg-white/20" />
-          <button 
-            onClick={() => navigate('/auth/listener?mode=signup')} 
-            className="text-smash-orange font-semibold text-[13px] hover:underline uppercase tracking-widest"
-          >
-            Sign Up Free
+        
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
+            <button onClick={() => navigate('/auth/listener')} className="font-display font-medium text-[13px] text-white/50 hover:text-white transition-colors uppercase tracking-widest">Log In</button>
+            <div className="h-4 w-px bg-white/20" />
+            <button 
+              onClick={() => navigate('/auth/listener?mode=signup')} 
+              className="text-smash-orange font-semibold text-[13px] hover:underline uppercase tracking-widest"
+            >
+              Sign Up Free
+            </button>
+          </div>
+          <button className="lg:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <div className="space-y-1.5 flex flex-col items-end">
+              <motion.div animate={{ width: mobileMenuOpen ? 24 : 24, rotate: mobileMenuOpen ? 45 : 0, y: mobileMenuOpen ? 8 : 0 }} className="h-0.5 bg-white rounded-full" />
+              <motion.div animate={{ opacity: mobileMenuOpen ? 0 : 1 }} className="w-4 h-0.5 bg-white rounded-full" />
+              <motion.div animate={{ width: mobileMenuOpen ? 24 : 20, rotate: mobileMenuOpen ? -45 : 0, y: mobileMenuOpen ? -8 : 0 }} className="h-0.5 bg-white rounded-full" />
+            </div>
           </button>
         </div>
-        <button className="lg:hidden text-white">
-          <div className="space-y-1.5 flex flex-col items-end">
-            <div className="w-6 h-0.5 bg-white rounded-full" />
-            <div className="w-4 h-0.5 bg-white rounded-full" />
-            <div className="w-5 h-0.5 bg-white rounded-full" />
-          </div>
-        </button>
-      </div>
-    </nav>
+      </nav>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-40 bg-[#0A0A0D] pt-[72px] px-6 lg:hidden"
+          >
+            <div className="flex flex-col gap-6 py-10">
+              {['Discover', 'Artists', 'Pricing', 'About'].map((link) => (
+                <Link 
+                  key={link} 
+                  to={`/${link.toLowerCase()}`} 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="font-studio font-black text-4xl uppercase italic hover:text-smash-orange transition-colors"
+                >
+                  {link}
+                </Link>
+              ))}
+              <div className="h-px bg-white/10 my-4" />
+              <button 
+                onClick={() => { navigate('/auth/listener'); setMobileMenuOpen(false); }}
+                className="h-16 w-full border border-white/20 rounded-2xl font-display font-black uppercase tracking-widest"
+              >
+                Log In
+              </button>
+              <button 
+                onClick={() => { navigate('/auth/listener?mode=signup'); setMobileMenuOpen(false); }}
+                className="h-16 w-full bg-smash-orange text-white rounded-2xl font-display font-black uppercase tracking-widest shadow-xl shadow-smash-orange/20"
+              >
+                Sign Up Free
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

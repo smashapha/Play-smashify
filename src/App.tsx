@@ -199,13 +199,18 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/auth" element={<Navigate to="/auth/listener" replace />} />
+      
+      {/* Public Landing or Dashboard Redirect */}
+      <Route path="/" element={user ? <Navigate to="/home" replace /> : <Landing />} />
+      
+      {/* Auth & Standalone Routes */}
       <Route path="/auth/listener" element={<AuthListener />} />
       <Route path="/auth/artist" element={<AuthArtist />} />
       <Route path="/artists" element={<ArtistLanding />} />
       <Route path="/application-pending" element={role === 'pending' || role === 'artist' ? <Navigate to="/artist-hub" replace /> : <ApplicationPending />} />
       <Route path="/moto-feed" element={<MotoFeed />} />
-      
-      {/* Payment Routes */}
+
+      {/* Payment Processing Pages (Standalone) */}
       <Route path="/purchase-success" element={<PaymentSuccess />} />
       <Route path="/tip-success" element={<PaymentSuccess />} />
       <Route path="/subscribe-success" element={<PaymentSuccess />} />
@@ -214,6 +219,7 @@ function AppContent() {
       <Route path="/ad-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={<PaymentFailed />} />
 
+      {/* Artist Hub (Standalone for better editing experience) */}
       <Route 
         path="/artist-hub" 
         element={
@@ -222,9 +228,10 @@ function AppContent() {
           </ArtistRoute>
         } 
       />
+
+      {/* Main App Experience (Shared Layout) */}
       <Route element={<MainLayout />}>
-        <Route index element={user ? <Home /> : <Landing />} />
-        <Route path="home" element={user ? <Home /> : <Navigate to="/" />} />
+        <Route path="/home" element={user ? <Home /> : <Navigate to="/" replace />} />
         <Route path="discover" element={<Discover />} />
         <Route path="trending" element={<Trending />} />
         <Route 
