@@ -29,7 +29,7 @@ const envAppUrl = import.meta.env.VITE_APP_URL;
 const APP_URL = (envAppUrl && envAppUrl !== 'YOUR_APP_URL') ? envAppUrl : window.location.origin;
 
 /**
- * Common function to initiate payment via Express API
+ * Common function to initiate payment via Supabase Edge Functions
  */
 export async function initiatePayment(params: InitiatePaymentParams) {
   const toastId = toast.loading('Initializing secure payment...');
@@ -37,33 +37,16 @@ export async function initiatePayment(params: InitiatePaymentParams) {
   try {
     const tx_ref = `SMASH-${params.type.toUpperCase()}-${params.meta.userId || 'anon'}-${Date.now()}`;
     
-    // Get session for auth
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const response = await fetch('/api/functions/create-payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}`
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('create-payment', {
+      body: {
         ...params,
         tx_ref,
-        currency: 'MWK'
-      })
+        currency: 'MWK',
+        callback_url: 'https://akclwguqzeijscftatqp.supabase.co/functions/v1/paychangu-webhook'
+      }
     });
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse frontend response:', text);
-      throw new Error('Server returned invalid response');
-    }
-
-    if (!response.ok) throw new Error(data.error || 'Failed to initialize payment');
-    
+    if (error) throw error;
     if (!data?.checkout_url) throw new Error('Failed to get checkout URL');
 
     toast.success('Redirecting to PayChangu...', { id: toastId });
@@ -87,7 +70,7 @@ export async function purchaseTrack({ song, user }: { song: Song; user: UserProf
     first_name: user.full_name?.split(' ')[0] || 'Fan',
     last_name: user.full_name?.split(' ').slice(1).join(' ') || '',
     type: 'track_purchase',
-    return_url: `${APP_URL}/purchase-success?song_id=${song.id}&tx_ref=`, // ref appended by PayChangu or handled by our success page
+    return_url: `${APP_URL}/purchase-success?song_id=${song.id}&tx_ref=`,
     meta: {
       userId: user.id,
       songId: song.id,
@@ -208,8 +191,7 @@ export async function payForAdCampaign({ artist, plays, amount }: { artist: User
 }
 
 /**
- * Withdraw funds (Payout)
- * This is a direct call to the local Express API
+ * Withdraw funds (Payout) via Supabase Edge Functions
  */
 export async function requestPayout({ 
   amount, 
@@ -223,20 +205,11 @@ export async function requestPayout({
   const toastId = toast.loading('Processing withdrawal...');
   
   try {
-    // Get session for auth
-    const { data: { session } } = await supabase.auth.getSession();
-
-    const response = await fetch('/api/functions/process-payout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}`
-      },
-      body: JSON.stringify({ amount, phone, network })
+    const { data, error } = await supabase.functions.invoke('process-payout', {
+      body: { amount, phone, network }
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Withdrawal failed');
+    if (error) throw error;
     
     toast.success('Withdrawal successful! Funds will land in your mobile wallet shortly.', { id: toastId });
     return data;
