@@ -37,25 +37,26 @@ export async function initiatePayment(params: InitiatePaymentParams) {
   try {
     const tx_ref = `SMASH-${params.type.toUpperCase()}-${params.meta.userId || 'anon'}-${Date.now()}`;
     
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      body: {
+    const response = await fetch(`/api/functions/create-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+      },
+      body: JSON.stringify({
         ...params,
         tx_ref,
         currency: 'MWK',
-        callback_url: 'https://akclwguqzeijscftatqp.supabase.co/functions/v1/paychangu-webhook'
-      }
+        // Let server.ts handle callback_url automatically
+      })
     });
 
-    if (error) {
-      let message = error.message;
-      try {
-        const errorData = await error.context?.json();
-        if (errorData?.error) message = errorData.error;
-      } catch (e) {
-        console.warn("Could not parse function error as JSON:", e);
-      }
-      throw new Error(message);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to initialize payment');
     }
+    
     if (!data?.checkout_url) throw new Error('Failed to get checkout URL');
 
     toast.success('Redirecting to PayChangu...', { id: toastId });
@@ -214,19 +215,19 @@ export async function requestPayout({
   const toastId = toast.loading('Processing withdrawal...');
   
   try {
-    const { data, error } = await supabase.functions.invoke('process-payout', {
-      body: { amount, phone, network }
+    const response = await fetch(`/api/functions/process-payout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+      },
+      body: JSON.stringify({ amount, phone, network })
     });
+    
+    const data = await response.json();
 
-    if (error) {
-      let message = error.message;
-      try {
-        const errorData = await error.context?.json();
-        if (errorData?.error) message = errorData.error;
-      } catch (e) {
-        console.warn("Could not parse function error as JSON:", e);
-      }
-      throw new Error(message);
+    if (!response.ok) {
+      throw new Error(data.error || 'Withdrawal failed on server');
     }
     
     toast.success('Withdrawal successful! Funds will land in your mobile wallet shortly.', { id: toastId });
