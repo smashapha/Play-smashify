@@ -126,8 +126,11 @@ async function startServer() {
         fan_id: meta.userId || user.id,
         type: type.includes('subscription') ? 'subscription' : (type === 'tip' ? 'donation' : (type === 'track_purchase' ? 'sale' : 'other')),
         gross_amount: amount,
+        net_amount: amount * 0.9,
         status: 'pending',
-        paychangu_ref: tx_ref
+        paychangu_ref: tx_ref,
+        description: descriptions[type] || 'Smashify Payment',
+        metadata: meta
       });
 
       if (txError) {
@@ -414,13 +417,13 @@ async function startServer() {
           await supabaseAdmin.rpc('increment_song_sales', { s_id: songId });
           const saleFee = 0.15;
           const saleNet = amount * (1 - saleFee);
-          await supabaseAdmin.rpc('increment_wallet_balance', { user_id: artistId, amount: saleNet });
+          await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: saleNet });
           break;
 
         case 'TIP':
           const tipFee = 0.10;
           const tipNet = amount * (1 - tipFee);
-          await supabaseAdmin.rpc('increment_wallet_balance', { user_id: artistId, amount: tipNet });
+          await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: tipNet });
           if (!anonymous) {
             await supabaseAdmin.from('notifications').insert({
               user_id: artistId,

@@ -46,7 +46,16 @@ export async function initiatePayment(params: InitiatePaymentParams) {
       }
     });
 
-    if (error) throw error;
+    if (error) {
+      let message = error.message;
+      try {
+        const errorData = await error.context?.json();
+        if (errorData?.error) message = errorData.error;
+      } catch (e) {
+        console.warn("Could not parse function error as JSON:", e);
+      }
+      throw new Error(message);
+    }
     if (!data?.checkout_url) throw new Error('Failed to get checkout URL');
 
     toast.success('Redirecting to PayChangu...', { id: toastId });
@@ -209,7 +218,16 @@ export async function requestPayout({
       body: { amount, phone, network }
     });
 
-    if (error) throw error;
+    if (error) {
+      let message = error.message;
+      try {
+        const errorData = await error.context?.json();
+        if (errorData?.error) message = errorData.error;
+      } catch (e) {
+        console.warn("Could not parse function error as JSON:", e);
+      }
+      throw new Error(message);
+    }
     
     toast.success('Withdrawal successful! Funds will land in your mobile wallet shortly.', { id: toastId });
     return data;

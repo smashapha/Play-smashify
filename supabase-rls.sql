@@ -23,8 +23,27 @@ ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAUL
 ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 
 -- ═════════════════════════════════════════════════════════════════════════════
--- 0. SCHEMA UPDATES (AUDIO ADS)
+-- 0. SCHEMA UPDATES (AUDIO ADS & TRANSACTIONS)
 -- ═════════════════════════════════════════════════════════════════════════════
+
+-- Create transactions table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.profiles(id),
+    fan_id UUID REFERENCES public.user_profiles(id),
+    type TEXT NOT NULL,
+    gross_amount DECIMAL(12,2) NOT NULL,
+    net_amount DECIMAL(12,2),
+    status TEXT DEFAULT 'pending',
+    paychangu_ref TEXT UNIQUE,
+    description TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Ensure all columns exist on profiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(12,2) DEFAULT 0;
 
 -- Drop old visual ads table if it exists
 DROP TABLE IF EXISTS ads CASCADE;
@@ -314,9 +333,17 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 
 -- CRITICAL: Prevent ANY client-side modifications. 
 -- Service role only handles INSERT/UPDATE/DELETE.
+DROP POLICY IF EXISTS "transactions_select_parties" ON transactions;
 CREATE POLICY "transactions_select_parties" 
 ON transactions FOR SELECT 
 USING (auth.uid() = artist_id OR auth.uid() = fan_id OR is_admin(auth.uid()));
+
+-- Only admin or system can update/insert directly; usually handled by webhooks/edge functions
+DROP POLICY IF EXISTS "transactions_admin_all" ON transactions;
+CREATE POLICY "transactions_admin_all"
+ON transactions FOR ALL TO authenticated
+USING (is_admin(auth.uid()))
+WITH CHECK (is_admin(auth.uid()));
 
 COMMENT ON POLICY "transactions_select_parties" ON transactions IS 'Parties read their own transactions. No client-side writes.';
 
