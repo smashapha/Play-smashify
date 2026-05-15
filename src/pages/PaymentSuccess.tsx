@@ -30,16 +30,28 @@ const PaymentSuccess = () => {
       const maxAttempts = 15; // 30 seconds total
 
       const check = async () => {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('paychangu_ref', tx_ref)
-          .single();
-
-        if (data && data.status === 'completed') {
-          setDetails(data);
-          setStatus('confirmed');
-          return true;
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment?tx_ref=${tx_ref}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'completed') {
+              setDetails(data.transaction);
+              setStatus('confirmed');
+              return true;
+            } else if (data.status === 'failed') {
+              navigate(`/payment-failed?tx_ref=${tx_ref}`);
+              return true;
+            }
+          }
+        } catch (e) {
+          console.error("Verification error", e);
         }
         
         attempts++;
