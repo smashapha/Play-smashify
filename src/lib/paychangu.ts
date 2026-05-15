@@ -40,18 +40,30 @@ export async function initiatePayment(params: InitiatePaymentParams) {
   try {
     const tx_ref = `SMASH-${params.type.toUpperCase()}-${params.meta.userId || 'anon'}-${Date.now()}`;
     
-    // Call Supabase Edge Function directly via the SDK
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      body: {
-        ...params,
-        tx_ref,
-        currency: 'MWK'
-      }
-    });
+    const session = (await supabase.auth.getSession()).data.session;
 
-    if (error) {
-       console.error("Payment Function Error:", error);
-       throw new Error(error.message || 'Failed to initialize payment');
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/create-payment`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          ...params,
+          tx_ref,
+          currency: 'MWK'
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+       console.error("Payment Function Error:", data);
+       throw new Error(data.error || 'Failed to initialize payment');
     }
     
     if (!data?.checkout_url) {
@@ -215,13 +227,26 @@ export async function requestPayout({
   const toastId = toast.loading('Processing withdrawal...');
   
   try {
-    const { data, error } = await supabase.functions.invoke('process-payout', {
-      body: { amount, phone, network }
-    });
+    const session = (await supabase.auth.getSession()).data.session;
+    
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/process-payout`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ amount, phone, network })
+      }
+    );
+    
+    const data = await response.json();
 
-    if (error) {
-      console.error("Payout Function Error:", error);
-      throw new Error(error.message || 'Withdrawal failed on server');
+    if (!response.ok) {
+      console.error("Payout Function Error:", data);
+      throw new Error(data.error || 'Withdrawal failed on server');
     }
     
     toast.success('Withdrawal successful! Funds will land in your mobile wallet shortly.', { id: toastId });

@@ -64,7 +64,7 @@ serve(async (req) => {
 
     if (response.ok && payload.status === 'success' && payload.data) {
       const pcStatus = payload.data.status
-      if (pcStatus === 'successful') {
+      if (pcStatus === 'successful' || pcStatus === 'success') {
         // Trigger the exact same logic as webhook! But just to be DRY, we can just fetch the webhook URL (or we can duplicate the logic here since we have it). 
         // To be simpler, we can just POST the payload.data to our own webhook.
         const webhookUrl = `${SUPABASE_URL}/functions/v1/paychangu-webhook`

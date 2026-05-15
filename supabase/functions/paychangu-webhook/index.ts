@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     // 3. Handle Failed Payment
-    if (status !== 'successful') {
+    if (status !== 'successful' && status !== 'success') {
       await supabase.from('transactions').update({ status: 'failed' }).eq('id', transaction.id)
       return new Response('Ok', { status: 200 })
     }
