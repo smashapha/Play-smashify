@@ -28,6 +28,9 @@ interface InitiatePaymentParams {
 const envAppUrl = import.meta.env.VITE_APP_URL;
 const APP_URL = (envAppUrl && envAppUrl !== 'YOUR_APP_URL') ? envAppUrl : window.location.origin;
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 /**
  * Common function to initiate payment via Supabase Edge Functions
  */
@@ -37,19 +40,25 @@ export async function initiatePayment(params: InitiatePaymentParams) {
   try {
     const tx_ref = `SMASH-${params.type.toUpperCase()}-${params.meta.userId || 'anon'}-${Date.now()}`;
     
-    const response = await fetch(`/api/functions/create-payment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-      },
-      body: JSON.stringify({
-        ...params,
-        tx_ref,
-        currency: 'MWK',
-        // Let server.ts handle callback_url automatically
-      })
-    });
+    const session = (await supabase.auth.getSession()).data.session;
+
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/create-payment`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          ...params,
+          tx_ref,
+          currency: 'MWK',
+          callback_url: `${SUPABASE_URL}/functions/v1/paychangu-webhook`
+        })
+      }
+    );
 
     const data = await response.json();
 
@@ -215,14 +224,20 @@ export async function requestPayout({
   const toastId = toast.loading('Processing withdrawal...');
   
   try {
-    const response = await fetch(`/api/functions/process-payout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-      },
-      body: JSON.stringify({ amount, phone, network })
-    });
+    const session = (await supabase.auth.getSession()).data.session;
+    
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/process-payout`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ amount, phone, network })
+      }
+    );
     
     const data = await response.json();
 
