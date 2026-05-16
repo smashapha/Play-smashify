@@ -8,7 +8,6 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
-import AdminQuickFloat from './AdminQuickFloat';
 
 const TopBar = () => {
   const { dataSaver, toggleDataSaver } = usePlayer();
@@ -343,7 +342,6 @@ const MainLayout: React.FC = () => {
 
       <GlobalPlayer />
       <BottomNav />
-      <AdminQuickFloat />
     </div>
   );
 };
