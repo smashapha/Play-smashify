@@ -548,11 +548,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               .select('song_id')
               .eq('fan_id', userProfile.id);
 
-            const purchasedIds = new Set((userPurchases || []).map(p => p.song_id));
+            const fetchedIds = new Set(
+              (userPurchases || []).map(p => p.song_id as string)
+            );
+            setPurchasedIds(fetchedIds);
 
             formatted = formatted.map(song => ({
               ...song,
-              is_purchased: purchasedIds.has(song.id)
+              is_purchased: fetchedIds.has(song.id)
             }));
           }
 

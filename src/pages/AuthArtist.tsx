@@ -19,6 +19,7 @@ const AuthArtist: React.FC = () => {
   const { user, userProfile, role, loading, refreshProfile } = useAuth();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<AuthMode>('login');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loadingState, setLoadingState] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -86,6 +87,23 @@ const AuthArtist: React.FC = () => {
     }
     if (!idPhoto) {
       toast.error('Please upload your ID photo');
+      return;
+    }
+
+    // Check stage name is not already taken
+    const stageTrimmed = stageName.trim();
+    const { data: existingStage } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('stage_name', stageTrimmed)
+      .maybeSingle();
+
+    if (existingStage) {
+      toast.error(
+        'This stage name is already registered. ' +
+        'If you are the real artist, contact support@smashify.mw'
+      );
+      setLoadingState(false);
       return;
     }
 

@@ -12,27 +12,27 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { Mail, Phone, MessageSquare, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import Landing from './pages/Landing';
-import AuthListener from './pages/AuthListener';
-import AuthArtist from './pages/AuthArtist';
-import Home from './pages/Home';
-
-import ArtistHub from './pages/ArtistHub';
-import MotoFeed from './pages/MotoFeed';
-import About from './pages/About';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Pricing from './pages/Pricing';
-import ArtistProfile from './pages/ArtistProfile';
-import ArtistLanding from './pages/ArtistLanding';
-import Discover from './pages/Discover';
-import Library from './pages/Library';
-import Profile from './pages/Profile';
-import Trending from './pages/Trending';
-import ApplicationPending from './pages/ApplicationPending';
-import Admin from './pages/Admin';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentFailed from './pages/PaymentFailed';
+import { lazy, Suspense } from 'react';
+const Landing = lazy(() => import('./pages/Landing'));
+const AuthListener = lazy(() => import('./pages/AuthListener'));
+const AuthArtist = lazy(() => import('./pages/AuthArtist'));
+const Home = lazy(() => import('./pages/Home'));
+const ArtistHub = lazy(() => import('./pages/ArtistHub'));
+const MotoFeed = lazy(() => import('./pages/MotoFeed'));
+const About = lazy(() => import('./pages/About'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const ArtistProfile = lazy(() => import('./pages/ArtistProfile'));
+const ArtistLanding = lazy(() => import('./pages/ArtistLanding'));
+const Discover = lazy(() => import('./pages/Discover'));
+const Library = lazy(() => import('./pages/Library'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Trending = lazy(() => import('./pages/Trending'));
+const ApplicationPending = lazy(() => import('./pages/ApplicationPending'));
+const Admin = lazy(() => import('./pages/Admin'));
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
+const PaymentFailed = lazy(() => import('./pages/PaymentFailed'));
 
 const ArtistRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, role, loading } = useAuth();
@@ -201,70 +201,76 @@ function AppContent() {
   }
 
   return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-smash-black flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-smash-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
       <Routes>
-      <Route path="/auth" element={<Navigate to="/auth/listener" replace />} />
-      
-      {/* Public Landing or Dashboard Redirect */}
-      <Route path="/" element={user ? <Navigate to="/home" replace /> : <Landing />} />
-      
-      {/* Auth & Standalone Routes */}
-      <Route path="/auth/listener" element={<AuthListener />} />
-      <Route path="/auth/artist" element={<AuthArtist />} />
-      <Route path="/artists" element={<ArtistLanding />} />
-      <Route path="/application-pending" element={role === 'pending' || role === 'artist' ? <Navigate to="/artist-hub" replace /> : <ApplicationPending />} />
-      
-      {/* Payment Processing Pages (Standalone) */}
-      <Route path="/purchase-success" element={<PaymentSuccess />} />
-      <Route path="/tip-success" element={<PaymentSuccess />} />
-      <Route path="/subscribe-success" element={<PaymentSuccess />} />
-      <Route path="/upgrade-success" element={<PaymentSuccess />} />
-      <Route path="/tier-success" element={<PaymentSuccess />} />
-      <Route path="/ad-success" element={<PaymentSuccess />} />
-      <Route path="/payment-failed" element={<PaymentFailed />} />
+        <Route path="/auth" element={<Navigate to="/auth/listener" replace />} />
+        
+        {/* Public Landing or Dashboard Redirect */}
+        <Route path="/" element={user ? <Navigate to="/home" replace /> : <Landing />} />
+        
+        {/* Auth & Standalone Routes */}
+        <Route path="/auth/listener" element={<AuthListener />} />
+        <Route path="/auth/artist" element={<AuthArtist />} />
+        <Route path="/artists" element={<ArtistLanding />} />
+        <Route path="/application-pending" element={role === 'pending' || role === 'artist' ? <Navigate to="/artist-hub" replace /> : <ApplicationPending />} />
+        
+        {/* Payment Processing Pages (Standalone) */}
+        <Route path="/purchase-success" element={<PaymentSuccess />} />
+        <Route path="/tip-success" element={<PaymentSuccess />} />
+        <Route path="/subscribe-success" element={<PaymentSuccess />} />
+        <Route path="/upgrade-success" element={<PaymentSuccess />} />
+        <Route path="/tier-success" element={<PaymentSuccess />} />
+        <Route path="/ad-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
 
-      {/* Artist Hub (Standalone for better editing experience) */}
-      <Route 
-        path="/artist-hub" 
-        element={
-          <ArtistRoute>
-            <ArtistHub />
-          </ArtistRoute>
-        } 
-      />
-
-      {/* Main App Experience (Shared Layout) */}
-      <Route path="/moto-feed" element={<MotoFeed />} />
-      <Route element={<MainLayout />}>
-        <Route path="home" element={user ? <Home /> : <Navigate to="/" replace />} />
-        <Route path="discover" element={<Discover />} />
-        <Route path="trending" element={<Trending />} />
+        {/* Artist Hub (Standalone for better editing experience) */}
         <Route 
-          path="library" 
+          path="/artist-hub" 
           element={
-            <ListenerRoute>
-              <Library />
-            </ListenerRoute>
+            <ArtistRoute>
+              <ArtistHub />
+            </ArtistRoute>
           } 
         />
-        <Route 
-          path="profile" 
-          element={
-            <ListenerRoute>
-              <Profile />
-            </ListenerRoute>
-          } 
-        />
-        <Route path="artist/:id" element={<ArtistProfile />} />
-        <Route path="search" element={<Discover />} />
-        <Route path="pricing" element={<Pricing />} />
-        <Route path="about" element={<About />} />
-        <Route path="terms" element={<Terms />} />
-        <Route path="privacy" element={<Privacy />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="admin" element={<Admin />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+
+        {/* Main App Experience (Shared Layout) */}
+        <Route path="/moto-feed" element={<MotoFeed />} />
+        <Route element={<MainLayout />}>
+          <Route path="home" element={user ? <Home /> : <Navigate to="/" replace />} />
+          <Route path="discover" element={<Discover />} />
+          <Route path="trending" element={<Trending />} />
+          <Route 
+            path="library" 
+            element={
+              <ListenerRoute>
+                <Library />
+              </ListenerRoute>
+            } 
+          />
+          <Route 
+            path="profile" 
+            element={
+              <ListenerRoute>
+                <Profile />
+              </ListenerRoute>
+            } 
+          />
+          <Route path="artist/:id" element={<ArtistProfile />} />
+          <Route path="search" element={<Discover />} />
+          <Route path="pricing" element={<Pricing />} />
+          <Route path="about" element={<About />} />
+          <Route path="terms" element={<Terms />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
