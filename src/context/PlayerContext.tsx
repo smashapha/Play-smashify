@@ -43,6 +43,7 @@ interface PlayerContextType {
   addToQueue: (song: Song) => void;
   removeFromQueue: (songId: string) => void;
   purchasedIds: Set<string>;
+  refreshPurchasedIds: (userId: string) => Promise<void>;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -92,6 +93,41 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [purchasedIds, setPurchasedIds] = useState<Set<string>>(new Set());
   const { userProfile } = useAuth();
   const lastIncrementedSongId = useRef<string | null>(null);
+
+  const refreshPurchasedIds = async (userId: string) => {
+    try {
+      const { data: userPurchases } = await supabase
+        .from('fan_purchases')
+        .select('song_id')
+        .eq('fan_id', userId);
+      const ids = new Set((userPurchases || []).map(p => p.song_id as string));
+      setPurchasedIds(ids);
+    } catch (err) {
+      console.warn('Could not refresh purchased IDs:', err);
+    }
+  };
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (userProfile?.id) {
+        refreshPurchasedIds(userProfile.id);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [userProfile?.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.has('tx_ref') ||
+      window.location.pathname.includes('success')
+    ) {
+      if (userProfile?.id) {
+        refreshPurchasedIds(userProfile.id);
+      }
+    }
+  }, [window.location.pathname, userProfile?.id]);
 
   const skipAd = async () => {
     if (adPlaying) {
@@ -799,7 +835,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsExpanded,
     addToQueue,
     removeFromQueue,
-    purchasedIds
+    purchasedIds,
+    refreshPurchasedIds
   }), [
     currentSong, isPlaying, currentTime, duration, volume, queue, dataSaver,
     eqPreset, playbackRate, sleepTimerRemaining, isExpanded, radioMode,

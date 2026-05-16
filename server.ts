@@ -29,7 +29,14 @@ async function startServer() {
 
   console.log(`NODE_ENV is: ${process.env.NODE_ENV}`);
 
-  app.use(cors());
+  app.use(cors({
+    origin: [
+      'https://play-smashify.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ],
+    credentials: true
+  }));
   app.use(express.json());
 
   // Log all API requests
@@ -58,9 +65,16 @@ async function startServer() {
   }
 
   let supabaseAdmin: any = null;
-  const adminKey = SUPABASE_SERVICE_ROLE_KEY && SUPABASE_SERVICE_ROLE_KEY !== 'YOUR_SUPABASE_SERVICE_ROLE_KEY' && SUPABASE_SERVICE_ROLE_KEY !== 'YOUR_SUPA_ADMIN_KEY'
-    ? SUPABASE_SERVICE_ROLE_KEY 
-    : process.env.VITE_SUPABASE_ANON_KEY;
+  if (!SUPABASE_SERVICE_ROLE_KEY || 
+      SUPABASE_SERVICE_ROLE_KEY === 'YOUR_SUPABASE_SERVICE_ROLE_KEY' ||
+      SUPABASE_SERVICE_ROLE_KEY === 'YOUR_SUPA_ADMIN_KEY') {
+    console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is not set.');
+    console.error('Server cannot perform admin operations safely.');
+    console.error('Set SUPA_ADMIN_KEY in your environment variables.');
+    // Do NOT fall back to anon key — fail loudly
+    throw new Error('Server misconfiguration: Service role key missing.');
+  }
+  const adminKey = SUPABASE_SERVICE_ROLE_KEY;
 
   console.log('[DEBUG] SUPABASE_SERVICE_ROLE_KEY present:', !!SUPABASE_SERVICE_ROLE_KEY);
   console.log('[DEBUG] PAYCHANGU_SECRET_KEY present:', !!PAYCHANGU_SECRET_KEY);

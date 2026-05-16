@@ -4,9 +4,11 @@ import { motion } from 'motion/react';
 import { CheckCircle2, Music2, ArrowRight, Loader2, Heart, Sparkles, ShoppingBag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { usePlayer } from '../context/PlayerContext';
 
 const PaymentSuccess = () => {
-  const { refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
+  const { refreshPurchasedIds } = usePlayer();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'confirmed' | 'pending'>('loading');
@@ -54,6 +56,9 @@ const PaymentSuccess = () => {
             setStatus('confirmed')
             if (typeof refreshProfile === 'function') {
               await refreshProfile()
+            }
+            if (txData.type === 'TRACK_PURCHASE' && typeof refreshPurchasedIds === 'function') {
+              await refreshPurchasedIds(user?.id)
             }
             return true
           } else if (txData?.status === 'failed') {
