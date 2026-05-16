@@ -32,6 +32,12 @@ async function startServer() {
   app.use(cors());
   app.use(express.json());
 
+  // Log all API requests
+  app.use('/api', (req, res, next) => {
+    console.log(`[API_LOG] ${req.method} ${req.originalUrl}`);
+    next();
+  });
+
   // Health check
   app.get('/api/health', (req, res) => {
     res.json({ 
@@ -103,9 +109,14 @@ async function startServer() {
   };
 
   // --- API ROUTES (Functions) ---
+  
+  // CORS Preflight for all functions
+  app.options(['/api/functions/v1/create-payment', '/api/functions/create-payment', '/api/functions/v1/process-payout', '/api/functions/process-payout'], (req, res) => {
+    res.sendStatus(204);
+  });
 
-  // 1. Create Payment
-  app.post(['/api/functions/v1/create-payment', '/api/functions/create-payment'], async (req, res) => {
+  // 1. Create Payment - explicit routes
+  const handleCreatePayment = async (req: express.Request, res: express.Response) => {
     console.log('[API] create-payment received');
     try {
       if (!PAYCHANGU_SECRET_KEY || PAYCHANGU_SECRET_KEY === 'YOUR_PAYCHANGU_SECRET_KEY') {
@@ -120,7 +131,8 @@ async function startServer() {
       }
 
       const { amount, email, first_name, last_name, type, tx_ref, meta, return_url, currency, callback_url } = req.body;
-      console.log(`[API] Processing ${type} for ${email}, amount: ${amount}`);
+      console.log(`[API] Processing ${type} for ${email}, amount: ${amount}, ref: ${tx_ref}`);
+      console.log('[API] Meta received:', JSON.stringify(meta));
 
       const descriptions: Record<string, string> = {
         'track_purchase': `Purchase of music track on Smashify`,
@@ -204,10 +216,13 @@ async function startServer() {
       console.error('[API] Create payment error:', error);
       res.status(400).json({ error: error.message });
     }
-  });
+  };
+
+  app.post('/api/functions/v1/create-payment', handleCreatePayment);
+  app.post('/api/functions/create-payment', handleCreatePayment);
 
   // 2. Process Payout
-  app.post(['/api/functions/v1/process-payout', '/api/functions/process-payout'], async (req, res) => {
+  const handleProcessPayout = async (req: express.Request, res: express.Response) => {
     console.log('[API] process-payout received');
     try {
       if (!PAYCHANGU_SECRET_KEY || PAYCHANGU_SECRET_KEY === 'YOUR_PAYCHANGU_SECRET_KEY') {
@@ -268,8 +283,8 @@ async function startServer() {
       console.log(`[PAYOUT] Initiating for user: ${user.id}, ref: ${payoutRef}`);
       
       const cleanKey = PAYCHANGU_SECRET_KEY.trim();
-      // Trying the endpoint discovered to be correct for some MWK accounts
-      const payoutEndpoint = 'https://api.paychangu.com/v1/disbursements'; 
+      // Using singular 'disbursement' based on 405 error reports for plural
+      const payoutEndpoint = 'https://api.paychangu.com/v1/disbursement'; 
       console.log("[PAYOUT] Calling PayChangu:", payoutEndpoint);
       
       const response = await fetch(payoutEndpoint, {
@@ -315,7 +330,10 @@ async function startServer() {
       console.error('[API] Payout error:', error);
       res.status(400).json({ error: error.message });
     }
-  });
+  };
+
+  app.post('/api/functions/v1/process-payout', handleProcessPayout);
+  app.post('/api/functions/process-payout', handleProcessPayout);
 
   // 3. Payout Webhook
   app.post('/api/functions/payout-webhook', async (req, res) => {
@@ -445,6 +463,8 @@ async function startServer() {
       const type = tx_ref.split('-')[1];
       const metadata = transaction.metadata || {};
       const { userId, artistId, songId, anonymous } = metadata;
+
+      console.log(`[WEBHOOK] Processing type: ${type} for ref: ${tx_ref}, userId: ${userId}`);
 
       await supabaseAdmin.from('transactions').update({ 
         status: 'completed',

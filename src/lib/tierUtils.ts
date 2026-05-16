@@ -7,7 +7,7 @@ export const getListenerTier = (user: any): ListenerTier => {
 };
 
 export const getListenerLimits = (user: any) => {
-  const tier = getListenerTier(user).toLowerCase();
+  const tier = (getListenerTier(user) || 'free').toLowerCase();
   switch (tier) {
     case 'premium':
     case 'family':
@@ -19,12 +19,12 @@ export const getListenerLimits = (user: any) => {
 };
 
 export const getArtistTier = (artist: any): ArtistTier => {
-  if (!artist) return 'Free';
-  return artist.subscription_tier || artist.artist_tier || 'Free';
+  if (!artist) return 'free';
+  return artist.subscription_tier || artist.artist_tier || 'free';
 };
 
 export const getTierLimits = (artist: any) => {
-  const tier = getArtistTier(artist).toLowerCase();
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
   switch (tier) {
     case 'elite':
       return { maxUploads: Infinity, canWithdraw: true, platformFee: 0.05, analytics: 'full', hasFullAnalytics: true, canCreateAlbums: true, songLimit: Infinity, monthlyLimit: Infinity, canPostSnippets: true, canSellSongs: true };
@@ -64,53 +64,62 @@ export const canUploadTrack = async (artist: any, supabaseClient: any): Promise<
   return (count || 0) < limits.maxUploads;
 };
 
+export const canWithdrawalFunds = (artist: any): boolean => {
+  if (!artist) return false;
+  const limits = getTierLimits(artist);
+  return limits.canWithdraw;
+};
+
 export const canReceiveFanSubscriptions = (artist: any): boolean => {
   if (!artist) return false;
-  const tier: ArtistTier = artist.artist_tier || 'Free';
-  return tier !== 'Free';
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
+  return tier !== 'free';
 };
 
 export const canAccessAdvancedAnalytics = (artist: any): boolean => {
   if (!artist) return false;
-  const tier: ArtistTier = artist.artist_tier || 'Free';
-  return tier === 'Standard' || tier === 'Elite';
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
+  return tier === 'standard' || tier === 'elite';
 };
 
 export const canSetExclusiveContent = (artist: any): boolean => {
   if (!artist) return false;
-  const tier: ArtistTier = artist.artist_tier || 'Free';
-  return tier !== 'Free';
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
+  return tier !== 'free';
 };
 
 export const getWithdrawalLimit = (artist: any): number => {
   if (!artist) return 50000;
-  const tier: ArtistTier = artist.artist_tier || 'Free';
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
   switch (tier) {
-    case 'Free': return 50000;
-    case 'RisingStar': return 200000;
-    case 'Standard': return 500000;
-    case 'Elite': return Infinity;
+    case 'free': return 50000;
+    case 'risingstar':
+    case 'rising_star': return 200000;
+    case 'standard': return 500000;
+    case 'elite': return Infinity;
     default: return 50000;
   }
 };
 
 export const getPlatformFee = (artist: any, type: 'tip' | 'sale' | 'subscription'): number => {
-  const tier: ArtistTier = artist?.artist_tier || 'Free';
+  const tier = (getArtistTier(artist) || 'free').toLowerCase();
   
   if (type === 'tip' || type === 'sale') {
     switch (tier) {
-      case 'Free': return 0.15;
-      case 'RisingStar': return 0.10;
-      case 'Standard': return 0.07;
-      case 'Elite': return 0.05;
+      case 'free': return 0.15;
+      case 'risingstar':
+      case 'rising_star': return 0.10;
+      case 'standard': return 0.07;
+      case 'elite': return 0.05;
       default: return 0.15;
     }
   } else if (type === 'subscription') {
     switch (tier) {
-      case 'Free': return 0.20;
-      case 'RisingStar': return 0.15;
-      case 'Standard': return 0.10;
-      case 'Elite': return 0.08;
+      case 'free': return 0.20;
+      case 'risingstar':
+      case 'rising_star': return 0.15;
+      case 'standard': return 0.10;
+      case 'elite': return 0.08;
       default: return 0.20;
     }
   }
@@ -118,15 +127,15 @@ export const getPlatformFee = (artist: any, type: 'tip' | 'sale' | 'subscription
 };
 
 export const isFeatureAvailable = (feature: string, tier: string | undefined): boolean => {
-  const currentTier = tier || 'Free';
+  const currentTier = (tier || 'free').toLowerCase();
   
   const featureRequirements: Record<string, string[]> = {
-    'advancedAnalytics': ['Standard', 'Elite'],
-    'exclusiveContent': ['RisingStar', 'Standard', 'Elite'],
-    'fanSubscriptions': ['RisingStar', 'Standard', 'Elite'],
-    'verifiedBadge': ['Standard', 'Elite'],
-    'customUrl': ['Standard', 'Elite'],
-    'fanMessaging': ['RisingStar', 'Standard', 'Elite'],
+    'advancedAnalytics': ['standard', 'elite'],
+    'exclusiveContent': ['risingstar', 'rising_star', 'standard', 'elite'],
+    'fanSubscriptions': ['risingstar', 'rising_star', 'standard', 'elite'],
+    'verifiedBadge': ['standard', 'elite'],
+    'customUrl': ['standard', 'elite'],
+    'fanMessaging': ['risingstar', 'rising_star', 'standard', 'elite'],
   };
   
   const allowedTiers = featureRequirements[feature];
