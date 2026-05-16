@@ -88,11 +88,8 @@ const Pricing = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="p-4 md:p-12 pb-32 max-w-[1400px] mx-auto overflow-hidden"
+    <div 
+      className="p-4 md:p-12 pb-32 max-w-[1400px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       <div className="flex items-center gap-3 text-[10px] md:text-sm font-bold text-smash-gray uppercase tracking-widest mb-8 md:mb-12">
          <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -353,7 +350,7 @@ const Pricing = () => {
         </a>
       </div>
 
-    </motion.div>
+    </div>
   );
 };
 
