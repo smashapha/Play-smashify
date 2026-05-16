@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PlayerProvider } from './context/PlayerContext';
@@ -17,22 +17,22 @@ import AuthListener from './pages/AuthListener';
 import AuthArtist from './pages/AuthArtist';
 import Home from './pages/Home';
 
-const ArtistHub = React.lazy(() => import('./pages/ArtistHub'));
-const MotoFeed = React.lazy(() => import('./pages/MotoFeed'));
-const About = React.lazy(() => import('./pages/About'));
-const Terms = React.lazy(() => import('./pages/Terms'));
-const Privacy = React.lazy(() => import('./pages/Privacy'));
-const Pricing = React.lazy(() => import('./pages/Pricing'));
-const ArtistProfile = React.lazy(() => import('./pages/ArtistProfile'));
-const ArtistLanding = React.lazy(() => import('./pages/ArtistLanding'));
-const Discover = React.lazy(() => import('./pages/Discover'));
-const Library = React.lazy(() => import('./pages/Library'));
-const Profile = React.lazy(() => import('./pages/Profile'));
-const Trending = React.lazy(() => import('./pages/Trending'));
-const ApplicationPending = React.lazy(() => import('./pages/ApplicationPending'));
-const Admin = React.lazy(() => import('./pages/Admin'));
-const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess'));
-const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed'));
+import ArtistHub from './pages/ArtistHub';
+import MotoFeed from './pages/MotoFeed';
+import About from './pages/About';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Pricing from './pages/Pricing';
+import ArtistProfile from './pages/ArtistProfile';
+import ArtistLanding from './pages/ArtistLanding';
+import Discover from './pages/Discover';
+import Library from './pages/Library';
+import Profile from './pages/Profile';
+import Trending from './pages/Trending';
+import ApplicationPending from './pages/ApplicationPending';
+import Admin from './pages/Admin';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 
 const ArtistRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, role, loading } = useAuth();
@@ -201,7 +201,6 @@ function AppContent() {
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
       <Routes>
       <Route path="/auth" element={<Navigate to="/auth/listener" replace />} />
       
@@ -234,9 +233,9 @@ function AppContent() {
       />
 
       {/* Main App Experience (Shared Layout) */}
+      <Route path="/moto-feed" element={<MotoFeed />} />
       <Route element={<MainLayout />}>
         <Route path="home" element={user ? <Home /> : <Navigate to="/" replace />} />
-        <Route path="moto-feed" element={<MotoFeed />} />
         <Route path="discover" element={<Discover />} />
         <Route path="trending" element={<Trending />} />
         <Route 
@@ -266,7 +265,6 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
-    </Suspense>
   );
 }
 

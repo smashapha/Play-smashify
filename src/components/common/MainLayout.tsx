@@ -74,7 +74,7 @@ const TopBar = () => {
   );
 };
 
-const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (val: boolean) => void }) => {
+export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (val: boolean) => void }) => {
   const { user, userProfile, role } = useAuth();
   const navigate = useNavigate();
 
@@ -332,7 +332,7 @@ const MainLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
-              className="w-full h-full relative"
+              className="w-full h-full"
             >
               <Outlet />
             </motion.div>

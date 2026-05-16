@@ -15,6 +15,8 @@ import { getListenerLimits } from '../lib/tierUtils';
 
 import { useNavigate } from 'react-router-dom';
 
+import { Sidebar, BottomNav } from '../components/common/MainLayout';
+
 const MotoCard = ({ song, active, onSkip }: { song: Song; active: boolean; onSkip: () => void }) => {
   const navigate = useNavigate();
   const { playSong, isPlaying, togglePlay, currentTime, duration, seek, volume, setVolume, purchasedIds } = usePlayer();
@@ -877,11 +879,12 @@ const MotoFeed: React.FC = () => {
         >
           Back to Home
         </button>
+        <BottomNav />
      </div>
   );
 
   return (
-    <div className="absolute inset-0 bg-smash-black overflow-hidden touch-none flex flex-col">
+    <div className="h-[100dvh] w-screen bg-smash-black overflow-hidden touch-none flex flex-col relative">
        {/* UI Tooltips */}
        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 pointer-events-none">
           <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-2">
@@ -917,6 +920,12 @@ const MotoFeed: React.FC = () => {
              )}
           </motion.div>
        </AnimatePresence>
+       
+       {/* Sidebar for Desktop, BottomNav for Mobile */}
+       <div className="hidden md:block absolute left-0 top-0 bottom-0 z-40 bg-black/50 backdrop-blur-md">
+           <Sidebar isCollapsed={true} setIsCollapsed={() => {}} />
+       </div>
+       <BottomNav />
     </div>
   );
 };
