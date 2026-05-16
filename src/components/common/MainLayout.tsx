@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, Library, User, Music, TrendingUp, Mic2, Compass, Flame, Wifi, WifiOff, LogOut, ShieldCheck, ChevronRight, ChevronLeft, Bell } from 'lucide-react';
 import GlobalPlayer from '../player/GlobalPlayer';
 import { motion, AnimatePresence } from 'motion/react';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import AdminQuickFloat from './AdminQuickFloat';
 
 const TopBar = () => {
   const { dataSaver, toggleDataSaver } = usePlayer();
@@ -304,6 +305,7 @@ const BottomNav = () => {
 
 const MainLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-bg-page text-text-primary flex">
@@ -326,6 +328,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 w-full pb-[144px] md:pb-[80px]">
           <AnimatePresence mode="wait">
             <motion.div
+              key={location.pathname}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
@@ -340,6 +343,7 @@ const MainLayout: React.FC = () => {
 
       <GlobalPlayer />
       <BottomNav />
+      <AdminQuickFloat />
     </div>
   );
 };
