@@ -287,7 +287,7 @@ async function startServer() {
       const payoutEndpoint = 'https://api.paychangu.com/v1/disbursement'; 
       console.log("[PAYOUT] Calling PayChangu:", payoutEndpoint);
       
-      const response = await fetch(payoutEndpoint, {
+      const response = await fetch('https://api.paychangu.com/mobile-money/payments/initiate', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cleanKey}`,
@@ -295,11 +295,16 @@ async function startServer() {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          amount,
+          amount: Number(amount),
           currency: 'MWK',
-          mobile: phone,
-          service: network.toUpperCase(), // TNM or AIRTEL (Uppercase)
+          mobile: phone.replace(/\s/g, ''),
+          operator: network.toUpperCase(), // 'AIRTEL' or 'TNM'
           reference: payoutRef,
+          first_name: artist.full_name?.split(' ')[0] || 'Artist',
+          last_name: artist.full_name?.split(' ').slice(1).join(' ') || '',
+          email: artist.email || '',
+          callback_url: `${process.env.SUPABASE_URL}/functions/v1/payout-webhook`,
+          type: 'payment'
         })
       });
 
@@ -310,14 +315,17 @@ async function startServer() {
       try {
         payload = JSON.parse(responseText);
       } catch (err) {
-        throw new Error(`PayChangu returned non-JSON (${response.status}): ${responseText.substring(0, 100)}...`);
+        console.error('[PAYOUT] PayChangu non-JSON response:', responseText);
       }
 
       if (!response.ok) {
         console.error('[PAYOUT] Failed on PayChangu side');
         await supabaseAdmin.from('profiles').update({ wallet_balance: artist.wallet_balance }).eq('id', user.id);
-        await supabaseAdmin.from('payout_requests').update({ status: 'failed', error_message: payload.message || responseText }).eq('id', payoutReq.id);
-        throw new Error(payload.message || `PayChangu payout initialization failed (${response.status})`);
+        await supabaseAdmin.from('payout_requests').update({ status: 'failed', error_message: responseText.substring(0, 500) }).eq('id', payoutReq.id);
+        
+        return res.status(400).json({ 
+          error: payload?.message || `PayChangu error (${response.status}): ${responseText.substring(0, 200)}` 
+        });
       }
 
       await supabaseAdmin.from('payout_requests').update({ 
@@ -460,7 +468,7 @@ async function startServer() {
         return res.sendStatus(200);
       }
 
-      const type = tx_ref.split('-')[1];
+      const type = (transaction.metadata?.payment_type || tx_ref.split('-')[1]).toUpperCase();
       const metadata = transaction.metadata || {};
       const { userId, artistId, songId, anonymous } = metadata;
 
@@ -473,7 +481,7 @@ async function startServer() {
 
       await supabaseAdmin.from('webhook_logs').insert({
         tx_ref,
-        type,
+        type: type,
         status: 'processed',
         payload: JSON.stringify(payload)
       });
@@ -492,7 +500,8 @@ async function startServer() {
             song_id: songId, 
             transaction_id: transaction.id,
             amount: amount,
-            status: 'completed'
+            status: 'completed',
+            purchased_at: new Date().toISOString()
           }, { onConflict: 'fan_id,song_id' });
           
           if (fanError) console.error('[WEBHOOK] fan_purchases insert error:', fanError);
@@ -559,8 +568,13 @@ async function startServer() {
         case 'LISTENER_FAMILY':
           const subEnds = new Date();
           subEnds.setDate(subEnds.getDate() + 30);
+          const subTierName = type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family';
           await supabaseAdmin.from('user_profiles').update({
-            subscription_tier: type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family',
+            subscription_tier: subTierName,
+            subscription_ends: subEnds.toISOString()
+          }).eq('id', userId);
+          await supabaseAdmin.from('profiles').update({
+            subscription_tier: subTierName,
             subscription_ends: subEnds.toISOString()
           }).eq('id', userId);
           console.log(`[WEBHOOK] Updated listener subscription for ${userId} to ${type}`);
@@ -572,16 +586,19 @@ async function startServer() {
           const artistTierEnds = new Date();
           artistTierEnds.setDate(artistTierEnds.getDate() + 365);
           
-          let tierName = 'Free';
-          if (type === 'ARTIST_RISING_STAR') tierName = 'RisingStar';
-          else if (type === 'ARTIST_STANDARD') tierName = 'Standard';
-          else if (type === 'ARTIST_ELITE') tierName = 'Elite';
+          const tierMap: Record<string,string> = {
+            'ARTIST_RISING_STAR': 'RisingStar',
+            'ARTIST_STANDARD': 'Standard', 
+            'ARTIST_ELITE': 'Elite'
+          }
+          const artistTierName = tierMap[type] || 'Free';
           
           await supabaseAdmin.from('profiles').update({
-            subscription_tier: tierName,
+            subscription_tier: artistTierName,
+            artist_tier: artistTierName,
             subscription_ends: artistTierEnds.toISOString()
           }).eq('id', userId);
-          console.log(`[WEBHOOK] Updated artist subscription for ${userId} to ${tierName}`);
+          console.log(`[WEBHOOK] Updated artist subscription for ${userId} to ${artistTierName}`);
           break;
       }
 

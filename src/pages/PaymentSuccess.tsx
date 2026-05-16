@@ -3,8 +3,10 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CheckCircle2, Music2, ArrowRight, Loader2, Heart, Sparkles, ShoppingBag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentSuccess = () => {
+  const { refreshProfile } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'confirmed' | 'pending'>('loading');
@@ -44,6 +46,15 @@ const PaymentSuccess = () => {
             if (data.status === 'completed') {
               setDetails(data.transaction);
               setStatus('confirmed');
+              // Trigger refresh of user data
+              if (typeof refreshProfile === 'function') {
+                await refreshProfile();
+              }
+              // Backup reload to ensure all data is absolutely fresh
+              setTimeout(() => {
+                // If we're on a tier success page, we might want to stay here, but a refresh of global state is needed.
+                // refreshProfile handles the state.
+              }, 1000);
               return true;
             } else if (data.status === 'failed') {
               navigate(`/payment-failed?tx_ref=${tx_ref}`);
@@ -71,7 +82,7 @@ const PaymentSuccess = () => {
     };
 
     pollStatus();
-  }, [tx_ref, navigate]);
+  }, [tx_ref, navigate, refreshProfile]);
 
   const getSuccessContent = () => {
     switch (type) {

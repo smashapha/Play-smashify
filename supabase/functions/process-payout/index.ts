@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://play-smashify.vercel.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -106,8 +106,8 @@ Deno.serve(async (req) => {
     // 5. Initialize Payout via PayChangu Mobile Money Transfer API
     console.log("Payout Function: Calling PayChangu Mobile Money Transfer API...")
     const cleanKey = PAYCHANGU_SECRET_KEY.trim()
-    // Using singular 'disbursement' with v1 prefix which is common for Malawian APIs
-    const response = await fetch('https://api.paychangu.com/v1/disbursement', {
+    
+    const response = await fetch('https://api.paychangu.com/mobile-money/payments/initiate', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${cleanKey}`,
@@ -117,10 +117,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: Number(amount),
         currency: 'MWK',
-        mobile: phone,
-        service: network.toUpperCase(), // TNM or AIRTEL
+        mobile: phone.replace(/\s/g, ''),
+        operator: network.toUpperCase(), // 'AIRTEL' or 'TNM'
         reference: payoutRef,
-        callback_url: `${SUPABASE_URL}/functions/v1/payout-webhook`
+        first_name: artist.full_name?.split(' ')[0] || 'Artist',
+        last_name: artist.full_name?.split(' ').slice(1).join(' ') || '',
+        email: artist.email || '',
+        callback_url: `${SUPABASE_URL}/functions/v1/payout-webhook`,
+        type: 'payment'
       })
     })
 
@@ -131,15 +135,21 @@ Deno.serve(async (req) => {
     try {
       payload = JSON.parse(responseText);
     } catch (err) {
-      throw new Error(`PayChangu returned non-JSON (${response.status}): ${responseText.substring(0, 100)}`);
+      console.error('PayChangu non-JSON response:', responseText);
     }
 
     if (!response.ok) {
-        console.error("Payout Function: PayChangu Error Detail:", payload)
+        console.error("Payout Function: PayChangu Error:", response.status, responseText)
         // REFUND Wallet on failure
         await supabase.from('profiles').update({ wallet_balance: artist.wallet_balance }).eq('id', user.id)
-        await supabase.from('payout_requests').update({ status: 'failed', error_message: payload.message || responseText }).eq('id', payoutReq.id)
-        throw new Error(payload.message || `PayChangu API error: ${response.status}`)
+        await supabase.from('payout_requests').update({ status: 'failed', error_message: responseText.substring(0, 500) }).eq('id', payoutReq.id)
+        
+        return new Response(JSON.stringify({ 
+          error: payload?.message || `PayChangu error (${response.status}): ${responseText.substring(0, 200)}` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        })
     }
 
     // 6. Update Request with PayChangu ref

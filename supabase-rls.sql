@@ -1,3 +1,51 @@
+-- Ensure fan_purchases has all required columns
+ALTER TABLE fan_purchases ADD COLUMN IF NOT EXISTS purchased_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE fan_purchases ADD COLUMN IF NOT EXISTS amount NUMERIC(10,2);
+ALTER TABLE fan_purchases ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'completed';
+
+-- Ensure unique constraint exists
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fan_purchases_fan_song_unique'
+  ) THEN
+    ALTER TABLE fan_purchases ADD CONSTRAINT fan_purchases_fan_song_unique UNIQUE (fan_id, song_id);
+  END IF;
+END $$;
+
+-- Ensure transactions.metadata column is JSONB (not TEXT)
+ALTER TABLE transactions ALTER COLUMN metadata TYPE JSONB USING metadata::jsonb;
+
+-- Fix increment_wallet_balance function (ensure it exists)
+CREATE OR REPLACE FUNCTION increment_wallet_balance(p_id UUID, amount NUMERIC)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE profiles SET wallet_balance = COALESCE(wallet_balance, 0) + amount WHERE id = p_id;
+END;$$;
+GRANT EXECUTE ON FUNCTION increment_wallet_balance TO authenticated;
+GRANT EXECUTE ON FUNCTION increment_wallet_balance TO anon;
+
+-- Fix payout_requests RLS so service role can update
+ALTER TABLE payout_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_role_all" ON payout_requests;
+CREATE POLICY "service_role_all" ON payout_requests FOR ALL USING (true);
+
+-- Fix profiles update for tier upgrades (service role needs to update any row)
+DROP POLICY IF EXISTS "profiles_service_update" ON profiles;
+CREATE POLICY "profiles_service_update" ON profiles FOR UPDATE USING (true);
+
+-- Fix user_profiles update for subscription (service role)
+DROP POLICY IF EXISTS "up_service_update" ON user_profiles;
+CREATE POLICY "up_service_update" ON user_profiles FOR UPDATE USING (true);
+
+-- Fix fan_purchases RLS
+ALTER TABLE fan_purchases ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "fp_read" ON fan_purchases;
+DROP POLICY IF EXISTS "fp_insert" ON fan_purchases;
+DROP POLICY IF EXISTS "fan_purchases_select" ON fan_purchases;
+CREATE POLICY "fp_read" ON fan_purchases FOR SELECT USING (true);
+CREATE POLICY "fp_insert" ON fan_purchases FOR INSERT WITH CHECK (true);
+CREATE POLICY "fp_upsert" ON fan_purchases FOR UPDATE USING (true);
+
 -- ==============================================================================
 -- Smashify Hardened Supabase Schema & RLS Policies
 -- ==============================================================================

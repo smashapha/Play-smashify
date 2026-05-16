@@ -80,7 +80,7 @@ serve(async (req) => {
           
           const eventData = payload.data;
           const { amount } = eventData
-          const type = tx_ref.split('-')[1]
+          const type = (dbTx.metadata?.payment_type || '').toUpperCase()
           const { userId, artistId, songId, plan, tier, plays, anonymous } = dbTx.metadata || {}
           const grossAmount = Number(dbTx.gross_amount)
           const netAmount = Number(dbTx.net_amount)
@@ -90,10 +90,17 @@ serve(async (req) => {
             completed_at: new Date().toISOString()
           }).eq('id', dbTx.id)
 
+          console.log(`Processing ${type} for user ${userId}`);
+
           // Process logic...
           switch (type) {
             case 'TRACK_PURCHASE':
-              await supabase.from('fan_purchases').upsert({ fan_id: userId, song_id: songId, transaction_id: dbTx.id })
+              const { error: fpError } = await supabase.from('fan_purchases').upsert(
+                { fan_id: userId, song_id: songId, transaction_id: dbTx.id, amount: grossAmount, status: 'completed' },
+                { onConflict: 'fan_id,song_id' }
+              )
+              if (fpError) console.error('fan_purchases upsert failed:', fpError.message, fpError.details)
+              
               await supabase.rpc('increment_song_sales', { s_id: songId })
               await supabase.rpc('increment_wallet_balance', { p_id: artistId, amount: netAmount });
               break;
@@ -102,7 +109,7 @@ serve(async (req) => {
               await supabase.rpc('increment_wallet_balance', { p_id: artistId, amount: netAmount });
               if (!anonymous) {
                   await supabase.from('notifications').insert({
-                    user_id: artistId,
+                    profile_id: artistId,
                     user_type: 'artist',
                     type: 'tip_received',
                     message: `You received a MWK ${grossAmount.toLocaleString()} tip! (Net: MWK ${netAmount.toLocaleString()}) 💸`,
@@ -121,7 +128,7 @@ serve(async (req) => {
               })
               await supabase.rpc('increment_wallet_balance', { p_id: artistId, amount: netAmount });
               await supabase.from('notifications').insert({
-                user_id: artistId,
+                profile_id: artistId,
                 user_type: 'artist',
                 type: 'subscription_started',
                 message: `A fan just started a monthly subscription! MWK ${grossAmount.toLocaleString()} 💖 (Net: MWK ${netAmount.toLocaleString()})`,
@@ -132,8 +139,14 @@ serve(async (req) => {
             case 'LISTENER_FAMILY':
               const subEnds = new Date()
               subEnds.setDate(subEnds.getDate() + 30)
+              const subTierName = type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family'
+              // Update both tables to handle artist-as-listener cases
               await supabase.from('user_profiles').update({
-                subscription_tier: type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family',
+                subscription_tier: subTierName,
+                subscription_ends: subEnds.toISOString()
+              }).eq('id', userId)
+              await supabase.from('profiles').update({
+                subscription_tier: subTierName,
                 subscription_ends: subEnds.toISOString()
               }).eq('id', userId)
               break;
@@ -142,9 +155,15 @@ serve(async (req) => {
             case 'ARTIST_ELITE':
               const artistTierEnds = new Date()
               artistTierEnds.setDate(artistTierEnds.getDate() + 365)
-              const tierName = type.split('_')[1].toLowerCase() === 'rising' ? 'rising_star' : type.split('_')[1].toLowerCase()
+              const tierMap: Record<string,string> = {
+                'ARTIST_RISING_STAR': 'RisingStar',
+                'ARTIST_STANDARD': 'Standard', 
+                'ARTIST_ELITE': 'Elite'
+              }
+              const artistTierName = tierMap[type] || 'Free'
               await supabase.from('profiles').update({
-                subscription_tier: tierName,
+                subscription_tier: artistTierName,
+                artist_tier: artistTierName,
                 subscription_ends: artistTierEnds.toISOString(),
                 approved: true
               }).eq('id', userId)

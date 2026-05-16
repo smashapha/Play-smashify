@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://play-smashify.vercel.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       status: 'pending',
       paychangu_ref: tx_ref,
       description: descriptions[type] || 'Smashify Payment',
-      metadata: meta,
+      metadata: { ...meta, payment_type: type },
       platform_fee: platformFee,
       net_amount: netAmount,
     })

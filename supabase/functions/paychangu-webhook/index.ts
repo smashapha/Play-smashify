@@ -90,7 +90,7 @@ serve(async (req) => {
       .single()
 
     const parts = tx_ref.split('-');
-    const type = parts[1]; // TRACK_PURCHASE, TIP, FAN_SUBSCRIPTION etc
+    const type = (transaction?.metadata?.payment_type || parts[1]).toUpperCase()
     const meta = transaction?.metadata || eventData.meta || payload.meta || {};
 
     console.log('Full payload:', bodyText);
@@ -130,7 +130,7 @@ serve(async (req) => {
     // Log the webhook
     await supabase.from('webhook_logs').insert({
       tx_ref,
-      type,
+      type: type,
       status: 'processed',
       payload: bodyText
     })
@@ -144,7 +144,8 @@ serve(async (req) => {
           song_id: songId, 
           transaction_id: transaction.id,
           amount: grossAmount,
-          status: 'completed'
+          status: 'completed',
+          purchased_at: new Date().toISOString()
         }, { onConflict: 'fan_id,song_id' })
         
         if (fanError) console.error('fan_purchases insert error:', fanError);
@@ -199,8 +200,14 @@ serve(async (req) => {
       case 'LISTENER_FAMILY':
         const subEnds = new Date()
         subEnds.setDate(subEnds.getDate() + 30)
+        const subTierName = type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family'
+        // Update both tables to handle artist-as-listener cases
         await supabase.from('user_profiles').update({
-          subscription_tier: type === 'LISTENER_PREMIUM' ? 'Premium' : 'Family',
+          subscription_tier: subTierName,
+          subscription_ends: subEnds.toISOString()
+        }).eq('id', userId)
+        await supabase.from('profiles').update({
+          subscription_tier: subTierName,
           subscription_ends: subEnds.toISOString()
         }).eq('id', userId)
         break;
@@ -210,9 +217,15 @@ serve(async (req) => {
       case 'ARTIST_ELITE':
         const artistTierEnds = new Date()
         artistTierEnds.setDate(artistTierEnds.getDate() + 365) // Yearly for studio tiers
-        const tierName = type.split('_')[1].toLowerCase() === 'rising' ? 'rising_star' : type.split('_')[1].toLowerCase()
+        const tierMap: Record<string,string> = {
+          'ARTIST_RISING_STAR': 'RisingStar',
+          'ARTIST_STANDARD': 'Standard', 
+          'ARTIST_ELITE': 'Elite'
+        }
+        const artistTierName = tierMap[type] || 'Free'
         await supabase.from('profiles').update({
-          subscription_tier: tierName,
+          subscription_tier: artistTierName,
+          artist_tier: artistTierName,
           subscription_ends: artistTierEnds.toISOString(),
           approved: true
         }).eq('id', userId)
