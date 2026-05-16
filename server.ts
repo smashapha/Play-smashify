@@ -270,7 +270,7 @@ async function startServer() {
         .insert({
           artist_id: user.id,
           requested_amount: amount,
-          net_amount: netAmount, // Track the net amount after fees
+          // net_amount: netAmount, // Temporarily disabled until schema update
           phone,
           network,
           status: 'processing',
@@ -308,8 +308,8 @@ async function startServer() {
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
       // Check if user is admin
-      const { data: adminProfile } = await supabaseAdmin.from('profiles').select('is_admin').eq('id', user.id).single();
-      if (!adminProfile?.is_admin) {
+      const { data: adminProfile } = await supabaseAdmin.from('profiles').select('is_admin, role').eq('id', user.id).single();
+      if (!adminProfile?.is_admin && adminProfile?.role !== 'admin') {
          return res.status(403).json({ error: 'Admin access required' });
       }
 
@@ -334,7 +334,7 @@ async function startServer() {
       if (status === 'paid') {
         await supabaseAdmin.from('payout_requests').update({
           status: 'paid',
-          processed_at: new Date().toISOString()
+          paid_at: new Date().toISOString()
         }).eq('id', id);
 
         // Record the transaction for accounting
@@ -519,8 +519,7 @@ async function startServer() {
 
       await supabaseAdmin.from('transactions').update({ 
         status: 'completed',
-        amount: amount,
-        platform_fee: pFee,
+        gross_amount: amount,
         completed_at: new Date().toISOString()
       }).eq('id', transaction.id);
 

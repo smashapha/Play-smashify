@@ -35,12 +35,13 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userProfile && !userProfile.is_admin) {
+    const isAdmin = userProfile?.is_admin || userProfile?.role === 'admin';
+    if (userProfile && !isAdmin) {
       toast.error('Unauthorized access');
       navigate('/');
       return;
     }
-    if (userProfile?.is_admin) {
+    if (isAdmin) {
       fetchAllData();
     }
   }, [userProfile, navigate]);
@@ -145,13 +146,21 @@ const Admin = () => {
         body: JSON.stringify({ status, error_message: reason })
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Update failed');
+      let result;
+      const text = await response.text();
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (e) {
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
+      if (!response.ok) throw new Error(result.error || result.message || 'Update failed');
 
       toast.success(status === 'paid' ? 'Payout marked as paid!' : 'Payout request declined');
       fetchPayoutRequests();
       fetchArtists(); // Refresh balances
     } catch (err: any) {
+      console.error('Update payout status error:', err);
       toast.error('Error: ' + err.message);
     }
   };
@@ -385,7 +394,7 @@ const Admin = () => {
     }
   };
 
-  if (!userProfile?.is_admin) return null;
+  if (!userProfile?.is_admin && userProfile?.role !== 'admin') return null;
 
   const TabButton = ({ id, label, icon: Icon, count }: { id: typeof activeTab, label: string, icon: any, count?: number }) => (
     <button
