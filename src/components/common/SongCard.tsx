@@ -20,7 +20,7 @@ interface SongCardProps {
 
 const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout = 'list' }) => {
   const navigate = useNavigate();
-  const { currentSong, isPlaying, playSong, addToQueue, playQueue, dataSaver } = usePlayer();
+  const { currentSong, isPlaying, playSong, addToQueue, playQueue, dataSaver, purchasedIds } = usePlayer();
   const { userProfile } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -223,7 +223,7 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout
           </div>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
-           {!song.is_purchased && song.is_for_sale && (
+           {!song.is_purchased && !purchasedIds.has(song.id) && song.is_for_sale && (
              <button 
                onClick={handleBuy}
                className="flex items-center gap-2 px-3 py-1.5 bg-smash-orange/10 text-smash-orange hover:bg-smash-orange text-[10px] md:text-[11px] font-display font-semibold uppercase tracking-widest rounded-full transition-all hover:text-white"
@@ -268,7 +268,7 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout
 
 const SongMenu = ({ song, onClose, onBuy, onAddToPlaylist }: any) => {
   const navigate = useNavigate();
-  const { addToQueue } = usePlayer();
+  const { addToQueue, purchasedIds } = usePlayer();
   
   const handleShare = async () => {
     const shareData = {
@@ -326,7 +326,7 @@ const SongMenu = ({ song, onClose, onBuy, onAddToPlaylist }: any) => {
         <button className="w-full px-4 py-2.5 text-left text-[13px] font-sans font-medium flex items-center gap-3 hover:bg-bg-elevated transition-colors text-text-primary">
           <Info size={16} /> Song Details
         </button>
-        {!song.is_purchased && song.is_for_sale && (
+        {!song.is_purchased && !purchasedIds?.has(song.id) && song.is_for_sale && (
           <>
             <div className="h-px w-full bg-border-default my-1" />
             <button 

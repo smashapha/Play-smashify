@@ -157,7 +157,7 @@ async function startServer() {
         status: 'pending',
         paychangu_ref: tx_ref,
         description: descriptions[type] || 'Smashify Payment',
-        metadata: meta
+        metadata: { ...meta, payment_type: type }
       });
 
       if (txError) {
@@ -283,11 +283,11 @@ async function startServer() {
       console.log(`[PAYOUT] Initiating for user: ${user.id}, ref: ${payoutRef}`);
       
       const cleanKey = PAYCHANGU_SECRET_KEY.trim();
-      // Using singular 'disbursement' based on 405 error reports for plural
-      const payoutEndpoint = 'https://api.paychangu.com/v1/disbursement'; 
+      // Correcting to the standard disbursement endpoint
+      const payoutEndpoint = 'https://api.paychangu.com/v1/disbursements'; 
       console.log("[PAYOUT] Calling PayChangu:", payoutEndpoint);
       
-      const response = await fetch('https://api.paychangu.com/mobile-money/payments/initiate', {
+      const response = await fetch(payoutEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cleanKey}`,
@@ -302,8 +302,8 @@ async function startServer() {
           reference: payoutRef,
           first_name: artist.full_name?.split(' ')[0] || 'Artist',
           last_name: artist.full_name?.split(' ').slice(1).join(' ') || '',
-          email: artist.email || '',
-          callback_url: `${process.env.SUPABASE_URL}/functions/v1/payout-webhook`,
+          email: artist.email || 'payout@smashify.mw',
+          callback_url: `${APP_URL}/api/functions/payout-webhook`,
           type: 'payment'
         })
       });
@@ -472,7 +472,8 @@ async function startServer() {
       const metadata = transaction.metadata || {};
       const { userId, artistId, songId, anonymous } = metadata;
 
-      console.log(`[WEBHOOK] Processing type: ${type} for ref: ${tx_ref}, userId: ${userId}`);
+      console.log(`[WEBHOOK] Payload received:`, JSON.stringify(payload));
+      console.log(`[WEBHOOK] Processing type: ${type} for ref: ${tx_ref}, userId: ${userId}, artistId: ${artistId}`);
 
       await supabaseAdmin.from('transactions').update({ 
         status: 'completed',
@@ -485,8 +486,6 @@ async function startServer() {
         status: 'processed',
         payload: JSON.stringify(payload)
       });
-
-      console.log(`[WEBHOOK] Processing type: ${type} for ref: ${tx_ref}`);
 
       switch (type) {
         case 'TRACK_PURCHASE':
@@ -510,38 +509,52 @@ async function startServer() {
           const saleFee = 0.15;
           const saleNet = amount * (1 - saleFee);
           
-          try {
-            const { error: rpcErr } = await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: saleNet });
-            if (rpcErr) {
-               // Fallback if RPC fails
-               const { data: p } = await supabaseAdmin.from('profiles').select('wallet_balance').eq('id', artistId).single();
-               await supabaseAdmin.from('profiles').update({ wallet_balance: (p?.wallet_balance || 0) + saleNet }).eq('id', artistId);
+          if (artistId) {
+            try {
+              const { error: rpcErr } = await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, p_amount: saleNet });
+              if (rpcErr) {
+                 console.warn('[WEBHOOK] RPC increment failed, trying manual fallback...', rpcErr.message);
+                 const { data: p } = await supabaseAdmin.from('profiles').select('wallet_balance').eq('id', artistId).single();
+                 await supabaseAdmin.from('profiles').update({ wallet_balance: (p?.wallet_balance || 0) + saleNet }).eq('id', artistId);
+              }
+            } catch(e) {
+               console.error('[WEBHOOK] Wallet update error:', e);
             }
-          } catch(e) {
-             console.error('[WEBHOOK] Wallet update error:', e);
+            
+            await supabaseAdmin.from('notifications').insert({
+               profile_id: artistId,
+               user_type: 'artist',
+               type: 'track_sold',
+               message: `You sold a track! MWK ${amount.toLocaleString()} earned. 💿`,
+               link: '/artist-hub#dashboard'
+            });
           }
-          
-          await supabaseAdmin.from('notifications').insert({
-             profile_id: artistId,
-             user_type: 'artist',
-             type: 'track_sold',
-             message: `You sold a track! MWK ${amount.toLocaleString()} earned. 💿`,
-             link: '/artist-hub#dashboard'
-          });
           break;
 
         case 'TIP':
           const tipFee = 0.10;
           const tipNet = amount * (1 - tipFee);
-          await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: tipNet });
-          if (!anonymous) {
-            await supabaseAdmin.from('notifications').insert({
-              profile_id: artistId,
-              user_type: 'artist',
-              type: 'tip_received',
-              message: `You received a MWK ${amount.toLocaleString()} tip! (Net: MWK ${tipNet.toLocaleString()}) 💸`,
-              link: '/artist-hub#dashboard'
-            });
+          if (artistId) {
+            console.log(`[WEBHOOK] Incrementing wallet for artist ${artistId} by ${tipNet}`);
+            const { error: tipRpcErr } = await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, p_amount: tipNet });
+            if (tipRpcErr) {
+              console.warn('[WEBHOOK] TIP RPC failed, trying manual fallback...', tipRpcErr.message);
+              const { data: p } = await supabaseAdmin.from('profiles').select('wallet_balance').eq('id', artistId).single();
+              const { error: manualErr } = await supabaseAdmin.from('profiles').update({ wallet_balance: (p?.wallet_balance || 0) + tipNet }).eq('id', artistId);
+              if (manualErr) console.error('[WEBHOOK] Manual wallet update failed:', manualErr);
+            }
+
+            if (!anonymous) {
+              await supabaseAdmin.from('notifications').insert({
+                profile_id: artistId,
+                user_type: 'artist',
+                type: 'tip_received',
+                message: `You received a MWK ${amount.toLocaleString()} tip! (Net: MWK ${tipNet.toLocaleString()}) 💸`,
+                link: '/artist-hub#dashboard'
+              });
+            }
+          } else {
+            console.error('[WEBHOOK] No artistId found for TIP payment');
           }
           break;
 

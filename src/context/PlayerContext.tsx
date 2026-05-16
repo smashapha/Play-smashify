@@ -42,6 +42,7 @@ interface PlayerContextType {
   setIsExpanded: (expanded: boolean) => void;
   addToQueue: (song: Song) => void;
   removeFromQueue: (songId: string) => void;
+  purchasedIds: Set<string>;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -88,6 +89,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
   const [shuffledQueue, setShuffledQueue] = useState<Song[]>([]);
+  const [purchasedIds, setPurchasedIds] = useState<Set<string>>(new Set());
   const { userProfile } = useAuth();
   const lastIncrementedSongId = useRef<string | null>(null);
 
@@ -729,8 +731,40 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setQueue(prev => prev.filter(s => s.id !== songId));
   };
 
+  const fetchPurchasedSongs = async () => {
+    if (!userProfile?.id) {
+       setPurchasedIds(new Set());
+       return;
+    }
+    try {
+       const { data } = await supabase
+          .from('fan_purchases')
+          .select('song_id')
+          .eq('fan_id', userProfile.id);
+       
+       if (data) {
+          setPurchasedIds(new Set(data.map(p => p.song_id)));
+       }
+    } catch (e) {
+       console.error('Error fetching purchases:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchPurchasedSongs();
+  }, [userProfile?.id]);
+
+  // Derived currentSong with latest purchase status
+  const currentSongWithStats = useMemo(() => {
+    if (!currentSong) return null;
+    return {
+      ...currentSong,
+      is_purchased: currentSong.is_purchased || purchasedIds.has(currentSong.id)
+    };
+  }, [currentSong, purchasedIds]);
+
   const value = useMemo(() => ({
-    currentSong,
+    currentSong: currentSongWithStats,
     isPlaying,
     currentTime,
     duration,
@@ -764,11 +798,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setEQPreset,
     setIsExpanded,
     addToQueue,
-    removeFromQueue
+    removeFromQueue,
+    purchasedIds
   }), [
     currentSong, isPlaying, currentTime, duration, volume, queue, dataSaver,
     eqPreset, playbackRate, sleepTimerRemaining, isExpanded, radioMode,
-    adPlaying, adSkipAvailable, isShuffle, repeatMode
+    adPlaying, adSkipAvailable, isShuffle, repeatMode, purchasedIds
   ]);
 
   return (
