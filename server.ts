@@ -308,8 +308,8 @@ async function startServer() {
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
       // Check if user is admin
-      const { data: adminProfile } = await supabaseAdmin.from('profiles').select('is_admin, role').eq('id', user.id).single();
-      if (!adminProfile?.is_admin && adminProfile?.role !== 'admin') {
+      const { data: adminProfile } = await supabaseAdmin.from('profiles').select('is_admin').eq('id', user.id).single();
+      if (!adminProfile?.is_admin) {
          return res.status(403).json({ error: 'Admin access required' });
       }
 
@@ -406,7 +406,7 @@ async function startServer() {
       if (status === 'successful') {
         await supabaseAdmin.from('payout_requests').update({
           status: 'paid',
-          processed_at: new Date().toISOString()
+          paid_at: new Date().toISOString()
         }).eq('id', payout.id);
 
         await supabaseAdmin.from('transactions').insert({
@@ -515,11 +515,22 @@ async function startServer() {
       console.log(`[WEBHOOK] Payload received:`, JSON.stringify(payload));
       console.log(`[WEBHOOK] Processing type: ${type} for ref: ${tx_ref}, userId: ${userId}, artistId: ${artistId}`);
 
-      const pFee = type === 'TRACK_PURCHASE' ? amount * 0.15 : (type === 'TIP' ? amount * 0.10 : 0);
+      let pFee = 0;
+      if (type === 'TRACK_PURCHASE') {
+        pFee = amount * 0.15;
+      } else if (type === 'TIP') {
+        pFee = amount * 0.10;
+      } else if (type === 'FAN_SUBSCRIPTION') {
+        pFee = amount * 0.15;
+      } else if (type.includes('LISTENER_') || type.includes('ARTIST_')) {
+        pFee = amount; // Platform takes 100% for studio tiers and listener subs
+      }
 
       await supabaseAdmin.from('transactions').update({ 
         status: 'completed',
         gross_amount: amount,
+        platform_fee: pFee,
+        net_amount: amount - pFee,
         completed_at: new Date().toISOString()
       }).eq('id', transaction.id);
 
@@ -610,6 +621,20 @@ async function startServer() {
             status: 'active',
             next_billing_at: renewsAt.toISOString()
           });
+
+          const fanSubFee = 0.15;
+          const fanSubNet = amount * (1 - fanSubFee);
+          if (artistId) {
+            try {
+              const { error: rpcErr } = await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: fanSubNet });
+              if (rpcErr) {
+                 const { data: p } = await supabaseAdmin.from('profiles').select('wallet_balance').eq('id', artistId).single();
+                 await supabaseAdmin.from('profiles').update({ wallet_balance: (p?.wallet_balance || 0) + fanSubNet }).eq('id', artistId);
+              }
+            } catch(e) {
+               console.error('[WEBHOOK] Fan sub wallet update error:', e);
+            }
+          }
 
           await supabaseAdmin.from('notifications').insert({
             profile_id: artistId,

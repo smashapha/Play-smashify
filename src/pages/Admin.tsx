@@ -456,8 +456,8 @@ const Admin = () => {
                 {stat.icon}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg md:text-xl font-black text-white break-words">{stat.value}</p>
-                <p className="text-[9px] font-black uppercase tracking-widest text-smash-gray truncate mt-0.5">{stat.label}</p>
+                <p className="text-xl md:text-2xl font-black text-white break-words leading-none">{stat.value}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-smash-gray mt-1 leading-tight">{stat.label}</p>
               </div>
             </div>
           ))}

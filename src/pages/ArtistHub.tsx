@@ -32,7 +32,7 @@ const NotificationsTab = ({ userProfile }: any) => {
     const { data } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', userProfile.id)
+      .eq('profile_id', userProfile.id)
       .order('created_at', { ascending: false });
     setNotifications(data || []);
     setLoading(false);
