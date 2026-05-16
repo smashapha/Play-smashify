@@ -881,7 +881,7 @@ const MotoFeed: React.FC = () => {
   );
 
   return (
-    <div className="h-screen w-screen bg-smash-black overflow-hidden touch-none">
+    <div className="absolute inset-0 bg-smash-black overflow-hidden touch-none flex flex-col">
        {/* UI Tooltips */}
        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 pointer-events-none">
           <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-2">

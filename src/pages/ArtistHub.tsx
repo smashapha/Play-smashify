@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { Song, Album } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { BottomNav } from '../components/common/MainLayout';
 import { getArtistTier, getTierLimits, getSongsUploadedThisMonth } from '../lib/tierUtils';
 import { requestPayout, upgradeArtistTier, payForAdCampaign } from '../lib/paychangu';
 
@@ -380,6 +381,7 @@ export default function ArtistHub() {
           </div>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 }

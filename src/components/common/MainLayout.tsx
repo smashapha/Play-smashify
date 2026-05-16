@@ -79,7 +79,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsC
   const navigate = useNavigate();
 
   const navItems = [
-    { icon: Home, label: 'Home', path: '/' },
+    { icon: Home, label: 'Home', path: '/home' },
     { icon: Compass, label: 'Discover', path: '/discover' },
     { icon: Library, label: 'Library', path: '/library' },
     { icon: Flame, label: 'Feed', path: '/moto-feed' },
@@ -252,7 +252,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsC
   );
 };
 
-const BottomNav = () => {
+export const BottomNav = () => {
   const { role, user } = useAuth();
   
   // Listener tabs: Home · Discover · Library · Feed · Profile
@@ -264,7 +264,7 @@ const BottomNav = () => {
     { icon: Library, label: 'LIBRARY', path: '/library' },
     { icon: User, label: 'PROFILE', path: '/profile' }
   ] : [
-    { icon: Home, label: 'HOME', path: '/' },
+    { icon: Home, label: 'HOME', path: '/home' },
     { icon: Compass, label: 'DISCOVER', path: '/discover' },
     { icon: Library, label: 'LIBRARY', path: '/library' },
     { icon: Flame, label: 'FEED', path: '/moto-feed' },
@@ -332,7 +332,7 @@ const MainLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
-              className="w-full h-full"
+              className="w-full h-full relative"
             >
               <Outlet />
             </motion.div>

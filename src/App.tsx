@@ -213,8 +213,7 @@ function AppContent() {
       <Route path="/auth/artist" element={<AuthArtist />} />
       <Route path="/artists" element={<ArtistLanding />} />
       <Route path="/application-pending" element={role === 'pending' || role === 'artist' ? <Navigate to="/artist-hub" replace /> : <ApplicationPending />} />
-      <Route path="/moto-feed" element={<MotoFeed />} />
-
+      
       {/* Payment Processing Pages (Standalone) */}
       <Route path="/purchase-success" element={<PaymentSuccess />} />
       <Route path="/tip-success" element={<PaymentSuccess />} />
@@ -236,7 +235,8 @@ function AppContent() {
 
       {/* Main App Experience (Shared Layout) */}
       <Route element={<MainLayout />}>
-        <Route path="/home" element={user ? <Home /> : <Navigate to="/" replace />} />
+        <Route path="home" element={user ? <Home /> : <Navigate to="/" replace />} />
+        <Route path="moto-feed" element={<MotoFeed />} />
         <Route path="discover" element={<Discover />} />
         <Route path="trending" element={<Trending />} />
         <Route 
