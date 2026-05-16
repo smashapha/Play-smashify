@@ -666,7 +666,7 @@ const GlobalPlayer: React.FC = () => {
 
   return (
     <>
-      <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-[60] px-2 pb-2 md:px-0 md:pb-0 md:pl-[72px] lg:pl-[240px] pointer-events-none transition-all duration-300">
+      <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-[60] px-2 md:px-0 md:pb-0 md:pl-[var(--sidebar-width,240px)] pointer-events-none transition-all duration-300">
         <motion.div 
           initial={{ y: 100 }}
           animate={{ y: 0 }}

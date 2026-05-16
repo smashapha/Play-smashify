@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, Library, User, Music, TrendingUp, Mic2, Compass, Flame, Wifi, WifiOff, LogOut, ShieldCheck, ChevronRight, ChevronLeft, Bell } from 'lucide-react';
 import GlobalPlayer from '../player/GlobalPlayer';
@@ -21,10 +21,10 @@ const TopBar = () => {
       
       {/* Mobile Logo */}
       <div className="md:hidden flex-1 flex items-center">
-        <Logo size="sm" showText={true} onClick={() => navigate('/')} className="cursor-pointer scale-75 origin-left" />
+        <Logo size="sm" showText={true} onClick={() => navigate('/')} className="cursor-pointer" />
       </div>
 
-      <div className="flex-1 max-w-xl hidden md:block">
+      <div className="flex-1 max-w-xl hidden md:block min-w-0 mx-4">
         <form className="relative group" onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
@@ -43,7 +43,7 @@ const TopBar = () => {
         </form>
       </div>
 
-      <div className="flex items-center gap-4 ml-auto">
+      <div className="flex items-center gap-2 sm:gap-4 ml-auto shrink-0">
         {userProfile?.is_admin && (
            <Link 
              to="/admin" 
@@ -96,7 +96,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean,
     <motion.aside 
       animate={{ width: isCollapsed ? 72 : 240 }} 
       transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-      className="flex flex-col h-full bg-bg-surface border-r border-border-subtle py-6 relative overflow-visible"
+      className="flex flex-col h-full bg-bg-surface border-r border-border-subtle py-6 relative overflow-hidden"
     >
       <div className="flex items-center justify-center h-8 mb-8 px-4">
         {isCollapsed ? (
@@ -109,7 +109,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean,
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto no-scrollbar pb-20">
+      <nav className="flex-1 overflow-y-auto no-scrollbar pb-4">
         {!isCollapsed && <div className="px-5 mb-2 text-[9px] font-display font-medium uppercase tracking-widest text-text-muted">NAVIGATE</div>}
         <ul className="space-y-1">
           {navItems.map((item) => (
@@ -240,7 +240,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean,
         )}
       </nav>
 
-      <div className="absolute bottom-6 w-full flex justify-center">
+      <div className="px-4 mt-6 flex justify-center shrink-0">
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="w-[36px] h-[36px] rounded-full bg-bg-elevated flex items-center justify-center text-text-muted hover:text-text-primary transition-colors hover:scale-105 active:scale-95"
@@ -275,7 +275,7 @@ export const BottomNav = () => {
   const activeBgClass = role === 'artist' ? 'bg-smash-purple/20' : 'bg-smash-orange/20';
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(64px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] bg-[#0a0a0d]/92 backdrop-blur-xl border-t border-white/5 z-40 flex items-center justify-around px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(64px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] bg-bg-page/92 backdrop-blur-xl border-t border-white/5 z-40 flex items-center justify-around px-2">
       {tabs.map(tab => (
         <NavLink 
           key={tab.path} 
@@ -284,14 +284,9 @@ export const BottomNav = () => {
         >
           {({ isActive }) => (
             <>
-              {isActive && (
-                <motion.div 
-                  layoutId="bottomNavPill"
-                  className={`absolute top-1 w-[28px] h-[4px] rounded-full ${activeBgClass}`}
-                />
-              )}
-              <tab.icon size={22} strokeWidth={1.5} className={isActive ? 'mt-3' : 'mt-0'} />
-              <span className={`text-[9px] font-display font-medium uppercase tracking-wide ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+              <div className={`absolute top-1 w-[28px] h-[4px] rounded-full transition-opacity ${isActive ? activeBgClass : 'opacity-0'}`} />
+              <tab.icon size={22} strokeWidth={1.5} className="mt-2" />
+              <span className={`text-[9px] font-display font-medium uppercase tracking-wide transition-opacity ${isActive ? 'opacity-100' : 'opacity-50'}`}>
                 {tab.label}
               </span>
             </>
@@ -306,6 +301,18 @@ const MainLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      const sidebarW = isSidebarCollapsed ? '72px' : '240px';
+      document.documentElement.style.setProperty('--sidebar-width', sidebarW);
+      document.documentElement.style.setProperty('--content-margin', w >= 768 ? sidebarW : '0px');
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [isSidebarCollapsed]);
+
   return (
     <div className="min-h-screen bg-bg-page text-text-primary flex">
       {/* Sidebar navigation */}
@@ -314,17 +321,14 @@ const MainLayout: React.FC = () => {
       </div>
 
       {/* Main content area */}
-      <motion.div 
-        animate={{ 
-          marginLeft: typeof window !== 'undefined' && window.innerWidth < 768 ? 0 : (isSidebarCollapsed ? 72 : 240) 
-        }}
-        transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        className="flex-1 flex flex-col min-w-0 md:ml-0 transition-all"
+      <div 
+        style={{ marginLeft: 'var(--content-margin)' }}
+        className="flex-1 flex flex-col min-w-0 transition-all duration-300"
       >
         <TopBar />
         
         {/* Content container with padding for sticky player and mobile tab bar */}
-        <main className="flex-1 w-full pb-[144px] md:pb-[80px]">
+        <main className="flex-1 w-full pb-[148px] md:pb-[96px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -338,7 +342,7 @@ const MainLayout: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </main>
-      </motion.div>
+      </div>
 
       <GlobalPlayer />
       <BottomNav />

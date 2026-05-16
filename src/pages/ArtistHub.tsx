@@ -100,6 +100,27 @@ export default function ArtistHub() {
     if (userProfile?.id) fetchData();
   }, [userProfile]);
 
+  useEffect(() => {
+    const update = () => {
+      document.documentElement.style.setProperty(
+        '--sidebar-width',
+        window.innerWidth >= 1024 ? '256px' : '0px'
+      );
+      document.documentElement.style.setProperty(
+        '--content-margin',
+        window.innerWidth >= 1024 ? '256px' : '0px'
+      );
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      // Reset to MainLayout defaults when leaving ArtistHub
+      document.documentElement.style.setProperty('--sidebar-width', '240px');
+      document.documentElement.style.setProperty('--content-margin', '240px');
+    };
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -192,7 +213,7 @@ export default function ArtistHub() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white flex overflow-hidden font-sans">
+    <div className="min-h-screen bg-bg-page text-white flex overflow-hidden font-sans">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -203,7 +224,7 @@ export default function ArtistHub() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#111111] border-r border-white/5 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 flex flex-col`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-bg-surface border-r border-white/5 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 flex flex-col`}>
         {/* Brand */}
         <div className="h-16 flex items-center px-6 border-b border-white/5 gap-3">
           <div className="w-8 h-8 rounded-full bg-smash-purple flex items-center justify-center text-white shadow-lg shadow-smash-purple/20">
@@ -302,9 +323,9 @@ export default function ArtistHub() {
       </aside>
 
       {/* Main Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col h-[100dvh] overflow-y-auto w-full min-w-0">
         {/* Topbar */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-white/5 bg-[#111111]/80 backdrop-blur-md z-30 shrink-0">
+        <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-white/5 bg-bg-surface/80 backdrop-blur-md z-30 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(true)} className="p-2 lg:hidden text-smash-gray hover:text-white">
               <Menu size={20} />
