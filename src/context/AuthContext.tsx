@@ -221,8 +221,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phone: authUser.user_metadata?.phone || null,
             approved: false,
             user_type: 'artist',
-            artist_tier: 'Free',
-            subscription_tier: 'Free'
+            artist_tier: 'free',
+            subscription_tier: 'free'
           };
           const { error: createError } = await supabase.from('profiles').upsert(profileData);
           if (!createError) {
@@ -237,7 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Listener',
             email: authUser.email,
             phone: authUser.user_metadata?.phone || null,
-            subscription_tier: 'Free',
+            subscription_tier: 'free',
             user_type: 'listener'
           };
           const { error: createError } = await supabase.from('user_profiles').upsert(profileData);

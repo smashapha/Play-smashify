@@ -135,7 +135,7 @@ async function startServer() {
         fan_id: meta.userId || user.id,
         type: type.includes('subscription') ? 'subscription' : (type === 'tip' ? 'donation' : (type === 'track_purchase' ? 'sale' : 'other')),
         gross_amount: amount,
-        net_amount: amount * 0.9,
+        net_amount: amount * 0.85,
         status: 'pending',
         paychangu_ref: tx_ref,
         description: descriptions[type] || 'Smashify Payment',
@@ -245,10 +245,10 @@ async function startServer() {
 
       console.log(`[PAYOUT] Initiating for user: ${user.id}, amount: ${amount}, phone: ${phone}, network: ${network}`);
       
-      console.log("PayChangu Payout: Calling endpoint...", 'https://api.paychangu.com/disbursements');
+      console.log("PayChangu Payout: Calling endpoint...", 'https://api.paychangu.com/v1/disbursement');
       // Clean KEY and ensure plural/singular consistency
       const cleanKey = PAYCHANGU_SECRET_KEY.trim();
-      const response = await fetch('https://api.paychangu.com/disbursements', {
+      const response = await fetch('https://api.paychangu.com/v1/disbursement', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cleanKey}`,
@@ -328,7 +328,7 @@ async function startServer() {
         });
 
         await supabaseAdmin.from('notifications').insert({
-          profile_id: payout.artist_id,
+          user_id: payout.artist_id,
           user_type: 'artist',
           type: 'payout_sent',
           message: `MK ${amount.toLocaleString()} has been sent to your ${payout.network} number 🎉`,
@@ -342,7 +342,7 @@ async function startServer() {
         }).eq('id', payout.artist_id);
 
         await supabaseAdmin.from('notifications').insert({
-          profile_id: payout.artist_id,
+          user_id: payout.artist_id,
           user_type: 'artist',
           type: 'payout_failed',
           message: `Your withdrawal failed. MK ${amount.toLocaleString()} returned to your wallet.`,
@@ -389,7 +389,14 @@ async function startServer() {
     try {
       if (!supabaseAdmin) throw new Error('Supabase Admin not initialized');
       const payload = req.body;
-      const { tx_ref, status, amount } = payload;
+      const tx_ref = payload.tx_ref || payload.transaction_reference || payload.reference;
+      const status = payload.status;
+      const amount = payload.amount;
+      
+      if (!tx_ref) {
+        console.error('[WEBHOOK] Missing reference in payload:', payload);
+        return res.sendStatus(200);
+      }
       
       const { data: transaction, error: txError } = await supabaseAdmin
         .from('transactions')
@@ -462,7 +469,7 @@ async function startServer() {
           }
           
           await supabaseAdmin.from('notifications').insert({
-             profile_id: artistId,
+             user_id: artistId,
              user_type: 'artist',
              type: 'track_sold',
              message: `You sold a track! MWK ${amount.toLocaleString()} earned. 💿`,
@@ -476,7 +483,7 @@ async function startServer() {
           await supabaseAdmin.rpc('increment_wallet_balance', { p_id: artistId, amount: tipNet });
           if (!anonymous) {
             await supabaseAdmin.from('notifications').insert({
-              profile_id: artistId,
+              user_id: artistId,
               user_type: 'artist',
               type: 'tip_received',
               message: `You received a MWK ${amount.toLocaleString()} tip! (Net: MWK ${tipNet.toLocaleString()}) 💸`,
@@ -496,7 +503,7 @@ async function startServer() {
           });
 
           await supabaseAdmin.from('notifications').insert({
-            profile_id: artistId,
+            user_id: artistId,
             user_type: 'artist',
             type: 'fan_subscribed',
             message: `A fan has subscribed to you! MWK ${amount.toLocaleString()} earned. 💖`,
@@ -520,11 +527,14 @@ async function startServer() {
         case 'ARTIST_ELITE':
           const artistTierEnds = new Date();
           artistTierEnds.setDate(artistTierEnds.getDate() + 365);
-          const tierName = type.split('_')[1].toLowerCase() === 'rising' ? 'rising_star' : type.split('_')[1].toLowerCase();
+          const tierParts = type.split('_');
+          const tierName = tierParts.length > 2 ? `${tierParts[1]}_${tierParts[2]}`.toLowerCase() : tierParts[1].toLowerCase();
+          
           await supabaseAdmin.from('profiles').update({
             subscription_tier: tierName,
             subscription_ends: artistTierEnds.toISOString()
           }).eq('id', userId);
+          console.log(`[WEBHOOK] Updated artist subscription for ${userId} to ${tierName}`);
           break;
       }
 
