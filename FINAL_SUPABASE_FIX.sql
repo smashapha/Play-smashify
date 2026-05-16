@@ -78,6 +78,7 @@ USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin 
 
 
 -- PART 2: FIX TRANSACTIONS CONSTRAINTS
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(12,2) DEFAULT 0;
 ALTER TABLE public.transactions 
 DROP CONSTRAINT IF EXISTS transactions_type_check;
 

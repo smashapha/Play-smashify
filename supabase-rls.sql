@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     fan_id UUID REFERENCES public.user_profiles(id),
     type TEXT NOT NULL,
     gross_amount DECIMAL(12,2) NOT NULL,
+    platform_fee DECIMAL(12,2) DEFAULT 0,
     net_amount DECIMAL(12,2),
     status TEXT DEFAULT 'pending',
     paychangu_ref TEXT UNIQUE,
@@ -92,6 +93,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 
 -- Ensure all columns exist on profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(12,2) DEFAULT 0;
 
 -- Drop old visual ads table if it exists
 DROP TABLE IF EXISTS ads CASCADE;
