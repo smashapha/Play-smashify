@@ -101,7 +101,7 @@ const About = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-smash-orange to-smash-red rounded-3xl p-8 md:p-12 mb-16 shadow-[0_0_100px_rgba(255,95,0,0.2)] text-white">
+      <div className="bg-gradient-to-br from-smash-orange to-red-500 rounded-3xl p-8 md:p-12 mb-16 shadow-[0_0_100px_rgba(255,95,0,0.2)] text-white">
         <h2 className="text-3xl font-black font-display italic uppercase text-center mb-12">The Numbers</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>

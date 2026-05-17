@@ -47,7 +47,7 @@ const TopBar = () => {
         {userProfile?.is_admin && (
            <Link 
              to="/admin" 
-             className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-smash-red/10 text-smash-red border border-smash-red/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-smash-red hover:text-white transition-all shadow-lg shadow-smash-red/10"
+             className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
            >
               <ShieldCheck size={14} /> Admin access
            </Link>
@@ -63,7 +63,7 @@ const TopBar = () => {
         {user && (
           <button 
             onClick={() => signOut()}
-            className="p-2.5 bg-bg-elevated border border-border-subtle rounded-[8px] text-text-muted hover:text-smash-red transition-colors focus:outline-none focus:ring-2 focus:ring-smash-orange focus:ring-offset-2 focus:ring-offset-bg-page"
+            className="p-2.5 bg-bg-elevated border border-border-subtle rounded-[8px] text-text-muted hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-smash-orange focus:ring-offset-2 focus:ring-offset-bg-page"
             title="Sign Out"
           >
             <LogOut size={16} />
@@ -196,8 +196,8 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean,
                     to="/admin"
                     className={({ isActive }) => 
                       `flex items-center h-[44px] ${isCollapsed ? 'justify-center mx-2 rounded-[10px]' : 'px-5'} gap-3 font-display font-medium text-[13px] transition-all group ${
-                        isActive ? 'text-smash-red bg-smash-red/10 border-l-[4px] border-smash-red' : 'text-smash-red hover:bg-smash-red/10 border-l-[4px] border-transparent'
-                      } ${isCollapsed && isActive ? 'border-none text-smash-red' : ''}`
+                        isActive ? 'text-red-400 bg-red-500/10 border-l-[4px] border-red-500' : 'text-red-400 hover:bg-red-500/10 border-l-[4px] border-transparent'
+                      } ${isCollapsed && isActive ? 'border-none text-red-400' : ''}`
                     }
                     title="Admin Panel"
                   >

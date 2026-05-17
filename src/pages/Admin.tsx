@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShieldCheck, CheckCircle2, Trash2, Music2, Plus, FileAudio, X, Flame, 
+  ShieldCheck, CircleCheck, Trash2, Music2, Plus, FileAudio, X, Flame, 
   Volume2, VolumeX, Edit3, LayoutDashboard, Clock, Radio, Wallet, DollarSign,
   Mic2, Users, ShoppingCart, Heart, CreditCard, Search, ArrowLeft, TrendingUp,
   Pause, Play
@@ -451,7 +451,7 @@ const Admin = () => {
       <Icon size={14} className={activeTab === id ? 'text-smash-purple' : ''} />
       {label}
       {count !== undefined && count > 0 && (
-        <span className="ml-1 px-1.5 py-0.5 bg-smash-red text-white rounded text-[8px] font-black animate-pulse">
+        <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white rounded text-[8px] font-black animate-pulse">
           {count}
         </span>
       )}
@@ -484,7 +484,7 @@ const Admin = () => {
             <AdminSidebarItem id="overview" label="Review Overview" icon={LayoutDashboard} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} />
             <div className="h-px bg-white/5 my-4 mx-3" />
             <p className={`text-[9px] font-black text-smash-gray uppercase tracking-widest mb-2 px-3 ${sidebarCollapsed ? 'sr-only' : ''}`}>Governance</p>
-            <AdminSidebarItem id="applications" label="Applicants" icon={CheckCircle2} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} count={applications.length} />
+            <AdminSidebarItem id="applications" label="Applicants" icon={CircleCheck} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} count={applications.length} />
             <AdminSidebarItem id="song-reviews" label="Song Reviews" icon={Music2} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} count={pendingSongs.length} />
             <AdminSidebarItem id="snippet-reviews" label="Moto Feed" icon={Radio} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} count={pendingSnippets.length} />
             <AdminSidebarItem id="payouts" label="Payout Registry" icon={Wallet} activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} count={payoutRequests.filter(p => p.status === 'processing').length} />
@@ -691,7 +691,7 @@ const Admin = () => {
                                {l.phone || '--'}
                             </td>
                             <td className="px-8 py-6 text-right">
-                              <button onClick={() => deleteUser(l.id, l.full_name)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-smash-red text-smash-gray hover:text-white rounded-lg transition-all">
+                              <button onClick={() => deleteUser(l.id, l.full_name)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500 text-smash-gray hover:text-white rounded-lg transition-all">
                                 <Trash2 size={14} />
                               </button>
                             </td>
@@ -785,7 +785,7 @@ const Admin = () => {
                                   {(a.verified || a.is_verified) ? 'Verified' : 'Verify'}
                                 </button>
                                 
-                                <button onClick={() => deleteArtist(a.id, a.stage_name)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-smash-red text-smash-gray hover:text-white rounded-lg transition-all">
+                                <button onClick={() => deleteArtist(a.id, a.stage_name)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500 text-smash-gray hover:text-white rounded-lg transition-all">
                                   <Trash2 size={14} />
                                 </button>
                              </td>
@@ -1018,7 +1018,7 @@ const Admin = () => {
                                   {!song.approved && (
                                     <button onClick={() => approveSong(song.id)} className="px-4 py-2 bg-white text-black rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95">Release</button>
                                   )}
-                                  <button onClick={() => rejectSong(song.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-smash-red text-smash-gray hover:text-white rounded-lg transition-all">
+                                  <button onClick={() => rejectSong(song.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500 text-smash-gray hover:text-white rounded-lg transition-all">
                                     <Trash2 size={14} />
                                   </button>
                                </div>
@@ -1065,15 +1065,15 @@ const Admin = () => {
                                     <ShieldCheck size={14} className="opacity-40 group-hover/btn:opacity-100" /> Inspect ID Payload
                                   </a>
                                 ) : (
-                                  <span className="text-[9px] font-black uppercase text-smash-red tracking-widest">Document Missing</span>
+                                  <span className="text-[9px] font-black uppercase text-red-400 tracking-widest">Document Missing</span>
                                 )}
                               </td>
                               <td className="px-8 py-6 text-right">
                                 <div className="flex items-center justify-end gap-3">
                                    <button onClick={() => approveArtist(app)} className="h-11 w-11 bg-white text-black rounded-xl flex items-center justify-center hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95 group/app">
-                                      <CheckCircle2 size={24} />
+                                      <CircleCheck size={24} />
                                    </button>
-                                   <button onClick={() => rejectArtist(app)} className="h-11 w-11 bg-white/5 text-smash-gray border border-white/5 rounded-xl flex items-center justify-center hover:bg-smash-red hover:text-white transition-all active:scale-95 group/rej">
+                                   <button onClick={() => rejectArtist(app)} className="h-11 w-11 bg-white/5 text-smash-gray border border-white/5 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-95 group/rej">
                                       <X size={24} />
                                    </button>
                                 </div>
@@ -1139,7 +1139,7 @@ const Admin = () => {
                               <td className="px-8 py-6 text-right">
                                 <div className="flex items-center justify-end gap-3">
                                    <button onClick={() => approveSong(song.id)} className="px-4 py-2 bg-white text-black rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95">Authorize</button>
-                                   <button onClick={() => rejectSong(song.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-smash-red text-smash-gray hover:text-white rounded-lg transition-all active:scale-95"><Trash2 size={14} /></button>
+                                   <button onClick={() => rejectSong(song.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500 text-smash-gray hover:text-white rounded-lg transition-all active:scale-95"><Trash2 size={14} /></button>
                                 </div>
                               </td>
                             </tr>
@@ -1201,7 +1201,7 @@ const Admin = () => {
                               <td className="px-8 py-6 text-right">
                                 <div className="flex items-center justify-end gap-3">
                                    <button onClick={() => approveSnippet(snippet.id)} className="px-4 py-2 bg-white text-black rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95">Authorize</button>
-                                   <button onClick={() => rejectSnippet(snippet.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-smash-red text-smash-gray hover:text-white rounded-lg transition-all active:scale-95"><Trash2 size={14} /></button>
+                                   <button onClick={() => rejectSnippet(snippet.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-red-500 text-smash-gray hover:text-white rounded-lg transition-all active:scale-95"><Trash2 size={14} /></button>
                                 </div>
                               </td>
                             </tr>
@@ -1282,8 +1282,8 @@ const Admin = () => {
                                   </div>
                                </td>
                                <td className="px-8 py-6">
-                                  <div className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest inline-flex items-center gap-2 ${ad.active ? 'bg-smash-green/10 text-smash-green border border-smash-green/10' : 'bg-smash-red/10 text-smash-red border border-smash-red/20'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${ad.active ? 'bg-smash-green animate-pulse' : 'bg-smash-red'}`} />
+                                  <div className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest inline-flex items-center gap-2 ${ad.active ? 'bg-smash-green/10 text-smash-green border border-smash-green/10' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${ad.active ? 'bg-smash-green animate-pulse' : 'bg-red-500'}`} />
                                     {ad.active ? 'Broadcasting' : 'Halted'}
                                   </div>
                                </td>
@@ -1292,7 +1292,7 @@ const Admin = () => {
                                      <button onClick={() => toggleAdStatus(ad)} className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${ad.active ? 'bg-white/5 text-smash-orange hover:bg-smash-orange hover:text-black' : 'bg-smash-green/10 text-smash-green hover:bg-smash-green hover:text-white'}`}>
                                        {ad.active ? <Pause size={14} /> : <Play size={14} />}
                                      </button>
-                                     <button onClick={() => deleteAd(ad.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 text-smash-gray hover:bg-smash-red hover:text-white rounded-lg transition-all">
+                                     <button onClick={() => deleteAd(ad.id)} className="w-9 h-9 flex items-center justify-center bg-white/5 text-smash-gray hover:bg-red-500 hover:text-white rounded-lg transition-all">
                                        <Trash2 size={14} />
                                      </button>
                                   </div>
@@ -1387,14 +1387,14 @@ const AdminSidebarItem = ({ id, label, icon: Icon, activeTab, setActiveTab, coll
       <div className="flex-1 flex items-center justify-between overflow-hidden">
         <span className="text-[11px] font-black uppercase tracking-wider truncate">{label}</span>
         {count !== undefined && count > 0 && (
-          <span className="bg-smash-red text-white text-[8px] font-black px-1.5 py-0.5 rounded animate-pulse">
+          <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded animate-pulse">
             {count}
           </span>
         )}
       </div>
     )}
     {collapsed && count !== undefined && count > 0 && (
-      <div className="absolute left-14 h-4 w-4 bg-smash-red rounded-full flex items-center justify-center border-2 border-[#0c0c10]">
+      <div className="absolute left-14 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-[#0c0c10]">
          <span className="text-[7px] font-black text-white">{count}</span>
       </div>
     )}

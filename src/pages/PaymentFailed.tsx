@@ -15,10 +15,10 @@ const PaymentFailed = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full bg-[#111111] border border-white/5 rounded-[48px] p-12 shadow-2xl relative"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-smash-red/10 blur-[100px] -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-red-500/10 blur-[100px] -z-10" />
 
         <div className="space-y-8">
-          <div className="w-24 h-24 bg-smash-red/10 rounded-full flex items-center justify-center mx-auto text-smash-red">
+          <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-400">
             <XCircle size={48} />
           </div>
 

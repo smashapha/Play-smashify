@@ -29,7 +29,7 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-smash-black flex flex-col items-center justify-center text-center px-4">
-          <AlertCircle size={64} className="text-smash-red mb-6" />
+          <AlertCircle size={64} className="text-red-400 mb-6" />
           <h1 className="text-4xl font-black font-display italic tracking-tighter text-white mb-4">Something went wrong</h1>
           <p className="text-smash-gray font-medium max-w-md mb-8">
             {this.state.error?.message || "An unexpected error occurred. Our team has been notified."}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart3, Music2, Upload, Wallet, UserCircle, Settings, 
   TrendingUp, Users, Play, DollarSign, Plus, Trash2, 
-  Edit3, CheckCircle2, AlertCircle, Sparkles, ChevronRight,
+  Edit3, CircleCheck, AlertCircle, Sparkles, ChevronRight,
   Smartphone, Image as ImageIcon, FileAudio, Info, Flame,
   Disc, LogOut, ArrowLeft, ArrowRight, Menu, Clock, ExternalLink, ShieldCheck,
   ShoppingBag, Heart, Lock as AppLockIcon, X, Bell, Rocket, Star,
@@ -296,7 +296,7 @@ export default function ArtistHub() {
             {isAdmin && (
               <Link 
                 to="/admin"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-smash-red hover:text-white hover:bg-smash-red/10 transition-all mb-2 border border-smash-red/20 border-dashed"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:text-white hover:bg-red-500/10 transition-all mb-2 border border-red-500/20 border-dashed"
               >
                 <ShieldCheck size={18} /> Admin Dashboard
               </Link>
@@ -310,7 +310,7 @@ export default function ArtistHub() {
             </Link>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-smash-gray hover:text-smash-red hover:bg-smash-red/5 transition-all text-left"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-smash-gray hover:text-red-400 hover:bg-red-500/5 transition-all text-left"
             >
               <LogOut size={18} /> Log Out
             </button>
@@ -337,14 +337,14 @@ export default function ArtistHub() {
             {isAdmin && (
               <Link 
                 to="/admin" 
-                className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-smash-red/10 text-smash-red border border-smash-red/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-smash-red hover:text-white transition-all shadow-lg shadow-smash-red/10"
+                className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
               >
                 <ShieldCheck size={14} /> Admin Access
               </Link>
             )}
             {isApproved ? (
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-smash-green/10 text-smash-green border border-smash-green/20 rounded-full text-xs font-bold uppercase tracking-widest">
-                <CheckCircle2 size={12} /> Approved
+                <CircleCheck size={12} /> Approved
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-smash-orange/10 text-smash-orange border border-smash-orange/20 rounded-full text-xs font-bold uppercase tracking-widest">
@@ -463,17 +463,17 @@ const MotoAnalytics = ({ limits }: { limits: any }) => {
        
        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <MetricCard label="Total Plays" value={stats.plays} icon={<Music2 size={16} />} />
-          <MetricCard label="Completion" value={`${completionRate}%`} icon={<CheckCircle2 size={16} />} />
+          <MetricCard label="Completion" value={`${completionRate}%`} icon={<CircleCheck size={16} />} />
           <MetricCard label="Like Rate" value={`${likeRate}%`} icon={<Heart size={16} />} />
           <MetricCard label="Revenue" value={`MK ${stats.revenue.toLocaleString()}`} icon={<Wallet size={16} />} />
        </div>
 
        {Number(skipRate) > 50 && (
-          <div className="bg-smash-red/10 border border-smash-red/20 rounded-[10px] p-5 flex items-start gap-4">
-             <AlertCircle className="text-smash-red shrink-0 mt-1" size={24} />
+          <div className="bg-red-500/10 border border-red-500/20 rounded-[10px] p-5 flex items-start gap-4">
+             <AlertCircle className="text-red-400 shrink-0 mt-1" size={24} />
              <div>
-                <p className="text-smash-red font-display font-semibold uppercase tracking-widest text-[11px] mb-2">Low Hook Score Warning</p>
-                <p className="text-smash-red/80 text-[13px] font-sans leading-relaxed">Your tracks have a skip rate of {skipRate}%. Try uploading snippets with stronger intros or engaging captions to capture listeners in the first 5 seconds.</p>
+                <p className="text-red-400 font-display font-semibold uppercase tracking-widest text-[11px] mb-2">Low Hook Score Warning</p>
+                <p className="text-red-400/80 text-[13px] font-sans leading-relaxed">Your tracks have a skip rate of {skipRate}%. Try uploading snippets with stronger intros or engaging captions to capture listeners in the first 5 seconds.</p>
              </div>
           </div>
        )}
@@ -593,20 +593,20 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
         {userProfile?.is_admin && (
            <Link 
              to="/admin" 
-             className="col-span-full p-6 bg-gradient-to-r from-smash-red/20 via-smash-purple/20 to-transparent border border-smash-red/30 rounded-[30px] flex items-center justify-between group hover:border-smash-red transition-all shadow-2xl shadow-smash-red/10"
+             className="col-span-full p-6 bg-gradient-to-r from-red-500/20 via-smash-purple/20 to-transparent border border-red-500/30 rounded-[30px] flex items-center justify-between group hover:border-red-500 transition-all shadow-2xl shadow-red-500/10"
            >
               <div className="flex items-center gap-6">
-                 <div className="w-16 h-16 rounded-2xl bg-smash-red flex items-center justify-center text-white shadow-lg shadow-smash-red/20 group-hover:scale-110 transition-transform">
+                 <div className="w-16 h-16 rounded-2xl bg-red-500 flex items-center justify-center text-white shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
                     <ShieldCheck size={32} />
                  </div>
                  <div>
                     <h3 className="text-xl font-studio font-black uppercase italic text-white leading-tight">Terminal Control</h3>
-                    <p className="text-[10px] text-smash-red font-black uppercase tracking-[0.3em] mt-1">Platform Moderation & Payout Engine</p>
+                    <p className="text-[10px] text-red-400 font-black uppercase tracking-[0.3em] mt-1">Platform Moderation & Payout Engine</p>
                  </div>
               </div>
               <div className="flex items-center gap-3 pr-4">
                  <span className="text-[10px] font-black uppercase tracking-widest text-text-muted group-hover:text-white transition-colors">Enter System</span>
-                 <ArrowRight className="text-smash-red group-hover:translate-x-2 transition-transform" />
+                 <ArrowRight className="text-red-400 group-hover:translate-x-2 transition-transform" />
               </div>
            </Link>
         )}
@@ -661,7 +661,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                        <div className="space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
                           <label className="text-[11px] text-text-muted font-display font-medium uppercase tracking-wider block text-left">Select Network</label>
                           <div className="grid grid-cols-2 gap-3 mb-4">
-                            <button onClick={()=>setSelectedNetwork('Airtel')} className={`p-4 rounded-[10px] border flex flex-col items-center gap-2 transition-all ${selectedNetwork==='Airtel' ? 'bg-smash-red/10 border-smash-red text-smash-red' : 'bg-bg-elevated border-border-default text-text-secondary hover:border-text-muted'}`}>
+                            <button onClick={()=>setSelectedNetwork('Airtel')} className={`p-4 rounded-[10px] border flex flex-col items-center gap-2 transition-all ${selectedNetwork==='Airtel' ? 'bg-red-500/10 border-red-500 text-red-400' : 'bg-bg-elevated border-border-default text-text-secondary hover:border-text-muted'}`}>
                                <div className="font-display font-bold text-[14px]">AIRTEL</div>
                             </button>
                             <button onClick={()=>setSelectedNetwork('TNM')} className={`p-4 rounded-[10px] border flex flex-col items-center gap-2 transition-all ${selectedNetwork==='TNM' ? 'bg-smash-green/10 border-smash-green text-smash-green' : 'bg-bg-elevated border-border-default text-text-secondary hover:border-text-muted'}`}>
@@ -968,7 +968,7 @@ const PromotionTab = ({ userProfile }: { userProfile: any }) => {
                       />
                       {audioFile ? (
                         <>
-                          <CheckCircle2 className="text-smash-green mb-2" size={24} />
+                          <CircleCheck className="text-smash-green mb-2" size={24} />
                           <p className="text-[14px] font-display font-medium text-text-primary truncate max-w-[200px]">{audioFile.name}</p>
                         </>
                       ) : (
@@ -1053,7 +1053,7 @@ const PromotionTab = ({ userProfile }: { userProfile: any }) => {
             ads.map(ad => (
               <div key={ad.id} className="group relative bg-bg-surface border border-border-default rounded-[14px] overflow-hidden p-6 hover:border-smash-purple/50 transition-all flex flex-col shadow-sm">
                  <div className="absolute top-6 right-6">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-display font-semibold uppercase tracking-wider ${ad.active ? 'bg-smash-green/10 text-smash-green border border-smash-green/20' : 'bg-smash-red/10 text-smash-red border border-smash-red/20'}`}>
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-display font-semibold uppercase tracking-wider ${ad.active ? 'bg-smash-green/10 text-smash-green border border-smash-green/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                        {ad.active ? 'Active' : 'Expired'}
                     </span>
                  </div>
@@ -1244,7 +1244,7 @@ const SongsTab = ({ songs, onRefresh, setActiveTab }: any) => {
                     </td>
                     <td className="px-4 py-3 text-right space-x-2 last:pr-6">
                        <button className="w-8 h-8 inline-flex items-center justify-center bg-bg-surface border border-border-default text-text-muted hover:text-text-primary hover:bg-bg-elevated rounded-[8px] transition-all" onClick={() => toast('Edit feature coming soon')}><Edit3 size={14} /></button>
-                       <button onClick={() => handleDelete(song)} className="w-8 h-8 inline-flex items-center justify-center bg-smash-red/10 border border-smash-red/20 text-smash-red hover:bg-smash-red hover:text-white rounded-[8px] transition-all"><Trash2 size={14} /></button>
+                       <button onClick={() => handleDelete(song)} className="w-8 h-8 inline-flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-[8px] transition-all"><Trash2 size={14} /></button>
                     </td>
                   </tr>
                 ))}
@@ -1277,7 +1277,7 @@ const SongsTab = ({ songs, onRefresh, setActiveTab }: any) => {
                       </span>
                    </div>
                    <div className="flex items-center gap-1">
-                      <button onClick={() => handleDelete(song)} className="w-6 h-6 inline-flex items-center justify-center bg-smash-red/10 text-smash-red rounded disabled:opacity-50 transition-colors"><Trash2 size={12} /></button>
+                      <button onClick={() => handleDelete(song)} className="w-6 h-6 inline-flex items-center justify-center bg-red-500/10 text-red-400 rounded disabled:opacity-50 transition-colors"><Trash2 size={12} /></button>
                    </div>
                 </div>
               </div>
@@ -1443,7 +1443,7 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
       <div className="max-w-2xl mx-auto py-20 px-6">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-bg-surface border border-white/5 rounded-[40px] p-12 text-center shadow-2xl">
           <div className="w-24 h-24 bg-smash-purple/20 rounded-full flex items-center justify-center mx-auto mb-8">
-            <CheckCircle2 size={48} className="text-smash-purple" />
+            <CircleCheck size={48} className="text-smash-purple" />
           </div>
           <h2 className="text-4xl font-studio font-black italic uppercase text-white mb-4">Submission Sent!</h2>
           <p className="text-text-secondary font-medium mb-12">Your music is headed to the Smashify review team. This usually takes 2-4 hours.</p>
@@ -1525,7 +1525,7 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
                     <div className="aspect-square md:col-span-2 bg-bg-elevated border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:border-smash-orange transition-all relative overflow-hidden group shadow-inner" onClick={() => document.getElementById('audio-file')?.click()}>
                        {(mode === 'album' ? albumFiles.length > 0 : songFile) ? (
                          <div className="text-center">
-                           <CheckCircle2 size={40} className="text-smash-green mx-auto mb-3" />
+                           <CircleCheck size={40} className="text-smash-green mx-auto mb-3" />
                            <p className="text-white font-display font-black uppercase tracking-[0.1em] text-[12px]">{mode === 'album' ? `${albumFiles.length} Tracks Selected` : songFile?.name}</p>
                          </div>
                        ) : (
@@ -1820,9 +1820,9 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
                <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Upload up to 10 songs/month</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Basic analytics</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Airtel/TNM withdrawals</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Upload up to 10 songs/month</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Basic analytics</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Airtel/TNM withdrawals</li>
             </ul>
             <button 
               onClick={() => handleSubscribe('RisingStar')} 
@@ -1842,10 +1842,10 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
                <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-orange shrink-0 mt-0.5" /> Unlimited uploads</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-orange shrink-0 mt-0.5" /> Full analytics dashboard</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-orange shrink-0 mt-0.5" /> Priority support</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-orange shrink-0 mt-0.5" /> Album creation</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-orange shrink-0 mt-0.5" /> Unlimited uploads</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-orange shrink-0 mt-0.5" /> Full analytics dashboard</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-orange shrink-0 mt-0.5" /> Priority support</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-orange shrink-0 mt-0.5" /> Album creation</li>
             </ul>
             <button 
               onClick={() => handleSubscribe('Standard')}
@@ -1864,9 +1864,9 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
                <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Everything in Standard</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Multiple artist management</li>
-               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CheckCircle2 size={18} className="text-smash-purple shrink-0 mt-0.5" /> Dedicated account manager</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Everything in Standard</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Multiple artist management</li>
+               <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Dedicated account manager</li>
             </ul>
             <button 
               onClick={() => handleSubscribe('Elite')}

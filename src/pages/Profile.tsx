@@ -278,7 +278,7 @@ const Profile: React.FC = () => {
 
             <button 
               onClick={handleSignOut}
-              className="w-full h-[40px] md:h-[44px] border border-smash-red/20 text-smash-red hover:bg-smash-red hover:text-white rounded-[10px] font-display font-semibold text-[10px] md:text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-sm"
+              className="w-full h-[40px] md:h-[44px] border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-[10px] font-display font-semibold text-[10px] md:text-[12px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
               <LogOut size={16} /> SIGN OUT
             </button>

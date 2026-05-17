@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { CheckCircle2, Music2, ArrowRight, Loader2, Heart, Sparkles, ShoppingBag } from 'lucide-react';
+import { CircleCheck, Music2, ArrowRight, Loader2, Heart, Sparkles, ShoppingBag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
@@ -119,14 +119,14 @@ const PaymentSuccess = () => {
         return {
           title: 'Upgrade Complete!',
           message: 'Welcome to the premium experience. Ads are officially gone.',
-          icon: CheckCircle2,
+          icon: CircleCheck,
           color: 'text-smash-green'
         };
       default:
         return {
           title: 'Payment Successful',
           message: 'Your transaction was processed successfully.',
-          icon: CheckCircle2,
+          icon: CircleCheck,
           color: 'text-smash-purple'
         };
     }

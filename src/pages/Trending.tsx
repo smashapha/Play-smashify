@@ -77,7 +77,7 @@ const Trending: React.FC = () => {
            </div>
          )}
          {/* Hero Header */}
-         <div className="relative p-6 md:p-12 rounded-[24px] md:rounded-[40px] overflow-hidden bg-gradient-to-br from-smash-orange to-smash-red text-white shadow-2xl">
+         <div className="relative p-6 md:p-12 rounded-[24px] md:rounded-[40px] overflow-hidden bg-gradient-to-br from-smash-orange to-red-500 text-white shadow-2xl">
             <div className="absolute top-0 right-0 p-6 md:p-12 opacity-10">
                <Trophy className="w-32 h-32 md:w-[200px] md:h-[200px]" strokeWidth={1} />
             </div>

@@ -29,7 +29,7 @@ const Nav = () => {
           <Logo size="md" className="cursor-pointer" onClick={() => navigate('/')} />
           <div className="hidden lg:flex items-center gap-8">
             {['Discover', 'Artists', 'Pricing', 'About'].map((link) => (
-              <Link key={link} to={`/${link.toLowerCase()}`} className="font-display font-medium text-[13px] text-white/60 hover:text-white transition-colors uppercase tracking-wider">{link}</Link>
+              <Link key={link} to={link === 'Artists' ? '/auth/artist' : `/${link.toLowerCase()}`} className="font-display font-medium text-[13px] text-white/60 hover:text-white transition-colors uppercase tracking-wider">{link}</Link>
             ))}
             <div className="bg-smash-purple/15 border border-smash-purple/25 text-smash-purple text-[10px] rounded-full px-3 py-1 font-black uppercase tracking-widest">
               FOR ARTISTS
@@ -39,13 +39,23 @@ const Nav = () => {
         
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center gap-4">
-            <button onClick={() => navigate('/auth/listener')} className="font-display font-medium text-[13px] text-white/50 hover:text-white transition-colors uppercase tracking-widest">Log In</button>
-            <div className="h-4 w-px bg-white/20" />
-            <button 
-              onClick={() => navigate('/auth/listener?mode=signup')} 
-              className="text-smash-orange font-semibold text-[13px] hover:underline uppercase tracking-widest"
+            <button
+              onClick={() => navigate('/auth/listener')}
+              className="font-display font-medium text-[13px] text-white/50 hover:text-white transition-colors uppercase tracking-widest"
             >
-              Sign Up Free
+              Log In
+            </button>
+            <button
+              onClick={() => navigate('/auth/listener?mode=signup')}
+              className="h-9 px-5 bg-smash-orange rounded-full text-white font-display font-bold text-[12px] uppercase tracking-widest hover:brightness-110 transition-all"
+            >
+              Join Free
+            </button>
+            <button
+              onClick={() => navigate('/auth/artist')}
+              className="h-9 px-5 bg-smash-purple/20 border border-smash-purple/30 rounded-full text-smash-purple font-display font-bold text-[12px] uppercase tracking-widest hover:bg-smash-purple/30 transition-all"
+            >
+              Artist Studio
             </button>
           </div>
           <button className="lg:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -70,7 +80,7 @@ const Nav = () => {
               {['Discover', 'Artists', 'Pricing', 'About'].map((link) => (
                 <Link 
                   key={link} 
-                  to={`/${link.toLowerCase()}`} 
+                  to={link === 'Artists' ? '/auth/artist' : `/${link.toLowerCase()}`} 
                   onClick={() => setMobileMenuOpen(false)}
                   className="font-studio font-black text-4xl uppercase italic hover:text-smash-orange transition-colors"
                 >
@@ -224,19 +234,21 @@ const Landing: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-16"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8 mb-16"
             >
-              <button 
+              <button
                 onClick={() => navigate('/auth/listener?mode=signup')}
-                className="h-[52px] px-8 bg-smash-orange text-white rounded-[10px] font-display font-semibold text-[13px] uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all"
+                className="h-14 px-10 bg-smash-orange text-white rounded-full font-display font-black uppercase tracking-widest text-sm hover:brightness-110 transition-all shadow-xl shadow-smash-orange/20 flex items-center justify-center gap-3"
               >
+                <Headphones size={20} />
                 Start Listening Free
               </button>
-              <button 
-                onClick={() => navigate('/artists')}
-                className="h-[52px] px-8 bg-transparent border border-white/20 text-white/80 rounded-[10px] font-display font-semibold text-[13px] uppercase tracking-widest hover:border-smash-orange/50 transition-all active:scale-[0.98]"
+              <button
+                onClick={() => navigate('/auth/artist')}
+                className="h-14 px-10 bg-white/5 border border-smash-purple/30 text-smash-purple rounded-full font-display font-black uppercase tracking-widest text-sm hover:bg-smash-purple/10 transition-all flex items-center justify-center gap-3"
               >
-                For Artists
+                <Mic2 size={20} />
+                I'm an Artist
               </button>
             </motion.div>
 
@@ -421,7 +433,7 @@ const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
             <h2 className="font-display font-medium text-[10px] uppercase tracking-[0.3em] text-white/40">Featured Artists</h2>
-            <Link to="/artists" className="font-display font-semibold text-[10px] uppercase tracking-widest text-smash-orange hover:underline">See All</Link>
+            <Link to="/auth/artist" className="font-display font-semibold text-[10px] uppercase tracking-widest text-smash-orange hover:underline">See All</Link>
           </div>
           <div className="flex gap-10 overflow-x-auto pb-8 hide-scrollbar scroll-smooth" style={{ maskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}>
             {artists.map((artist) => (
@@ -504,7 +516,7 @@ const Landing: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              {[
                { icon: Infinity, title: 'Free Streaming', color: 'text-smash-orange', desc: 'Listen to all your favorite hits — no subscription required to stream.' },
-               { icon: Heart, title: 'Direct Support', color: 'text-smash-red', desc: 'Buy songs & send donations directly via Airtel Money or TNM Mpamba.' },
+               { icon: Heart, title: 'Direct Support', color: 'text-red-400', desc: 'Buy songs & send donations directly via Airtel Money or TNM Mpamba.' },
                { icon: Download, title: 'Offline Mode', color: 'text-smash-cyan', desc: 'Download songs with Premium. Listen anywhere, anytime.' },
                { icon: Smartphone, title: 'Install as App', color: 'text-smash-purple', desc: 'Install Smashify on your phone like a native app — no app store needed.' },
                { icon: LayoutDashboard, title: 'Smart Queue', color: 'text-smash-green', desc: 'Shuffle, repeat, feed view, crossfade & full player controls built in.' },
@@ -668,7 +680,7 @@ const Landing: React.FC = () => {
                   Join artists across Africa already monetising their music directly. Keep your rights. Keep your revenue. Get paid via mobile money within 24 hours.
                </p>
                <button 
-                  onClick={() => navigate('/artists')}
+                  onClick={() => navigate('/auth/artist')}
                   className="h-[52px] px-10 bg-smash-orange text-white rounded-[10px] font-display font-semibold text-[13px] uppercase tracking-widest shadow-xl shadow-smash-orange/20"
                >
                   Apply as Artist
@@ -705,7 +717,7 @@ const Landing: React.FC = () => {
           <div className="flex flex-col gap-6">
              <h4 className="font-display font-semibold text-[12px] uppercase tracking-widest text-white/40">Artists</h4>
              {['Artist Studio', 'Apply Now', 'Distribution', 'Help'].map(link => (
-               <Link key={link} to="/artists" className="text-white/60 hover:text-smash-orange transition-colors font-medium text-[14px]">{link}</Link>
+               <Link key={link} to="/auth/artist" className="text-white/60 hover:text-smash-orange transition-colors font-medium text-[14px]">{link}</Link>
              ))}
           </div>
 

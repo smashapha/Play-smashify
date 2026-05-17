@@ -250,7 +250,7 @@ const Library: React.FC = () => {
                   <Plus size={32} className="text-white/20 group-hover:text-smash-orange transition-colors md:w-10 md:h-10" />
                   <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest mt-3 md:mt-4">Create New</p>
                   {playlists.length >= limits.maxPlaylists && (
-                     <div className="absolute top-3 right-3 md:top-4 md:right-4 text-smash-red"><AppLockIcon size={14} className="md:w-4 md:h-4" /></div>
+                     <div className="absolute top-3 right-3 md:top-4 md:right-4 text-red-400"><AppLockIcon size={14} className="md:w-4 md:h-4" /></div>
                   )}
                </motion.div>
 

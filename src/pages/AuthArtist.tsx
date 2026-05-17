@@ -368,9 +368,22 @@ const AuthArtist: React.FC = () => {
       )}
 
       <div className="w-full max-w-[420px] bg-[#141418]/85 backdrop-blur-[24px] saturate-180 border border-white/10 rounded-[24px] p-8 md:p-10 relative z-10 mx-auto shadow-2xl pb-16 h-[85vh] overflow-y-auto no-scrollbar">
-        <div className="flex flex-col items-center text-center mb-8">
-           <Logo size="xl" />
-           <p className="font-sans text-[13px] text-text-muted mt-2">Artist Studio</p>
+        <div className="text-center mb-8">
+          <Logo size="lg" className="mx-auto mb-4" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-smash-purple/10 border border-smash-purple/20 rounded-full mb-3">
+            <Mic2 size={16} className="text-smash-purple" />
+            <span className="text-smash-purple text-xs font-black uppercase tracking-widest">
+              Artist Studio
+            </span>
+          </div>
+          <h1 className="text-2xl font-studio font-black uppercase italic text-white">
+            {mode === 'login' ? 'Studio Access' : 'Apply as Artist'}
+          </h1>
+          <p className="text-text-muted text-sm mt-1">
+            {mode === 'login'
+              ? 'Sign in to your artist account'
+              : 'Create your artist account and start earning'}
+          </p>
         </div>
 
         <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-[12px]">
@@ -396,29 +409,14 @@ const AuthArtist: React.FC = () => {
                     LOG IN TO STUDIO
                  </button>
 
-                 <div className="relative flex items-center py-4">
+                 <div className="relative flex items-center py-2">
                     <div className="flex-grow border-t border-white/10"></div>
                  </div>
-
-                 <button type="button" onClick={() => navigate('/auth/listener')} className="w-full h-[52px] border border-white/10 hover:border-smash-orange/50 rounded-[14px] flex items-center justify-center gap-3 font-sans font-medium text-[14px] hover:bg-smash-orange/10 text-text-muted hover:text-smash-orange transition-colors">
-                    <Headphones size={18} /> I'm a Listener
-                 </button>
               </motion.form>
            ) : (
               <motion.div key="artist" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
                  
-                 {artistStep === 1 && (
-                     <div className="grid grid-cols-2 gap-3 mb-2">
-                        <button type="button" onClick={() => navigate('/auth/listener?mode=signup')} className="h-[72px] border border-white/10 bg-white/5 rounded-[14px] flex flex-col items-center justify-center gap-1 hover:border-white/20 transition-all hover:bg-white/10">
-                           <Headphones size={20} className="text-text-muted" />
-                           <span className="font-sans font-medium text-[12px] text-text-muted">I'm a Listener</span>
-                        </button>
-                        <button type="button" className="h-[72px] border border-smash-orange bg-smash-orange/10 rounded-[14px] flex flex-col items-center justify-center gap-1 transition-all">
-                           <Mic2 size={20} className="text-smash-orange" />
-                           <span className="font-sans font-medium text-[12px] text-text-primary">I'm an Artist</span>
-                        </button>
-                     </div>
-                 )}
+                 {/* Removed the Grid of Listeners / Artists toggles */}
 
                  {/* Stepper */}
                  {artistStep < 4 && (
@@ -716,8 +714,22 @@ const AuthArtist: React.FC = () => {
            )}
         </AnimatePresence>
 
+        <div className="mt-8 pt-6 border-t border-white/10 text-center">
+          <p className="text-text-muted text-xs mb-3">
+            Just here to listen?
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/auth/listener')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-smash-orange/10 border border-smash-orange/20 rounded-full text-smash-orange text-xs font-bold hover:bg-smash-orange/20 transition-all"
+          >
+            <Headphones size={14} />
+            Go to Listener Sign Up →
+          </button>
+        </div>
+
         {error && (
-           <div className="mt-4 p-3 bg-smash-red/10 border border-smash-red/20 rounded-[10px] flex items-center gap-2 text-smash-red font-sans font-medium text-[13px]">
+           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-[10px] flex items-center gap-2 text-red-400 font-sans font-medium text-[13px]">
               <AlertCircle size={16} /> {error}
            </div>
         )}

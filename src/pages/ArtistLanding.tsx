@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   Mic2, Rocket, Star, ShieldCheck, 
-  CheckCircle2, TrendingUp, Music, LayoutDashboard,
+  CircleCheck, TrendingUp, Music, LayoutDashboard,
   Smartphone, Wallet, ChevronRight, Play, Heart, Star as StarIcon
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -196,7 +196,7 @@ const ArtistLanding: React.FC = () => {
                    ].map((f, i) => (
                      <div key={i} className="flex gap-5">
                         <div className="w-6 h-6 rounded-full bg-smash-purple/20 flex items-center justify-center shrink-0 mt-1">
-                           <CheckCircle2 size={14} className="text-smash-purple" />
+                           <CircleCheck size={14} className="text-smash-purple" />
                         </div>
                         <div>
                            <h4 className="text-[16px] font-display font-bold uppercase italic text-white mb-1">{f.title}</h4>
@@ -275,7 +275,7 @@ const ArtistLanding: React.FC = () => {
                 <ul className="space-y-4 flex-1">
                    {["Upload 12 songs/yr", "Mobile analytics", "Standard payouts", "Supporter badges"].map((f, i) => (
                      <li key={i} className="flex items-center gap-3 text-[14px] text-white/60 font-medium font-sans">
-                        <CheckCircle2 size={16} className="text-smash-purple shrink-0" />
+                        <CircleCheck size={16} className="text-smash-purple shrink-0" />
                         {f}
                      </li>
                    ))}
@@ -299,7 +299,7 @@ const ArtistLanding: React.FC = () => {
                 <ul className="space-y-4 flex-1">
                    {["UNLIMITED uploads", "Full dashboard", "Priority payouts", "Verified profile", "Advanced promotion"].map((f, i) => (
                      <li key={i} className="flex items-center gap-3 text-[14px] text-white font-medium font-sans">
-                        <CheckCircle2 size={16} className="text-smash-purple shrink-0" />
+                        <CircleCheck size={16} className="text-smash-purple shrink-0" />
                         {f}
                      </li>
                    ))}
@@ -322,7 +322,7 @@ const ArtistLanding: React.FC = () => {
                 <ul className="space-y-4 flex-1">
                    {["Manage 5 artists", "Shared dashboards", "Dedicated manager", "Revenue splitting", "Custom contracts"].map((f, i) => (
                      <li key={i} className="flex items-center gap-3 text-[14px] text-white/60 font-medium font-sans">
-                        <CheckCircle2 size={16} className="text-smash-purple shrink-0" />
+                        <CircleCheck size={16} className="text-smash-purple shrink-0" />
                         {f}
                      </li>
                    ))}

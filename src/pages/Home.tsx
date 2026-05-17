@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Flame, Sparkles, DollarSign, Clock, Crown, Heart } from 'lucide-react';
+import { Search, Flame, Sparkles, DollarSign, Clock, Trophy, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Song, Artist } from '../types';
 import SongCard from '../components/common/SongCard';
@@ -459,7 +459,7 @@ const Home: React.FC = () => {
          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-smash-orange/5 rounded-full blur-[60px] -mt-10 -mr-10 pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
          <div className="relative z-10 flex-1 text-center md:text-left flex flex-col md:flex-row md:items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0 mx-auto md:mx-0 border border-yellow-500/30 shadow-sm">
-               <Crown className="text-yellow-500" size={24} />
+               <Trophy className="text-yellow-500" size={24} />
             </div>
             <div>
                <h3 className="text-[20px] font-studio font-bold mb-1 text-white">

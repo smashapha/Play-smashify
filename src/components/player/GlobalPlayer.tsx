@@ -70,7 +70,7 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
         onTouchEnd={() => setIsDragging(false)}
       >
         <motion.div 
-          className="h-full bg-gradient-to-r from-smash-orange to-smash-red relative rounded-full"
+          className="h-full bg-gradient-to-r from-smash-orange to-red-500 relative rounded-full"
           style={{ width: `${(current / total) * 100}%` }}
         />
         <div 
@@ -274,7 +274,7 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
                    <p className="text-xs font-display font-semibold uppercase tracking-widest text-text-muted mb-4">Malaŵi's No.1 Music Platform</p>
                    <a 
                      href="/pricing"
-                     className={`inline-block px-8 py-4 bg-gradient-to-r ${accentColor.replace('text-', 'from-')} to-smash-red text-white rounded-full font-display font-bold uppercase text-sm tracking-widest shadow-xl hover:scale-105 transition-transform`}
+                     className={`inline-block px-8 py-4 bg-gradient-to-r ${accentColor.replace('text-', 'from-')} to-red-500 text-white rounded-full font-display font-bold uppercase text-sm tracking-widest shadow-xl hover:scale-105 transition-transform`}
                    >
                      Remove ads — Premium MK 750/month
                    </a>
@@ -359,7 +359,7 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
                  )}
                  <button 
                    onClick={handleLike}
-                   className={`transition-colors p-2 rounded-full hover:bg-bg-elevated ${isLiked ? 'text-smash-red' : 'text-text-muted hover:text-text-primary'}`}
+                   className={`transition-colors p-2 rounded-full hover:bg-bg-elevated ${isLiked ? 'text-red-400' : 'text-text-muted hover:text-text-primary'}`}
                  >
                    <Heart size={24} fill={isLiked ? "currentColor" : "none"} />
                  </button>
@@ -412,7 +412,7 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
                          </button>
                        ))}
                        {sleepTimerRemaining && (
-                         <button onClick={() => { setSleepTimer(null); setShowSleepMenu(false); }} className="w-full mt-1.5 p-2 text-center font-medium text-smash-red hover:bg-smash-red/10 rounded-lg transition-colors">
+                         <button onClick={() => { setSleepTimer(null); setShowSleepMenu(false); }} className="w-full mt-1.5 p-2 text-center font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
                            Cancel Timer
                          </button>
                        )}
@@ -436,7 +436,7 @@ const ExpandedPlayer = ({ onClose, isLiked, handleLike }: { onClose: () => void,
                      }
                      handleDownload();
                    }} 
-                   className={`flex items-center gap-2 uppercase transition-colors px-2 py-1.5 rounded-md hover:bg-bg-elevated ${!getListenerLimits(userProfile).canDownload ? 'text-smash-red/80' : 'text-text-secondary hover:text-text-primary'}`}
+                   className={`flex items-center gap-2 uppercase transition-colors px-2 py-1.5 rounded-md hover:bg-bg-elevated ${!getListenerLimits(userProfile).canDownload ? 'text-red-400/80' : 'text-text-secondary hover:text-text-primary'}`}
                  >
                    {!getListenerLimits(userProfile).canDownload ? <AppLockIcon size={15} className="mr-1" /> : <Download size={18} />} Download
                  </button>
@@ -711,7 +711,7 @@ const GlobalPlayer: React.FC = () => {
             <div className="flex items-center gap-4 md:hidden">
               <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="text-text-muted hover:text-text-primary focus:outline-none">
                 <motion.div whileTap={{ scale: 0.8 }}>
-                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} className={isLiked ? 'text-smash-red' : ''} />
+                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} className={isLiked ? 'text-red-400' : ''} />
                 </motion.div>
               </button>
               <button 
@@ -777,7 +777,7 @@ const GlobalPlayer: React.FC = () => {
 
             {/* [vol · like · expand] (Desktop) */}
             <div className="hidden md:flex flex-row items-center justify-end gap-4 lg:w-1/4">
-               <button onClick={handleLike} className={`${isLiked ? 'text-smash-red' : 'text-text-muted hover:text-text-primary'} transition-colors focus:outline-none`}>
+               <button onClick={handleLike} className={`${isLiked ? 'text-red-400' : 'text-text-muted hover:text-text-primary'} transition-colors focus:outline-none`}>
                  <motion.div whileTap={{ scale: 0.8 }}>
                    <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
                  </motion.div>
@@ -873,7 +873,7 @@ const GlobalPlayer: React.FC = () => {
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={(e) => { e.stopPropagation(); removeFromQueue(song.id); }}
-                        className="p-2 hover:bg-bg-elevated rounded-full text-smash-red"
+                        className="p-2 hover:bg-bg-elevated rounded-full text-red-400"
                       >
                         <Trash2 size={16} />
                       </button>

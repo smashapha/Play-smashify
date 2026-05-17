@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Heart, ShieldCheck, ChevronRight, Zap, Coffee, Crown } from 'lucide-react';
+import { X, Heart, ShieldCheck, ChevronRight, Zap, Coffee, Trophy } from 'lucide-react';
 import Avatar from './Avatar';
 import { UserProfile } from '../../types';
 import { sendTip } from '../../lib/paychangu';
@@ -21,7 +21,7 @@ const SupportArtistModal: React.FC<SupportArtistModalProps> = ({ artist, onClose
     { value: '1000', label: 'Coffee', icon: <Coffee size={16} /> },
     { value: '5000', label: 'Vibe Check', icon: <Zap size={16} /> },
     { value: '10000', label: 'Superfan', icon: <Heart size={16} /> },
-    { value: '25000', label: 'Patron', icon: <Crown size={16} /> },
+    { value: '25000', label: 'Patron', icon: <Trophy size={16} /> },
   ];
 
   const handleSupport = async () => {

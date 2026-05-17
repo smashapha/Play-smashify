@@ -186,9 +186,22 @@ const AuthListener: React.FC = () => {
       )}
 
       <div className="w-full max-w-[420px] bg-[#141418]/85 backdrop-blur-[24px] saturate-180 border border-white/10 rounded-[24px] p-8 md:p-10 relative z-10 mx-auto shadow-2xl">
-        <div className="flex flex-col items-center text-center mb-8">
-           <Logo size="xl" />
-           <p className="font-sans text-[13px] text-text-muted mt-2">Your music. Your stage.</p>
+        <div className="text-center mb-8">
+          <Logo size="lg" className="mx-auto mb-4" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-smash-orange/10 border border-smash-orange/20 rounded-full mb-3">
+            <Headphones size={16} className="text-smash-orange" />
+            <span className="text-smash-orange text-xs font-black uppercase tracking-widest">
+              Listener Portal
+            </span>
+          </div>
+          <h1 className="text-2xl font-studio font-black uppercase italic text-white">
+            {mode === 'login' ? 'Welcome Back' : 'Join Smashify Free'}
+          </h1>
+          <p className="text-text-muted text-sm mt-1">
+            {mode === 'login' 
+              ? 'Sign in to your listener account' 
+              : 'Stream music and support African artists directly'}
+          </p>
         </div>
 
         <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-[12px]">
@@ -225,20 +238,8 @@ const AuthListener: React.FC = () => {
                  </button>
               </motion.form>
            ) : (
-              <motion.form key="signup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleSignup} className="space-y-4">
+               <motion.form key="signup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} onSubmit={handleSignup} className="space-y-4">
                  
-                 {/* Role Selector BEFORE form */}
-                 <div className="grid grid-cols-2 gap-3 mb-2">
-                    <button type="button" className="h-[72px] border border-smash-orange bg-smash-orange/10 rounded-[14px] flex flex-col items-center justify-center gap-1 transition-all">
-                       <Headphones size={20} className="text-smash-orange" />
-                       <span className="font-sans font-medium text-[12px] text-text-primary">I'm a Listener</span>
-                    </button>
-                    <button type="button" onClick={() => navigate('/auth/artist?mode=signup')} className="h-[72px] border border-white/10 bg-white/5 rounded-[14px] flex flex-col items-center justify-center gap-1 hover:border-white/20 transition-all hover:bg-white/10">
-                       <Mic2 size={20} className="text-text-muted" />
-                       <span className="font-sans font-medium text-[12px] text-text-muted">I'm an Artist</span>
-                    </button>
-                 </div>
-
                  <AuthInput icon={User} type="text" placeholder="Full Name" value={fullName} onChange={setFullName} disabled={loadingState} />
                  <AuthInput icon={Mail} type="email" placeholder="Email Address" value={email} onChange={setEmail} disabled={loadingState} />
                  <AuthInput icon={Phone} type="tel" placeholder="Phone" value={phone} onChange={setPhone} disabled={loadingState} />
@@ -255,8 +256,22 @@ const AuthListener: React.FC = () => {
            )}
         </AnimatePresence>
 
+        <div className="mt-8 pt-6 border-t border-white/10 text-center">
+          <p className="text-text-muted text-xs mb-3">
+            Are you an artist?
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/auth/artist')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-smash-purple/10 border border-smash-purple/20 rounded-full text-smash-purple text-xs font-bold hover:bg-smash-purple/20 transition-all"
+          >
+            <Mic2 size={14} />
+            Go to Artist Studio →
+          </button>
+        </div>
+
         {error && (
-           <div className="mt-4 p-3 bg-smash-red/10 border border-smash-red/20 rounded-[10px] flex items-center gap-2 text-smash-red font-sans font-medium text-[13px]">
+           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-[10px] flex items-center gap-2 text-red-400 font-sans font-medium text-[13px]">
               <AlertCircle size={16} /> {error}
            </div>
         )}

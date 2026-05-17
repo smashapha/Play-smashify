@@ -242,7 +242,7 @@ const SongCard: React.FC<SongCardProps> = ({ song, queue, className = '', layout
            </button>
            <button 
              onClick={handleLike}
-             className={`p-2 rounded-full hover:bg-bg-elevated transition-colors ${isLiked ? 'text-smash-red opacity-100' : 'text-text-muted opacity-40 group-hover:opacity-100'}`}
+             className={`p-2 rounded-full hover:bg-bg-elevated transition-colors ${isLiked ? 'text-red-400 opacity-100' : 'text-text-muted opacity-40 group-hover:opacity-100'}`}
            >
               <Heart size={16} fill={isLiked ? "currentColor" : "none"} />
            </button>

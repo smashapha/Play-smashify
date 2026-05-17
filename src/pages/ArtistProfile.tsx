@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Play, Share2, Instagram, Twitter, Music2, MapPin, Users, Check, 
-  Crown, Heart, CheckCircle2, Disc, Trophy, Sparkles, TrendingUp,
+  Trophy, Heart, CircleCheck, Disc, Sparkles, TrendingUp,
   Calendar, Info, Plus, UserPlus, Share, MessageSquare, Flame,
   ShieldCheck, ArrowUpRight, Zap
 } from 'lucide-react';
@@ -260,7 +260,7 @@ const ArtistProfile: React.FC = () => {
                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
                         {artist.verified && (
                            <span className="px-2 py-0.5 bg-smash-cyan/10 text-smash-cyan border border-smash-cyan/20 rounded-full text-[8px] md:text-[10px] font-display font-semibold uppercase tracking-widest flex items-center gap-1 shadow-sm">
-                             <CheckCircle2 size={10} className="md:w-3 md:h-3" /> Verified
+                             <CircleCheck size={10} className="md:w-3 md:h-3" /> Verified
                            </span>
                         )}
                         <StatPill icon={<Users size={12}/>} value={artist.followers_count || 0} label="Fans" />
@@ -412,7 +412,7 @@ const ArtistProfile: React.FC = () => {
                            {topSupporters && topSupporters.length > 0 && (
                               <div className="p-5 bg-white/5 rounded-3xl border border-white/10">
                                  <h3 className="font-bold text-sm mb-4 flex items-center gap-2 text-text-primary">
-                                    <Crown size={16} className="text-smash-orange" /> Top Supporters
+                                    <Trophy size={16} className="text-smash-orange" /> Top Supporters
                                  </h3>
                                  <div className="space-y-3">
                                     {topSupporters.slice(0, 5).map((s: any, i: number) => (
@@ -446,7 +446,7 @@ const ArtistProfile: React.FC = () => {
 
                            {isSubscribed && (
                               <div className="p-4 bg-smash-green/10 rounded-3xl border border-smash-green/20 flex items-center gap-3">
-                                 <CheckCircle2 size={20} className="text-smash-green shrink-0" />
+                                 <CircleCheck size={20} className="text-smash-green shrink-0" />
                                  <p className="text-sm text-smash-green font-bold">You are supporting {artist?.stage_name} monthly!</p>
                               </div>
                            )}
