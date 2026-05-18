@@ -196,12 +196,11 @@ export default function ArtistHub() {
   };
 
   const getTierLabel = (tier: string) => {
-    switch(tier) {
-      case 'rising_star': return '🌟 Rising Star';
-      case 'standard': return '🚀 Standard';
-      case 'elite': return '👑 Elite / Label';
-      default: return role === 'pending' ? '⏳ Pending Review' : '🎵 Free Artist';
-    }
+    const t = (tier || 'free').toLowerCase();
+    if (t.includes('rising')) return '🌟 Rising Star';
+    if (t.includes('standard')) return '🚀 Standard';
+    if (t.includes('elite')) return '👑 Elite / Label';
+    return role === 'pending' ? '⏳ Pending Review' : '🎵 Free Artist';
   };
 
   const isApproved = userProfile?.approved ?? true; // Temporary fallback to true for UI testing
@@ -1775,7 +1774,12 @@ const ProfileTab = ({ userProfile }: any) => {
 
 
 const SubscriptionTab = ({ userProfile, role }: any) => {
-  const currentTier = userProfile?.subscription_tier || 'free';
+  const currentTierRaw = (userProfile?.subscription_tier || userProfile?.artist_tier || 'free').toLowerCase();
+  // Normalize the string
+  const currentTier = currentTierRaw.includes('rising') ? 'rising_star' : 
+                      currentTierRaw.includes('elite') ? 'elite' : 
+                      currentTierRaw.includes('standard') ? 'standard' : 'free';
+                      
   const isPending = role === 'pending';
   const { refreshProfile } = useAuth();
   

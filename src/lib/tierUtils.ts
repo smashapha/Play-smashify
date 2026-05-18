@@ -8,14 +8,11 @@ export const getListenerTier = (user: any): ListenerTier => {
 
 export const getListenerLimits = (user: any) => {
   const tier = (getListenerTier(user) || 'free').toLowerCase();
-  switch (tier) {
-    case 'premium':
-    case 'family':
-      return { hdAudio: true, hasAds: false, canDownload: true, maxPlaylists: Infinity, canAccessSnippets: true };
-    case 'free':
-    default:
-      return { hdAudio: false, hasAds: true, canDownload: false, maxPlaylists: 3, canAccessSnippets: false };
+  if (tier.includes('premium') || tier.includes('family')) {
+    return { hdAudio: true, hasAds: false, canDownload: true, maxPlaylists: Infinity, canAccessSnippets: true };
   }
+  
+  return { hdAudio: false, hasAds: true, canDownload: false, maxPlaylists: 3, canAccessSnippets: false };
 };
 
 export const getArtistTier = (artist: any): ArtistTier => {
