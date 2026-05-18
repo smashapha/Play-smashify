@@ -212,9 +212,9 @@ const Pricing = () => {
              <PricingCard 
                 isArtist={true}
                 title="Rising Star" 
-                price="8,000" 
+                price="15,000" 
                 period="6 MO"
-                annualText="14,000"
+                annualText="26,000"
                 subtitle="Build your fanbase"
                 onAction={() => handleAction('RisingStar')}
                 features={[
@@ -229,9 +229,9 @@ const Pricing = () => {
              <PricingCard 
                 isArtist={true}
                 title="Standard" 
-                price="13,000" 
+                price="25,000" 
                 period="6 MO"
-                annualText="23,000"
+                annualText="44,000"
                 badge="POPULAR" 
                 subtitle="For full-time artists"
                 onAction={() => handleAction('Standard')}
@@ -247,9 +247,9 @@ const Pricing = () => {
              <PricingCard 
                 isArtist={true}
                 title="Elite / Label" 
-                price="24,000" 
+                price="45,000" 
                 period="6 MO"
-                annualText="42,000"
+                annualText="80,000"
                 subtitle="For Serious Artists"
                 onAction={() => handleAction('Elite')}
                 features={[

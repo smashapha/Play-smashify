@@ -210,19 +210,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       // Execution based on metaRole
+      let profileFound = false;
       if (metaRole === 'artist' || metaRole === 'pending') {
-        if (await checkArtist()) return;
-        if (await checkListener()) return;
+        profileFound = await checkArtist();
+        if (!profileFound) profileFound = await checkListener();
       } else {
-        if (await checkListener()) return;
-        if (await checkArtist()) return;
+        profileFound = await checkListener();
+        if (!profileFound) profileFound = await checkArtist();
       }
+
+      if (profileFound) return;
 
       // 3. Neither table has a row
       const intent = localStorage.getItem('smashify_auth_intent');
       
       if (metaRole === 'artist' || metaRole === 'pending' || intent === 'artist') {
-          // Auto-create artist profile if it came from OAuth and is missing
+          // Check if it really doesn't exist before upserting (to avoid loops)
+          const { data: existing } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+          if (existing) {
+             // Should have been caught by checkArtist, but just in case
+             return;
+          }
+
           const profileData: any = {
             id: userId,
             full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Artist',
@@ -241,7 +250,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
              localStorage.removeItem('smashify_auth_intent');
           }
       } else {
-          // Default to listener (or if metaRole is 'listener' or intent is 'listener')
+          // Check if it really doesn't exist before upserting
+          const { data: existing } = await supabase.from('user_profiles').select('id').eq('id', userId).maybeSingle();
+          if (existing) return;
+
           const profileData: any = {
             id: userId,
             full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Listener',

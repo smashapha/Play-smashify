@@ -754,12 +754,18 @@ async function startServer() {
   const distPath = path.resolve(__dirname, 'dist');
   const indexHtmlExists = fs.existsSync(path.join(distPath, 'index.html'));
 
-  if (process.env.NODE_ENV === 'production' || indexHtmlExists) {
-    console.log('Serving static files from dist/');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+  // Only use static serving if specifically in production mode
+  if (process.env.NODE_ENV === 'production') {
+    if (indexHtmlExists) {
+      console.log('Serving static files from dist/');
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    } else {
+      console.error('CRITICAL: dist/index.html not found in production!');
+      app.get('*', (req, res) => res.status(500).send('Production build missing'));
+    }
   } else {
     console.log('Starting Vite in middleware mode...');
     try {
@@ -770,6 +776,11 @@ async function startServer() {
       app.use(vite.middlewares);
     } catch (err) {
       console.error('Vite failed to initialize:', err);
+      // Fallback to static if vite fails but dist exists
+      if (indexHtmlExists) {
+        app.use(express.static(distPath));
+        app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+      }
     }
   }
 

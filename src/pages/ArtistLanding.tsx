@@ -269,7 +269,7 @@ const ArtistLanding: React.FC = () => {
              <div className="bg-bg-surface border border-border-subtle rounded-[24px] p-10 flex flex-col group hover:border-smash-purple/30 transition-all">
                 <h3 className="text-2xl font-studio font-bold uppercase italic mb-2">Rising Star</h3>
                 <div className="flex items-baseline gap-2 mb-8">
-                   <span className="text-4xl font-studio font-bold text-white">8,000</span>
+                   <span className="text-4xl font-studio font-bold text-white">15,000</span>
                    <span className="text-[11px] font-display font-medium text-white/40 uppercase tracking-widest">MWK / 6 MO</span>
                 </div>
                 <ul className="space-y-4 flex-1">
@@ -280,7 +280,7 @@ const ArtistLanding: React.FC = () => {
                      </li>
                    ))}
                 </ul>
-                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 14,000 per year — save 12%</p>
+                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 26,000 per year — save 12%</p>
                 <button 
                    onClick={() => navigate('/auth/artist?mode=signup')}
                    className="w-full h-[54px] bg-white text-black rounded-[14px] font-display font-bold text-[12px] uppercase tracking-widest hover:bg-smash-purple hover:text-white transition-all shadow-xl mt-auto"
@@ -293,7 +293,7 @@ const ArtistLanding: React.FC = () => {
                 <div className="absolute top-6 right-0 bg-smash-purple text-white text-[10px] font-black px-4 py-1.5 rounded-l-full uppercase tracking-widest">MOST POPULAR</div>
                 <h3 className="text-2xl font-studio font-bold uppercase italic mb-2 text-smash-purple">Standard</h3>
                 <div className="flex items-baseline gap-2 mb-8">
-                   <span className="text-4xl font-studio font-bold text-white">13,000</span>
+                   <span className="text-4xl font-studio font-bold text-white">25,000</span>
                    <span className="text-[11px] font-display font-medium text-white/40 uppercase tracking-widest">MWK / 6 MO</span>
                 </div>
                 <ul className="space-y-4 flex-1">
@@ -304,7 +304,7 @@ const ArtistLanding: React.FC = () => {
                      </li>
                    ))}
                 </ul>
-                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 23,000 per year — save 12%</p>
+                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 44,000 per year — save 12%</p>
                 <button 
                    onClick={() => navigate('/auth/artist?mode=signup')}
                    className="w-full h-[54px] bg-smash-purple text-white rounded-[14px] font-display font-bold text-[12px] uppercase tracking-widest hover:brightness-110 shadow-xl mt-auto"
@@ -316,18 +316,18 @@ const ArtistLanding: React.FC = () => {
              <div className="bg-bg-surface border border-border-subtle rounded-[24px] p-10 flex flex-col group hover:border-smash-purple/30 transition-all">
                 <h3 className="text-2xl font-studio font-bold uppercase italic mb-2">Elite / Label</h3>
                 <div className="flex items-baseline gap-2 mb-8">
-                   <span className="text-4xl font-studio font-bold text-white">24,000</span>
+                   <span className="text-4xl font-studio font-bold text-white">45,000</span>
                    <span className="text-[11px] font-display font-medium text-white/40 uppercase tracking-widest">MWK / 6 MO</span>
                 </div>
                 <ul className="space-y-4 flex-1">
-                   {["Manage 5 artists", "Shared dashboards", "Dedicated manager", "Revenue splitting", "Custom contracts"].map((f, i) => (
+                   {["Manage 10 artists", "Shared dashboards", "Dedicated manager", "Revenue splitting", "Custom contracts"].map((f, i) => (
                      <li key={i} className="flex items-center gap-3 text-[14px] text-white/60 font-medium font-sans">
                         <CircleCheck size={16} className="text-smash-purple shrink-0" />
                         {f}
                      </li>
                    ))}
                 </ul>
-                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 42,000 per year — save 12%</p>
+                <p className="text-center text-xs text-white/50 mt-6 mb-4">Or MK 80,000 per year — save 12%</p>
                 <button 
                    onClick={() => navigate('/auth/artist?mode=signup')}
                    className="w-full h-[54px] bg-white text-black rounded-[14px] font-display font-bold text-[12px] uppercase tracking-widest hover:bg-smash-purple hover:text-white transition-all shadow-xl mt-auto"

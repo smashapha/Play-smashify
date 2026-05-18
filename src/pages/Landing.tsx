@@ -244,11 +244,11 @@ const Landing: React.FC = () => {
                 Start Listening Free
               </button>
               <button
-                onClick={() => navigate('/auth/artist')}
+                onClick={() => navigate('/artists')}
                 className="h-14 px-10 bg-white/5 border border-smash-purple/30 text-smash-purple rounded-full font-display font-black uppercase tracking-widest text-sm hover:bg-smash-purple/10 transition-all flex items-center justify-center gap-3"
               >
                 <Mic2 size={20} />
-                I'm an Artist
+                Explore Artist Studio
               </button>
             </motion.div>
 

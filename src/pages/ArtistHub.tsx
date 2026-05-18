@@ -675,8 +675,24 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                               placeholder="099..."
                               className="w-full h-[44px] bg-bg-elevated/50 border border-border-default rounded-[10px] px-4 font-display text-[14px] text-text-muted outline-none cursor-not-allowed"
                             />
-                            <p className="text-[9px] text-text-muted mt-1 italic italic">To change your payout number, please update your profile.</p>
+                            <p className="text-[9px] text-text-muted mt-1 italic">To change your payout number, please update your profile.</p>
                           </div>
+
+                          <div className="p-4 bg-bg-elevated border border-border-subtle rounded-[14px] space-y-2">
+                             <div className="flex justify-between text-[11px] uppercase tracking-widest text-text-muted font-bold">
+                                <span>Requested:</span>
+                                <span>MK {withdrawalAmount.toLocaleString()}</span>
+                             </div>
+                             <div className="flex justify-between text-[11px] uppercase tracking-widest text-text-muted font-bold">
+                                <span>Fee (3%):</span>
+                                <span>-MK {Math.round(withdrawalAmount * 0.03).toLocaleString()}</span>
+                             </div>
+                             <div className="flex justify-between text-[12px] uppercase tracking-widest text-smash-green font-black pt-2 border-t border-border-subtle">
+                                <span>Receive:</span>
+                                <span>MK {Math.round(withdrawalAmount * 0.97).toLocaleString()}</span>
+                             </div>
+                          </div>
+
                           <div className="flex gap-3 pt-2">
                              <button onClick={()=>setShowWithdrawForm(false)} className="flex-1 h-[44px] bg-bg-elevated border border-border-default text-text-primary font-display font-semibold uppercase tracking-widest text-[11px] rounded-[10px] hover:bg-border-default transition-colors">Cancel</button>
                              <button onClick={handleWithdraw} disabled={requesting} className="flex-1 h-[44px] bg-smash-purple text-white font-display font-semibold uppercase tracking-widest text-[11px] rounded-[10px] hover:bg-smash-purple/90 transition-colors">{requesting?'Processing...':'Confirm'}</button>
@@ -694,6 +710,19 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                                 />
                                 <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[12px] font-display font-semibold uppercase tracking-widest text-text-muted">MK</div>
                              </div>
+
+                             {withdrawalAmount >= 2000 && (
+                                <div className="p-4 bg-bg-elevated/50 border border-border-subtle rounded-[14px] space-y-2 animate-in fade-in zoom-in-95 duration-300">
+                                   <div className="flex justify-between items-center text-[11px] font-display font-medium uppercase tracking-wider text-text-muted">
+                                      <span>Platform Fee (3%)</span>
+                                      <span>MK {Math.round(withdrawalAmount * 0.03).toLocaleString()}</span>
+                                   </div>
+                                   <div className="pt-2 border-t border-border-subtle flex justify-between items-center">
+                                      <span className="text-[11px] font-display font-bold uppercase tracking-widest text-text-primary">Net Receive</span>
+                                      <span className="text-[18px] font-studio font-bold text-smash-green">MK {Math.round(withdrawalAmount * 0.97).toLocaleString()}</span>
+                                   </div>
+                                </div>
+                             )}
                              {userProfile?.is_verified ? (
                                <button 
                                   onClick={handleInitiateWithdraw} 
@@ -1821,7 +1850,7 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
             <h4 className="font-studio font-bold text-[18px] mb-4 text-text-primary flex items-center gap-2"><Rocket className="text-smash-orange" size={20} /> Rising Star</h4>
             <div className="flex items-baseline gap-1 mb-8">
                <span className="text-[32px] font-studio font-bold text-text-primary">15,000</span>
-               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
+               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / 6 MO</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Upload up to 10 songs/month</li>
@@ -1843,7 +1872,7 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
             <h4 className="font-studio font-bold text-[18px] mb-4 text-text-primary flex items-center gap-2"><Star className="text-smash-orange" size={20} /> Standard</h4>
             <div className="flex items-baseline gap-1 mb-8">
                <span className="text-[32px] font-studio font-bold text-text-primary">25,000</span>
-               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
+               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / 6 MO</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-orange shrink-0 mt-0.5" /> Unlimited uploads</li>
@@ -1865,7 +1894,7 @@ const SubscriptionTab = ({ userProfile, role }: any) => {
             <h4 className="font-studio font-bold text-[18px] mb-4 text-text-primary flex items-center gap-2"><ShieldCheck className="text-smash-purple" size={20} /> Elite / Label</h4>
             <div className="flex items-baseline gap-1 mb-8">
                <span className="text-[32px] font-studio font-bold text-text-primary">45,000</span>
-               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / YR</span>
+               <span className="text-[11px] font-display font-medium text-text-muted uppercase tracking-widest">MWK / 6 MO</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
                <li className="flex items-start gap-3 text-[13px] text-text-secondary font-sans"><CircleCheck size={18} className="text-smash-purple shrink-0 mt-0.5" /> Everything in Standard</li>

@@ -918,11 +918,13 @@ const Admin = () => {
                       📱 Action Required
                     </p>
                     <p className="text-xs text-smash-green/80">
-                      Send MK {Number(payout.amount || payout.requested_amount).toLocaleString()} to{' '}
+                      Send <span className="text-white font-black">MK {Math.round(Number(payout.amount || payout.requested_amount) * 0.97).toLocaleString()}</span> (Net of 3% Fee) to{' '}
                       <span className="font-mono font-bold text-white">
                         {payout.artist_phone || payout.phone || payout.profiles?.phone}
                       </span>{' '}
                       via {payout.network}, then mark as paid.
+                      <br/>
+                      <span className="text-[9px] opacity-70">Gross Requested: MK {Number(payout.amount || payout.requested_amount).toLocaleString()} | Fee: MK {Math.round(Number(payout.amount || payout.requested_amount) * 0.03).toLocaleString()}</span>
                     </p>
                   </div>
 
