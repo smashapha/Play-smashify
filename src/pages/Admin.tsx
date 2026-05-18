@@ -841,7 +841,7 @@ const Admin = () => {
                   </p>
                   <p className="text-xs text-smash-gray mt-0.5">
                     {payout.profiles?.artist_tier || 'Free'} tier •{' '}
-                    {new Date(payout.requested_at).toLocaleDateString('en-GB', {
+                    {new Date(payout.created_at).toLocaleDateString('en-GB', {
                       day: 'numeric', month: 'short', year: 'numeric',
                       hour: '2-digit', minute: '2-digit'
                     })}

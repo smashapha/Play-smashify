@@ -358,7 +358,7 @@ const Pricing = () => {
       </div>
 
       <div className="text-center">
-        <a href="https://wa.me/265990000000" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-full font-black uppercase tracking-widest hover:bg-[#20bd5a] transition-colors shadow-lg shadow-[#25D366]/20">
+        <a href="https://wa.me/265883728868" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-full font-black uppercase tracking-widest hover:bg-[#20bd5a] transition-colors shadow-lg shadow-[#25D366]/20">
           <MessageCircle size={24} />
           Still unsure? Chat on WhatsApp
         </a>

@@ -177,7 +177,8 @@ export default function ArtistHub() {
     {
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-        { id: 'music', label: 'Music & Upload', icon: Music2 },
+        { id: 'music', label: 'Music', icon: Music2 },
+        { id: 'upload', label: 'Upload', icon: UploadCloud },
         { id: 'promotion', label: 'Promote', icon: Flame },
         { id: 'notifications', label: 'Notifications', icon: Bell },
       ]
@@ -388,9 +389,10 @@ export default function ArtistHub() {
                       <SongsTab songs={songs} onRefresh={fetchData} setActiveTab={setActiveTab} />
                       <div className="h-px w-full bg-white/5 my-8" />
                       <AlbumsTab albums={albums} songs={songs} onRefresh={fetchData} setActiveTab={setActiveTab} userProfile={userProfile} />
-                      <div className="h-px w-full bg-white/5 my-8" />
-                      <UploadTab onComplete={fetchData} albums={albums} songs={songs} setActiveTab={setActiveTab} role={role} />
                     </div>
+                  )}
+                  {activeTab === 'upload' && (
+                    <UploadTab onComplete={fetchData} albums={albums} songs={songs} setActiveTab={setActiveTab} role={role} />
                   )}
                   {activeTab === 'promotion' && <PromotionTab userProfile={userProfile} />}
                   {activeTab === 'profile' && <ProfileTab userProfile={userProfile} />}
@@ -495,7 +497,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
         .from('payout_requests')
         .select('*')
         .eq('artist_id', userProfile?.id)
-        .order('requested_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
       if (data) setHistory(data);
     };
@@ -545,13 +547,10 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
         .from('payout_requests')
         .insert({
           artist_id: userProfile.id,
-          artist_name: userProfile.stage_name
-            || userProfile.full_name,
-          artist_phone: phone,
-          amount: withdrawalAmount,
+          requested_amount: withdrawalAmount,
+          phone: phone,
           network: selectedNetwork,
-          status: 'pending',
-          requested_at: new Date().toISOString()
+          status: 'pending'
         });
 
       if (reqErr) {
@@ -586,7 +585,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
            <p className="text-text-secondary text-[12px] md:text-[14px] font-sans mt-1 md:mt-2">Real-time performance metrics</p>
         </div>
         <div className="flex gap-3">
-           <button onClick={() => setActiveTab('music')} className="h-[44px] px-6 bg-border-default hover:bg-border-subtle text-text-primary rounded-[10px] font-display font-semibold uppercase text-[11px] tracking-widest transition-all inline-flex items-center justify-center">New Upload</button>
+           <button onClick={() => setActiveTab('upload')} className="h-[44px] px-6 bg-border-default hover:bg-border-subtle text-text-primary rounded-[10px] font-display font-semibold uppercase text-[11px] tracking-widest transition-all inline-flex items-center justify-center">New Upload</button>
            <button onClick={() => setActiveTab('promotion')} className="h-[44px] px-6 bg-smash-purple text-white font-display font-semibold uppercase tracking-widest text-[11px] rounded-[10px] hover:bg-smash-purple/90 transition-all inline-flex items-center justify-center">Promote Track</button>
         </div>
       </div>
@@ -618,7 +617,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
             value={stats.streams.toLocaleString()}
             icon={<Play size={20} />}
             color="text-smash-cyan"
-            sub="Total organic plays across all tracks"
+            sub="NOT tied to earnings"
          />
          <MetricCard
             label="TOTAL EARNINGS"
@@ -785,7 +784,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                              <p className="font-display font-medium text-[13px] text-text-primary uppercase tracking-wide truncate">WITHDRAWAL</p>
                              {statusBadge(payout.status)}
                            </div>
-                           <p className="text-[11px] text-text-muted font-sans mt-0.5">{new Date(payout.requested_at).toLocaleString('en-MW', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                           <p className="text-[11px] text-text-muted font-sans mt-0.5">{new Date(payout.created_at).toLocaleString('en-MW', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                            {payout.status === 'rejected' && payout.admin_note && (
                              <p className="text-xs text-red-400 mt-1">Reason: {payout.admin_note}</p>
                            )}
@@ -795,7 +794,7 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                         </div>
                         <div className="text-right flex items-center h-full">
                            <p className="text-[14px] font-sans font-semibold text-smash-orange">
-                              -MK {Number(payout.amount || 0).toLocaleString()}
+                              -MK {Number(payout.amount || payout.requested_amount || 0).toLocaleString()}
                            </p>
                         </div>
                      </div>
@@ -1132,7 +1131,7 @@ const PromotionTab = ({ userProfile }: { userProfile: any }) => {
             <div className="col-span-full py-16 text-center bg-bg-surface rounded-[14px] border border-border-default border-dashed">
                <Flame size={40} className="text-text-muted/50 mx-auto mb-4" />
                <h4 className="text-[20px] font-studio font-bold uppercase text-text-primary mb-2">No active campaigns</h4>
-               <p className="text-text-secondary text-[14px] font-sans mb-6">Boost your streams by reaching targeted Malawian listeners.</p>
+               <p className="text-text-secondary text-[14px] font-sans mb-6">Reach more fans and grow your audience.</p>
                <button onClick={() => setShowForm(true)} className="h-[44px] px-6 bg-border-default hover:bg-border-subtle text-text-primary rounded-[10px] font-display font-semibold uppercase text-[11px] tracking-widest transition-all inline-flex items-center justify-center">
                   Get Started
                </button>
@@ -1381,7 +1380,8 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
   const [isSuccess, setIsSuccess] = useState(false);
   
   const [songFile, setSongFile] = useState<File | null>(null);
-  const [albumFiles, setAlbumFiles] = useState<File[]>([]);
+  const [albumTracks, setAlbumTracks] = useState<{file: File, title: string, price: number}[]>([]);
+  const [albumPricingMode, setAlbumPricingMode] = useState<'album' | 'individual'>('album');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   
   const [releaseDate, setReleaseDate] = useState(new Date().toISOString().split('T')[0]);
@@ -1465,8 +1465,80 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
 
   const handleUploadAlbum = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (albumFiles.length === 0 || !coverFile) return toast.error('Check files');
-    handleUploadSingle(e); 
+    if (albumTracks.length === 0 || !coverFile || !title) return toast.error('Check files and fields');
+    
+    setUploading(true);
+    setUploadProgress(5);
+    
+    try {
+      // 1. Upload Cover
+      const coverExt = coverFile.name.split('.').pop();
+      const coverPath = `covers/${userProfile?.id}/cover-${Date.now()}.${coverExt}`;
+      const { error: coverErr } = await supabase.storage.from('covers').upload(coverPath, coverFile);
+      if (coverErr) throw coverErr;
+      const { data: { publicUrl: coverUrl } } = supabase.storage.from('covers').getPublicUrl(coverPath);
+
+      setUploadProgress(15);
+      
+      // 2. Create Album Record
+      const { data: newAlbum, error: albumErr } = await supabase.from('albums').insert({
+        artist_id: userProfile?.id,
+        title,
+        cover_url: coverUrl,
+        release_year: new Date(releaseDate).getFullYear()
+      }).select().single();
+
+      if (albumErr) throw albumErr;
+
+      // 3. Upload Tracks
+      const totalTracks = albumTracks.length;
+      let completed = 0;
+
+      for (const track of albumTracks) {
+        const audioExt = track.file.name.split('.').pop();
+        const audioPath = `songs/${userProfile?.id}/song-${Date.now()}-${Math.random().toString(36).substring(7)}.${audioExt}`;
+        const { error: audioErr } = await supabase.storage.from('songs').upload(audioPath, track.file);
+        if (audioErr) throw audioErr;
+        
+        const { data: { publicUrl: audioUrl } } = supabase.storage.from('songs').getPublicUrl(audioPath);
+
+        const trackPrice = isForSale 
+          ? (albumPricingMode === 'album' ? Math.floor(price / totalTracks) : track.price) 
+          : 0;
+
+        const { error: dbErr } = await supabase.from('songs').insert({
+          title: track.title,
+          artist_id: userProfile?.id,
+          audio_url: audioUrl,
+          cover_url: coverUrl,
+          is_explicit: isExplicit,
+          release_date: releaseDate,
+          featured_artist: featuredArtist,
+          language: language,
+          lyrics: lyrics, // same lyrics? probably empty if they bulk upload, but fine
+          genre: genre,
+          album_id: newAlbum.id,
+          price: trackPrice,
+          is_for_sale: isForSale,
+          approved: false,
+          type: 'single',
+          plays: 0
+        });
+
+        if (dbErr) throw dbErr;
+
+        completed++;
+        setUploadProgress(15 + Math.floor((completed / totalTracks) * 85));
+      }
+
+      setUploadProgress(100);
+      setIsSuccess(true);
+      if (onComplete) onComplete();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (isSuccess) {
@@ -1498,17 +1570,28 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
 
       <div className="bg-bg-surface border border-white/5 rounded-[32px] overflow-hidden shadow-2xl backdrop-blur-md p-6 md:p-12">
          {uploading ? (
-             <motion.div key="uploading" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 py-10 text-center">
-                <div className="relative w-56 h-56 mx-auto">
-                   <div className={`w-full h-full rounded-full border-4 border-smash-purple border-t-transparent ${uploading?'animate-spin':''}`} />
-                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-6xl font-studio font-black text-white">{uploadProgress}%</span>
-                      <span className="text-[10px] font-display font-black uppercase tracking-[0.3em] text-smash-purple mt-3 animate-pulse">Syncing</span>
+             <motion.div key="uploading" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 py-10 max-w-2xl mx-auto">
+                <div className="space-y-8 bg-bg-elevated p-8 rounded-[24px] border border-white/5 shadow-inner">
+                   <div className="flex flex-col gap-2">
+                     <div className="flex justify-between text-[11px] font-display font-black uppercase tracking-widest text-text-muted">
+                        <span>Syncing {mode === 'album' ? 'Album' : 'Track'}</span>
+                        <span className="text-smash-purple">{uploadProgress}%</span>
+                     </div>
+                     <div className="w-full h-3 bg-bg-surface rounded-full overflow-hidden border border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${uploadProgress}%` }} 
+                          transition={{ ease: "linear" }}
+                          className="h-full bg-gradient-to-r from-smash-purple to-smash-pink rounded-full relative" 
+                        />
+                     </div>
                    </div>
-                </div>
-                <div className="max-w-md mx-auto space-y-4">
-                   <h3 className="text-3xl font-studio font-black uppercase italic text-white tracking-widest">Engine Processing</h3>
-                   <p className="text-text-secondary font-sans leading-relaxed text-[15px]">Please stay on this page while we distribute "{title}" to the nodes.</p>
+                   <div className="text-center space-y-2">
+                     <h3 className="text-xl font-studio font-black uppercase italic text-white tracking-widest animate-pulse">Engine Processing</h3>
+                     <p className="text-[13px] font-sans text-text-muted">
+                        Distributing "{title}" to the nodes. Please don't close this page.
+                     </p>
+                   </div>
                 </div>
              </motion.div>         
          ) : (
@@ -1537,20 +1620,73 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
                     </div>
 
                     <div className="aspect-square md:col-span-2 bg-bg-elevated border-2 border-dashed border-white/10 rounded-[32px] flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:border-smash-orange transition-all relative overflow-hidden group shadow-inner" onClick={() => document.getElementById('audio-file')?.click()}>
-                       {(mode === 'album' ? albumFiles.length > 0 : songFile) ? (
+                       {(mode === 'album' ? albumTracks.length > 0 : songFile) ? (
                          <div className="text-center">
                            <CircleCheck size={40} className="text-smash-green mx-auto mb-3" />
-                           <p className="text-white font-display font-black uppercase tracking-[0.1em] text-[12px]">{mode === 'album' ? `${albumFiles.length} Tracks Selected` : songFile?.name}</p>
+                           <p className="text-white font-display font-black uppercase tracking-[0.1em] text-[12px]">{mode === 'album' ? `${albumTracks.length} Tracks Selected` : songFile?.name}</p>
                          </div>
                        ) : (
                          <>
                            <UploadCloud size={40} className="text-smash-orange mb-3" />
-                           <p className="text-white font-display font-black uppercase tracking-[0.1em] text-[12px]">Select Audio File</p>
+                           <p className="text-white font-display font-black uppercase tracking-[0.1em] text-[12px]">Select Audio File{mode === 'album' ? 's' : ''}</p>
                          </>
                        )}
-                       <input id="audio-file" type="file" multiple={mode === 'album'} accept="audio/*" onChange={e=> mode === 'album' ? setAlbumFiles(Array.from(e.target.files || [])) : setSongFile(e.target.files?.[0]||null)} className="hidden" />
+                       <input id="audio-file" type="file" multiple={mode === 'album'} accept="audio/*" onChange={e => {
+                         if (mode === 'album') {
+                           const files = Array.from(e.target.files || []);
+                           setAlbumTracks(files.map(f => ({ file: f, title: f.name.replace(/\.[^/.]+$/, ""), price: 2500 })));
+                         } else {
+                           setSongFile(e.target.files?.[0]||null);
+                         }
+                       }} className="hidden" />
                     </div>
                  </div>
+
+                 {mode === 'album' && albumTracks.length > 0 && (
+                   <div className="bg-bg-elevated border border-white/5 p-6 rounded-[24px]">
+                      <div className="flex justify-between items-center mb-6">
+                        <h4 className="text-white font-display font-black uppercase tracking-widest text-[13px]">Album Tracks</h4>
+                        {isForSale && (
+                          <select value={albumPricingMode} onChange={e => setAlbumPricingMode(e.target.value as any)} className="bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-[11px] font-display font-bold uppercase tracking-widest text-white outline-none">
+                            <option value="album">Split Album Price</option>
+                            <option value="individual">Set Individual Prices</option>
+                          </select>
+                        )}
+                      </div>
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {albumTracks.map((track, idx) => (
+                           <div key={idx} className="flex flex-col md:flex-row gap-4 items-center bg-black/20 p-4 rounded-xl border border-white/5">
+                              <div className="text-smash-purple font-black text-lg w-6 shrink-0">{idx + 1}</div>
+                              <input 
+                                value={track.title} 
+                                onChange={e => {
+                                  const newTracks = [...albumTracks];
+                                  newTracks[idx].title = e.target.value;
+                                  setAlbumTracks(newTracks);
+                                }} 
+                                placeholder="Track Title"
+                                className="flex-1 bg-transparent border-b border-white/10 focus:border-smash-purple text-[14px] font-display font-semibold transition-all outline-none text-white w-full px-2 py-1" 
+                              />
+                              {(isForSale && albumPricingMode === 'individual') && (
+                                 <div className="relative shrink-0 w-32 mt-4 md:mt-0">
+                                   <input 
+                                     type="number" 
+                                     value={track.price} 
+                                     onChange={e => {
+                                       const newTracks = [...albumTracks];
+                                       newTracks[idx].price = Number(e.target.value);
+                                       setAlbumTracks(newTracks);
+                                     }} 
+                                     className="w-full bg-transparent border-b border-white/10 focus:border-smash-purple text-[14px] font-display font-bold transition-all outline-none text-smash-orange px-2 py-1" 
+                                   />
+                                   <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[9px] font-display font-black text-text-muted">MWK</span>
+                                 </div>
+                              )}
+                           </div>
+                        ))}
+                      </div>
+                   </div>
+                 )}
 
                  <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
@@ -1597,9 +1733,9 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
                           }} className={`flex-1 h-12 rounded-xl text-[11px] font-display font-black uppercase tracking-widest transition-all ${isForSale ? 'bg-smash-purple text-white shadow-lg shadow-smash-purple/20' : 'text-text-muted hover:text-white'} ${!limits.canSellSongs ? 'opacity-50' : ''}`}>Paid Download</button>
                        </div>
                      </div>
-                     {isForSale && (
+                     {(isForSale && (mode !== 'album' || albumPricingMode === 'album')) && (
                        <div className="group">
-                         <label className="text-[11px] text-text-muted font-display font-black uppercase tracking-widest block mb-2 transition-colors">Download Price (MWK)</label>
+                         <label className="text-[11px] text-text-muted font-display font-black uppercase tracking-widest block mb-2 transition-colors">{mode === 'album' ? 'Total Album Price' : 'Download Price'} (MWK)</label>
                          <div className="relative">
                             <input type="number" required={isForSale} value={price} onChange={e => setPrice(Number(e.target.value))} min="100" step="500" className="w-full h-14 bg-bg-elevated border border-white/5 rounded-2xl px-6 text-[15px] font-display font-bold focus:border-smash-purple transition-all outline-none text-white pr-20" />
                             <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[11px] font-display font-black text-text-muted uppercase">MWK</div>
@@ -1610,7 +1746,7 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
                  )}
 
                  <div className="pt-8 flex flex-col gap-4">
-                    <button type="submit" disabled={!canUploadMore || !coverFile || (mode === 'album' ? albumFiles.length === 0 : !songFile)} className="w-full h-16 bg-smash-purple text-white font-display font-black uppercase tracking-[0.2em] text-[13px] rounded-2xl hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-4 shadow-[0_10px_30px_rgba(168,85,247,0.3)]">
+                    <button type="submit" disabled={!canUploadMore || !coverFile || (mode === 'album' ? albumTracks.length === 0 : !songFile)} className="w-full h-16 bg-smash-purple text-white font-display font-black uppercase tracking-[0.2em] text-[13px] rounded-2xl hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-4 shadow-[0_10px_30px_rgba(168,85,247,0.3)]">
                        PUBLISH TO SMASHIFY <Rocket size={20} />
                     </button>
                     <p className="text-[11px] font-sans text-center mt-4 text-text-muted">By publishing, you confirm you own the rights to this audio.</p>
@@ -1642,21 +1778,33 @@ const ProfileTab = ({ userProfile }: any) => {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${userProfile.id}/avatar-${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
-        if (!uploadError) {
-          avatarUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
-        }
+        if (uploadError) throw new Error(`Avatar upload failed: ${uploadError.message}`);
+        avatarUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
       }
 
       if (bannerFile) {
         const fileExt = bannerFile.name.split('.').pop();
         const fileName = `${userProfile.id}/banner-${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('banners').upload(fileName, bannerFile, { upsert: true });
-        if (!uploadError) {
-          bannerUrl = supabase.storage.from('banners').getPublicUrl(fileName).data.publicUrl;
+        if (uploadError) throw new Error(`Banner upload failed: ${uploadError.message}`);
+        bannerUrl = supabase.storage.from('banners').getPublicUrl(fileName).data.publicUrl;
+      }
+
+      const idDocFile = fd.get('id_document_file') as File;
+      let idUrl = userProfile?.id_document_url;
+      if (idDocFile && idDocFile.size > 0) {
+        const fileExt = idDocFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const fileName = `${userProfile.id}/id-document-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('artist-verifications').upload(fileName, idDocFile, { upsert: true, contentType: idDocFile.type });
+        if (uploadError) throw new Error(`ID Document upload failed: ${uploadError.message}`);
+        
+        const { data: signedData, error: signedErr } = await supabase.storage.from('artist-verifications').createSignedUrl(fileName, 60 * 60 * 24 * 365);
+        if (!signedErr && signedData) {
+          idUrl = signedData.signedUrl;
         }
       }
 
-      const { error } = await supabase.from('profiles').update({
+      const updateData: any = {
         full_name: fd.get('full_name'),
         stage_name: fd.get('stage_name'),
         genre: fd.get('genre'),
@@ -1666,10 +1814,16 @@ const ProfileTab = ({ userProfile }: any) => {
         twitter: fd.get('twitter'),
         avatar_url: avatarUrl,
         banner_url: bannerUrl,
-        subscription_price: fd.get('subscription_price') ? Number(fd.get('subscription_price')) : null,
-        // Phone is not updated if it already exists to protect withdrawal routing
         ...(userProfile?.phone ? {} : { phone: fd.get('phone') })
-      }).eq('id', userProfile?.id);
+      };
+      
+      if (!userProfile?.is_verified) {
+        if (fd.get('id_type')) updateData.id_type = fd.get('id_type');
+        if (fd.get('nrc_number')) updateData.nrc_number = fd.get('nrc_number');
+        if (idUrl) updateData.id_document_url = idUrl;
+      }
+
+      const { error } = await supabase.from('profiles').update(updateData).eq('id', userProfile?.id);
 
       if(error) throw error;
       toast.success('Studio Profile Updated!');
@@ -1767,16 +1921,6 @@ const ProfileTab = ({ userProfile }: any) => {
             </div>
          </div>
          <div>
-            <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Fan Club Monthly Price (MWK)</label>
-            <input type="number" name="subscription_price" defaultValue={userProfile?.subscription_price || ''} placeholder="e.g. 500" min="500" onChange={(e) => {
-              if (!limits.canReceiveSubs) {
-                toast.error('Upgrade to Rising Star to accept fan subscriptions');
-                e.target.value = '';
-              }
-            }} className="w-full h-[44px] bg-bg-elevated border border-border-default px-4 rounded-[10px] text-[14px] font-display outline-none focus:border-smash-purple focus:ring-[3px] focus:ring-smash-purple/15 transition-all text-text-primary placeholder:text-text-muted" />
-            <p className="text-[10px] text-text-muted mt-2 font-sans font-medium">Minimum price is MK 500. This is the amount fans will pay monthly to join your VIP fan club.</p>
-         </div>
-         <div>
             <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Artist Bio</label>
             <textarea name="bio" rows={4} defaultValue={userProfile?.bio} className="w-full bg-bg-elevated border border-border-default py-3 px-4 rounded-[10px] text-[14px] font-display outline-none focus:border-smash-purple focus:ring-[3px] focus:ring-smash-purple/15 transition-all resize-none placeholder:opacity-50 text-text-primary" placeholder="Tell your fans about yourself..." />
          </div>
@@ -1790,6 +1934,41 @@ const ProfileTab = ({ userProfile }: any) => {
                <input name="twitter" defaultValue={userProfile?.twitter} className="w-full h-[44px] bg-bg-elevated border border-border-default px-4 rounded-[10px] text-[14px] font-display outline-none focus:border-smash-purple focus:ring-[3px] focus:ring-smash-purple/15 transition-all placeholder:opacity-50 text-text-primary" placeholder="@handle" />
             </div>
          </div>
+         
+         {!userProfile?.is_verified && (
+           <div className="p-6 bg-smash-orange/5 border border-smash-orange/20 rounded-[14px] space-y-4">
+              <div className="flex gap-3 items-center mb-2">
+                 <ShieldCheck className="text-smash-orange shrink-0" size={24} />
+                 <div>
+                    <h4 className="text-smash-orange font-studio font-bold uppercase tracking-widest text-sm">Action Required: Identity Verification</h4>
+                    <p className="text-text-muted text-xs font-sans mt-1">To withdraw funds, you must provide your National ID details. If you already submitted a photo during onboarding, just provide the number below.</p>
+                 </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                    <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">ID Document Type</label>
+                    <select name="id_type" defaultValue={userProfile?.id_type || "National ID"} className="w-full h-[44px] bg-bg-elevated border border-border-default px-4 rounded-[10px] text-[14px] font-display outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all text-text-primary">
+                       <option value="National ID">Malawi National ID</option>
+                       <option value="Passport">Passport</option>
+                       <option value="Driver License">Driver's License</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">ID Document Number</label>
+                    <input name="nrc_number" defaultValue={userProfile?.nrc_number} type="text" placeholder="e.g. A1234567" className="w-full h-[44px] bg-bg-elevated border border-border-default px-4 rounded-[10px] text-[14px] font-display outline-none focus:border-smash-orange focus:ring-[3px] focus:ring-smash-orange/15 transition-all text-text-primary placeholder:opacity-50" />
+                 </div>
+              </div>
+
+              {!userProfile?.id_document_url && (
+                 <div>
+                    <label className="block text-[11px] font-display font-medium uppercase tracking-wider text-text-muted mb-2">Upload ID Document Photo</label>
+                    <input name="id_document_file" type="file" accept="image/*" className="w-full bg-bg-elevated border border-border-default p-2 rounded-[10px] text-[12px] font-display outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-smash-orange file:text-white hover:file:bg-smash-orange/80 cursor-pointer text-text-muted" />
+                 </div>
+              )}
+           </div>
+         )}
+
          <button disabled={saving} type="submit" className="w-full h-[48px] bg-smash-purple text-white font-display font-semibold uppercase tracking-widest rounded-[10px] mt-4 hover:bg-smash-purple/90 transition-colors disabled:opacity-50 text-[13px]">
             {saving ? 'SYNCING...' : 'UPDATE STUDIO PROFILE'}
          </button>

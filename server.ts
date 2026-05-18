@@ -57,7 +57,7 @@ async function startServer() {
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
   // Fallbacks for 15-character truncation limit in some panels
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPA_ADMIN_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVIC || process.env.SUPABASE_SECRE || process.env.SERVICE_ROLE_KEY;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPA_ADMIN_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
   const PAYCHANGU_SECRET_KEY = process.env.PAYCHANGU_SEC || process.env.PAYCHANGU_SECRET_KEY || process.env.PAYCHANGU_SECRE || process.env.PAYCHANGU_SECRET;
   let APP_URL = process.env.APP_URL || process.env.VITE_APP_URL || `http://localhost:${PORT}`;
   if (APP_URL === 'YOUR_APP_URL' || APP_URL === 'APP_URL' || !APP_URL) {
@@ -74,7 +74,6 @@ async function startServer() {
   }
   const adminKey = SUPABASE_SERVICE_ROLE_KEY;
 
-  console.log('[DEBUG] SUPABASE_SERVICE_ROLE_KEY present:', !!SUPABASE_SERVICE_ROLE_KEY);
   console.log('[DEBUG] PAYCHANGU_SECRET_KEY present:', !!PAYCHANGU_SECRET_KEY);
 
   if (SUPABASE_URL && adminKey) {

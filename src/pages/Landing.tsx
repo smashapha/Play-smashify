@@ -428,6 +428,64 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* Agent/Referral Section */}
+      <section className="py-20 px-6 md:px-12 border-t border-white/5">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-smash-green/10 border border-smash-green/20 rounded-full mb-6">
+            <span className="text-smash-green text-xs font-black uppercase tracking-widest">
+              💼 Earn With Smashify
+            </span>
+          </div>
+          <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-studio font-black uppercase italic mb-4">
+            Become a <span className="text-smash-green">Smashify Agent</span>
+          </h2>
+          <p className="text-white/50 text-base mb-10 max-w-2xl mx-auto">
+            Know artists, producers, or musicians? Refer them to Smashify and earn 5% of their first subscription payment — every time you bring someone on board.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {[
+              {
+                emoji: '🤝',
+                title: 'Refer an Artist',
+                desc: 'Share your unique agent link with any artist who needs to monetize their music'
+              },
+              {
+                emoji: '💰',
+                title: 'They Subscribe',
+                desc: 'When they pay their first Rising Star, Standard or Elite plan — you earn 5%'
+              },
+              {
+                emoji: '📱',
+                title: 'You Get Paid',
+                desc: 'Your commission goes straight to your Airtel Money or TNM Mpamba number'
+              }
+            ].map((item, i) => (
+              <div key={i} className="p-6 bg-white/5 rounded-3xl border border-white/10 text-left">
+                <div className="text-3xl mb-4">{item.emoji}</div>
+                <h3 className="font-bold text-sm mb-2">{item.title}</h3>
+                <p className="text-white/40 text-xs leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-smash-green/10 border border-smash-green/20 rounded-2xl p-6 mb-8 inline-block">
+            <p className="text-smash-green font-bold text-sm">
+              Example: You refer 10 artists who each pay MK 8,000 Rising Star
+            </p>
+            <p className="text-2xl font-black mt-1">You earn MK 4,000 💚</p>
+            <p className="text-white/40 text-xs mt-1">5% × MK 8,000 × 10 artists</p>
+          </div>
+          <br />
+          <a
+            href="https://wa.me/265883728868?text=I%20want%20to%20become%20a%20Smashify%20Agent"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 h-14 px-10 bg-smash-green text-white rounded-full font-display font-black uppercase tracking-widest text-sm hover:brightness-110 transition-all shadow-xl shadow-smash-green/20"
+          >
+            Apply to Become an Agent →
+          </a>
+        </div>
+      </section>
+
       {/* Featured Artists */}
       <section className="pt-24 pb-12 px-6 md:px-12 relative">
         <div className="max-w-7xl mx-auto">

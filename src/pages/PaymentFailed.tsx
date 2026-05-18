@@ -40,7 +40,7 @@ const PaymentFailed = () => {
              </button>
              
              <a 
-                href="https://wa.me/265999000000" // Mock support link
+                href="https://wa.me/265883728868" // Mock support link
                 target="_blank"
                 rel="noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 px-8 py-5 bg-white/5 text-white font-black uppercase text-xs tracking-widest rounded-full hover:bg-white/10 transition-all"

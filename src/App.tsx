@@ -94,7 +94,7 @@ const Contact = () => {
             </div>
             <div>
               <p className="text-[10px] uppercase font-black tracking-widest text-smash-gray mb-1">WhatsApp</p>
-              <a href="https://wa.me/265990000000" target="_blank" rel="noopener noreferrer" className="font-bold text-lg hover:text-smash-cyan transition-colors">+265 99 000 0000</a>
+              <a href="https://wa.me/265883728868" target="_blank" rel="noopener noreferrer" className="font-bold text-lg hover:text-smash-cyan transition-colors">+265 88 372 88 68</a>
             </div>
           </div>
 

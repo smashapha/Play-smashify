@@ -25,6 +25,7 @@ const AuthArtist: React.FC = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [stageName, setStageName] = useState('');
@@ -245,6 +246,12 @@ const AuthArtist: React.FC = () => {
         throw new Error(`Application could not be saved: ${appError.message}`);
       }
 
+      if (referralCode) {
+        await supabase.from('artist_applications').update({
+          referral_code: referralCode
+        }).eq('profile_id', userId);
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -435,6 +442,23 @@ const AuthArtist: React.FC = () => {
                           <AuthInput icon={User} type="text" placeholder="Full Legal Name" value={fullName} onChange={setFullName} />
                           <AuthInput icon={Mic2} type="text" placeholder="Stage Name" value={stageName} onChange={setStageName} />
                           <AuthInput icon={Mail} type="email" placeholder="Professional Email" value={email} onChange={setEmail} />
+                          <div>
+                            <label className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-2">
+                              Referral Code
+                              <span className="text-[10px] normal-case font-normal ml-2 text-text-muted">
+                                (optional — enter if someone referred you)
+                              </span>
+                            </label>
+                            <input
+                              type="text"
+                              value={referralCode}
+                              onChange={(e) => setReferralCode(
+                                e.target.value.toUpperCase().trim()
+                              )}
+                              placeholder="e.g. AGENT-ABC123"
+                              className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl px-5 text-white text-sm outline-none focus:border-smash-orange/50 font-mono"
+                            />
+                          </div>
                           <button onClick={nextArtistStep} className="w-full h-[52px] rounded-[14px] bg-bg-elevated text-text-primary font-display font-bold text-[13px] uppercase tracking-wide flex items-center justify-center gap-2 mt-4 hover:bg-white/10 transition-colors">
                              Next Step <ArrowRight size={16} />
                           </button>
