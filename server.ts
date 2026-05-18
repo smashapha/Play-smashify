@@ -754,8 +754,8 @@ async function startServer() {
   const distPath = path.resolve(__dirname, 'dist');
   const indexHtmlExists = fs.existsSync(path.join(distPath, 'index.html'));
 
-  // Only use static serving if specifically in production mode
   if (process.env.NODE_ENV === 'production') {
+    console.log('--- PRODUCTION MODE ---');
     if (indexHtmlExists) {
       console.log('Serving static files from dist/');
       app.use(express.static(distPath));
@@ -764,20 +764,36 @@ async function startServer() {
       });
     } else {
       console.error('CRITICAL: dist/index.html not found in production!');
-      app.get('*', (req, res) => res.status(500).send('Production build missing'));
+      app.get('*', (req, res) => res.status(500).send('Production build missing. Please run npm run build.'));
     }
   } else {
-    console.log('Starting Vite in middleware mode...');
+    console.log('--- DEVELOPMENT MODE (Vite Middleware) ---');
     try {
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: 'spa',
       });
       app.use(vite.middlewares);
+      
+      // Fallback for SPA if Vite middleware doesn't catch it
+      app.get('*', async (req, res, next) => {
+        const url = req.originalUrl;
+        try {
+          const indexPath = path.resolve(__dirname, 'index.html');
+          if (!fs.existsSync(indexPath)) {
+             return res.status(404).send('index.html not found in root');
+          }
+          let template = fs.readFileSync(indexPath, 'utf-8');
+          template = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        } catch (e) {
+          next(e);
+        }
+      });
     } catch (err) {
       console.error('Vite failed to initialize:', err);
-      // Fallback to static if vite fails but dist exists
       if (indexHtmlExists) {
+        console.warn('Vite failed, falling back to static dist/ as emergency fallback');
         app.use(express.static(distPath));
         app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
       }
