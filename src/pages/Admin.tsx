@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShieldCheck, CircleCheck, Trash2, Music2, Plus, FileAudio, X, Flame, 
   Volume2, VolumeX, Edit3, LayoutDashboard, Clock, Radio, Wallet, DollarSign,
   Mic2, Users, ShoppingCart, Heart, CreditCard, Search, ArrowLeft, TrendingUp,
-  Pause, Play
+  Pause, Play, Activity, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'listeners' | 'artists' | 'songs' | 'applications' | 'song-reviews' | 'snippet-reviews' | 'ads' | 'payouts'>('overview');
@@ -100,6 +101,10 @@ const Admin = () => {
     }
   };
 
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<any[]>([]);
+  const [revenueSplits, setRevenueSplits] = useState<any[]>([]);
+
   const fetchPlatformStats = async () => {
     try {
       const [
@@ -108,15 +113,50 @@ const Admin = () => {
         { count: totalSongs },
         { count: pendingSongsCount },
         { data: revenueData },
+        { data: recentTxs },
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('user_type', 'artist'),
         supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
         supabase.from('songs').select('*', { count: 'exact', head: true }).eq('approved', true),
         supabase.from('songs').select('*', { count: 'exact', head: true }).eq('approved', false),
-        supabase.from('transactions').select('platform_fee').eq('status', 'completed'),
+        supabase.from('transactions').select('platform_fee, type, created_at, net_amount').eq('status', 'completed'),
+        supabase.from('transactions').select('id, type, platform_fee, created_at, net_amount, profiles:artist_id(full_name, stage_name)').eq('status', 'completed').order('created_at', { ascending: false }).limit(6),
       ]);
       const totalRev = (revenueData || []).reduce((a, t) => a + (t.platform_fee || 0), 0) || 0;
       
+      // Process revenue splits
+      const splits: Record<string, number> = { subscriptions: 0, tips: 0, sales: 0, events: 0 };
+      revenueData?.forEach(tx => {
+         const type = (tx.type || '').toLowerCase();
+         if (type.includes('sub')) splits.subscriptions += tx.platform_fee || 0;
+         else if (type.includes('tip') || type.includes('donat')) splits.tips += tx.platform_fee || 0;
+         else if (type.includes('sale') || type.includes('song')) splits.sales += tx.platform_fee || 0;
+         else splits.events += tx.platform_fee || 0;
+      });
+      setRevenueSplits([
+        { name: 'Subscriptions', value: splits.subscriptions, color: '#FF6B35' },
+        { name: 'Tips', value: splits.tips, color: '#00D68F' },
+        { name: 'Sales', value: splits.sales, color: '#4C9AFF' },
+      ].filter(s => s.value > 0).length ? [
+        { name: 'Subscriptions', value: splits.subscriptions, color: '#FF6B35' },
+        { name: 'Tips', value: splits.tips, color: '#00D68F' },
+        { name: 'Sales', value: splits.sales, color: '#4C9AFF' },
+      ] : [{ name: 'No Data', value: 1, color: '#22223E' }]);
+
+      // Process monthly trend
+      const monthlyData: Record<string, any> = {};
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      months.forEach(m => monthlyData[m] = { name: m, revenue: 0 });
+      revenueData?.forEach(tx => {
+         if (tx.created_at) {
+            const date = new Date(tx.created_at);
+            const m = months[date.getMonth()];
+            if (monthlyData[m]) monthlyData[m].revenue += tx.platform_fee || 0;
+         }
+      });
+      setRevenueTrend(Object.values(monthlyData));
+      setRecentActivities(recentTxs || []);
+
       setPlatformStats({
         totalArtists: totalArtists || 0,
         totalListeners: totalListeners || 0,
@@ -147,6 +187,35 @@ const Admin = () => {
 
   const [processingId, setProcessingId] = useState<string|null>(null);
   const [adminNote, setAdminNote] = useState('');
+
+  // Modals state
+  const [selectedApp, setSelectedApp] = useState<any>(null);
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
+  const [selectedSong, setSelectedSong] = useState<any>(null);
+  const [selectedPayout, setSelectedPayout] = useState<any>(null);
+  const [playingSongId, setPlayingSongId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = (url: string, id: string) => {
+    if (playingSongId === id && audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    } else {
+      if (audioRef.current) {
+         audioRef.current.pause();
+      }
+      audioRef.current = new Audio(url);
+      audioRef.current.play();
+      setPlayingSongId(id);
+      
+      audioRef.current.onended = () => {
+         setPlayingSongId(null);
+      };
+    }
+  };
 
   const markAsPaid = async (
     payoutId: string,
@@ -543,34 +612,48 @@ const Admin = () => {
         <div className="flex-1 overflow-y-auto p-8 lg:p-12 custom-scrollbar">
            <div className="max-w-7xl mx-auto space-y-12">
               {/* KPIs with refined design */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                  <KpiCard 
-                   title="Platform Revenue" 
-                   value={`MK ${platformStats.totalRevenue.toLocaleString()}`} 
-                   trend="+12.4%" 
+                   title="Platform Rev" 
+                   value={`MK ${(platformStats.totalRevenue / 1000).toFixed(0)}k`} 
+                   trend="Net Earnings" 
                    icon={DollarSign} 
-                   color="text-smash-green" 
+                   color="text-[#FF6B35]" 
                  />
                  <KpiCard 
-                   title="Total Network" 
-                   value={(platformStats.totalArtists + platformStats.totalListeners).toLocaleString()} 
+                   title="Users" 
+                   value={platformStats.totalListeners.toLocaleString()} 
                    trend="Active" 
                    icon={Users} 
-                   color="text-smash-cyan" 
+                   color="text-[#4C9AFF]" 
+                 />
+                 <KpiCard 
+                   title="Artists" 
+                   value={platformStats.totalArtists.toLocaleString()} 
+                   trend="Creators" 
+                   icon={Mic2} 
+                   color="text-[#A855F7]" 
+                 />
+                 <KpiCard 
+                   title="Songs Live" 
+                   value={platformStats.totalSongs.toLocaleString()} 
+                   trend="Catalog" 
+                   icon={Music2} 
+                   color="text-[#FFAA00]" 
                  />
                  <KpiCard 
                    title="Review Queue" 
                    value={applications.length + pendingSongs.length + pendingSnippets.length} 
-                   trend="Urgent" 
+                   trend="Pending" 
                    icon={Clock} 
-                   color="text-smash-orange" 
+                   color="text-[#FF4757]" 
                  />
                  <KpiCard 
                    title="Net Payouts" 
                    value={payoutRequests.filter(p => p.status === 'processing').length} 
-                   trend="Pending" 
+                   trend="Action Req" 
                    icon={Wallet} 
-                   color="text-smash-purple" 
+                   color="text-[#00D68F]" 
                  />
               </div>
 
@@ -583,68 +666,118 @@ const Admin = () => {
                 <AnimatePresence mode="wait">
                   <div key={activeTab}>
                     {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* System Audit Card */}
-                  <div className="col-span-1 lg:col-span-2 p-8 bg-white/2 border border-white/5 rounded-[40px] space-y-6">
-                    <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-xl bg-smash-purple/20 flex items-center justify-center text-smash-purple">
-                            <ShieldCheck size={20} />
+                <div className="space-y-6">
+                  {/* Charts Row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-[#141428] border border-[#22223e] rounded-[14px] p-6 hover:border-[#2e2e50] transition-all">
+                      <h3 className="text-base font-semibold text-white mb-1">Revenue Overview</h3>
+                      <p className="text-xs text-[#7878a0] mb-6">Monthly revenue breakdown by source</p>
+                      <div className="h-[260px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={revenueTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#FF6B35" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#FF6B35" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="name" stroke="#505070" fontSize={11} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#505070" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `MK${v/1000}k`} />
+                            <Tooltip contentStyle={{ backgroundColor: '#141428', borderColor: '#22223E', borderRadius: '8px' }} itemStyle={{ color: '#EAEAF2' }} />
+                            <Area isAnimationActive={false} type="monotone" dataKey="revenue" stroke="#FF6B35" fillOpacity={1} fill="url(#colorRev)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#141428] border border-[#22223e] rounded-[14px] p-6 hover:border-[#2e2e50] transition-all">
+                      <h3 className="text-base font-semibold text-white mb-1">Revenue Split</h3>
+                      <p className="text-xs text-[#7878a0] mb-6">By source this quarter</p>
+                      <div className="h-[230px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie isAnimationActive={false} data={revenueSplits} innerRadius={70} outerRadius={100} paddingAngle={2} dataKey="value" stroke="none">
+                              {revenueSplits.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip contentStyle={{ backgroundColor: '#141428', borderColor: '#22223E', borderRadius: '8px' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-4 mt-2">
+                        {revenueSplits.filter(s => s.name !== 'No Data').map(s => (
+                          <div key={s.name} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                            <span className="text-[11px] text-[#7878a0] leading-none">{s.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Goal + Recent Txs */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-[#141428] border border-[#22223e] rounded-[14px] p-6">
+                      <h3 className="text-base font-semibold text-white mb-1">Platform Goal</h3>
+                      <p className="text-xs text-[#7878a0] mb-6">Target: MK 5,000,000</p>
+                      <div className="mt-8">
+                        <div className="flex justify-between text-[13px] mb-2">
+                          <span className="text-[#7878a0]">Progress</span>
+                          <span className="font-bold text-[#FF6B35]">{Math.min(100, Math.round((platformStats.totalRevenue / 5000000) * 100))}%</span>
+                        </div>
+                        <div className="w-full h-3 bg-[#22223e] rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF8F65] rounded-full" style={{ width: `${Math.min(100, Math.round((platformStats.totalRevenue / 5000000) * 100))}%` }} />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4 mt-8">
+                         <div className="text-center">
+                            <h4 className="text-xl font-bold text-white">MK {(platformStats.totalRevenue / 1000).toFixed(1)}K</h4>
+                            <p className="text-[11px] text-[#505070] mt-1 uppercase tracking-widest font-bold">Earned</p>
                          </div>
-                         <h3 className="font-studio font-black uppercase italic text-xl">Governance Dashboard</h3>
-                       </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <button onClick={() => setActiveTab('applications')} className="group p-6 bg-white/5 rounded-3xl border border-white/5 hover:border-smash-purple transition-all text-left">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-smash-gray mb-1">Artist Pipeline</p>
-                          <div className="flex items-center justify-between">
-                             <h4 className="text-2xl font-studio font-black italic">{applications.length} PENDING</h4>
-                             <ArrowLeft size={16} className="rotate-180 text-smash-purple group-hover:translate-x-1 transition-transform" />
-                          </div>
-                       </button>
-                       <button onClick={() => setActiveTab('song-reviews')} className="group p-6 bg-white/5 rounded-3xl border border-white/5 hover:border-smash-purple transition-all text-left">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-smash-gray mb-1">Content Review</p>
-                          <div className="flex items-center justify-between">
-                             <h4 className="text-2xl font-studio font-black italic">{pendingSongs.length} SONGS</h4>
-                             <ArrowLeft size={16} className="rotate-180 text-smash-purple group-hover:translate-x-1 transition-transform" />
-                          </div>
-                       </button>
+                         <div className="text-center">
+                            <h4 className="text-xl font-bold text-[#FFAA00]">MK {Math.max(0, (5000000 - platformStats.totalRevenue) / 1000).toFixed(1)}K</h4>
+                            <p className="text-[11px] text-[#505070] mt-1 uppercase tracking-widest font-bold">Remaining</p>
+                         </div>
+                         <div className="text-center">
+                            <h4 className="text-xl font-bold text-[#00D68F]">{platformStats.totalArtists}</h4>
+                            <p className="text-[11px] text-[#505070] mt-1 uppercase tracking-widest font-bold">Active Acts</p>
+                         </div>
+                      </div>
                     </div>
 
-                    <div className="p-6 bg-smash-purple/5 border border-smash-purple/10 rounded-3xl">
-                       <p className="text-xs font-bold text-white/80 leading-relaxed">
-                          All artist payouts are manually verified against wallet balances and transaction logs. 
-                          Verification ensures that only organic earnings are withdrawn.
-                       </p>
+                    <div className="bg-[#141428] border border-[#22223e] rounded-[14px] p-6">
+                      <h3 className="text-base font-semibold text-white mb-1">Recent Transactions</h3>
+                      <p className="text-xs text-[#7878a0] mb-6">Latest platform financial activity</p>
+                      <table className="w-full mt-2">
+                        <thead>
+                          <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-[#7878a0] border-b border-[#22223e]">
+                            <th className="pb-3 text-white/50">Artist</th>
+                            <th className="pb-3 text-white/50">Type</th>
+                            <th className="pb-3 text-white/50">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#22223e]">
+                           {recentActivities.map(tx => (
+                             <tr key={tx.id} className="hover:bg-[#1a1a35] transition-colors">
+                               <td className="py-3 text-[13px] font-medium text-white">{tx.profiles?.stage_name || tx.profiles?.full_name || 'System'}</td>
+                               <td className="py-3">
+                                 <span className={`px-2 py-1 rounded-md text-[11px] font-semibold capitalize ${tx.type?.includes('sub') ? 'bg-[#ff6b35]/15 text-[#ff6b35]' : tx.type?.includes('tip') || tx.type?.includes('donat') ? 'bg-[#00d68f]/15 text-[#00d68f]' : 'bg-[#4c9aff]/15 text-[#4c9aff]'}`}>
+                                   {tx.type || 'tx'}
+                                 </span>
+                               </td>
+                               <td className="py-3 text-[13px] font-bold font-mono text-[#00d68f]">MK {Math.round(tx.net_amount || tx.platform_fee || 0).toLocaleString()}</td>
+                             </tr>
+                           ))}
+                           {recentActivities.length === 0 && (
+                             <tr><td colSpan={3} className="py-6 text-center text-[13px] text-[#505070]">No recent transactions</td></tr>
+                           )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-
-                  {/* Operational Health */}
-                  <div className="p-8 bg-white/2 border border-white/5 rounded-[40px] flex flex-col justify-between">
-                     <div>
-                        <div className="flex items-center gap-2 mb-6">
-                          <div className="w-8 h-8 rounded-lg bg-smash-green/20 flex items-center justify-center text-smash-green">
-                             <ShieldCheck size={16} />
-                          </div>
-                          <p className="text-[10px] font-black uppercase tracking-widest leading-none">Security Node</p>
-                        </div>
-                        <h4 className="text-2xl font-studio font-black italic uppercase leading-tight mb-4">Integrity Check</h4>
-                        <p className="text-xs text-smash-gray leading-relaxed font-bold">
-                           Malawian ID verification is required for all Elite tier artists. Rising Star and Standard tiers are verified through social proof and phone numbers.
-                        </p>
-                     </div>
-                     <div className="pt-6 border-t border-white/5 mt-6">
-                        <div className="flex items-center justify-between mb-4">
-                           <p className="text-[10px] font-black uppercase text-smash-gray">Uptime</p>
-                           <p className="text-[10px] font-black uppercase text-smash-green">99.9%</p>
-                        </div>
-                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-smash-green w-[99.9%]" />
-                        </div>
-                     </div>
-                  </div>
-                </div>
+               </div>
               )}
 
               {activeTab === 'listeners' && (
@@ -774,6 +907,9 @@ const Admin = () => {
                                 )}
                              </td>
                              <td className="px-8 py-6 text-right flex items-center justify-end gap-3">
+                                <button onClick={() => setSelectedArtist(a)} className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-smash-purple hover:text-smash-purple transition-all flex items-center gap-2">
+                                   <ShieldCheck size={14} /> Profile
+                                </button>
                                 <button 
                                   onClick={() => toggleArtistVerification(a.id, !!(a.verified || a.is_verified))}
                                   className={`px-4 py-1.5 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
@@ -1062,21 +1198,24 @@ const Admin = () => {
                                 </div>
                               </td>
                               <td className="px-8 py-6 text-left">
-                                {app.id_document_url ? (
-                                  <a href={app.id_document_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 group/btn px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-smash-cyan hover:text-smash-cyan transition-all">
-                                    <ShieldCheck size={14} className="opacity-40 group-hover/btn:opacity-100" /> Inspect ID Payload
-                                  </a>
-                                ) : (
-                                  <span className="text-[9px] font-black uppercase text-red-400 tracking-widest">Document Missing</span>
-                                )}
+                                <div className="flex items-center gap-2">
+                                 {app.id_document_url ? (
+                                   <span className="text-[10px] bg-[#00d68f]/15 text-[#00d68f] px-2 py-1 flex items-center gap-1 rounded-md uppercase font-bold"><ShieldCheck size={12} /> ID Verified</span>
+                                 ) : (
+                                   <span className="text-[9px] font-black uppercase text-red-400 tracking-widest">Document Missing</span>
+                                 )}
+                                </div>
                               </td>
                               <td className="px-8 py-6 text-right">
                                 <div className="flex items-center justify-end gap-3">
-                                   <button onClick={() => approveArtist(app)} className="h-11 w-11 bg-white text-black rounded-xl flex items-center justify-center hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95 group/app">
-                                      <CircleCheck size={24} />
+                                   <button onClick={() => setSelectedApp(app)} className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-smash-cyan hover:text-smash-cyan transition-all flex items-center gap-2">
+                                      <ShieldCheck size={14} /> Review Details
                                    </button>
-                                   <button onClick={() => rejectArtist(app)} className="h-11 w-11 bg-white/5 text-smash-gray border border-white/5 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-95 group/rej">
-                                      <X size={24} />
+                                   <button onClick={() => approveArtist(app)} className="h-9 w-9 bg-white text-black rounded-xl flex items-center justify-center hover:bg-smash-green hover:text-white transition-all shadow-lg active:scale-95 group/app tooltip" title="Approve">
+                                      <CircleCheck size={16} />
+                                   </button>
+                                   <button onClick={() => rejectArtist(app)} className="h-9 w-9 bg-white/5 text-smash-gray border border-white/5 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-95 group/rej tooltip" title="Reject">
+                                      <X size={16} />
                                    </button>
                                 </div>
                               </td>
@@ -1132,10 +1271,24 @@ const Admin = () => {
                                 <p className="text-[10px] text-smash-gray font-bold tracking-tight lowercase underline opacity-60">{song.profiles?.email}</p>
                               </td>
                               <td className="px-8 py-6">
-                                <div className="bg-white/5 rounded-xl p-1.5 border border-white/5">
-                                   <audio controls className="h-7 w-44 opacity-80 hover:opacity-100 transition-opacity invert brightness-200">
-                                     <source src={song.audio_url} type="audio/mpeg" />
-                                   </audio>
+                                <div className="flex items-center gap-3">
+                                   <button 
+                                      onClick={() => togglePlay(song.audio_url, song.id)}
+                                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                                        playingSongId === song.id 
+                                        ? 'bg-[#ff6b35] text-white shadow-[0_0_20px_rgba(255,107,53,0.4)]' 
+                                        : 'bg-[#ff6b35]/15 text-[#ff6b35] hover:bg-[#ff6b35] hover:text-white'
+                                      }`}
+                                   >
+                                      {playingSongId === song.id ? <Pause size={16} /> : <Play size={16} />}
+                                   </button>
+                                   <div className="flex-1 flex flex-col justify-center">
+                                      <div className="flex items-center gap-[2px] h-6 opacity-60">
+                                         {Array.from({length:15}).map((_, i) => (
+                                            <div key={i} className={`w-[3px] rounded-full bg-[#ff6b35] transition-all duration-150 ${playingSongId === song.id ? 'animate-pulse' : ''}`} style={{height: playingSongId === song.id ? `${8 + Math.random() * 16}px` : '4px'}} />
+                                         ))}
+                                      </div>
+                                   </div>
                                 </div>
                               </td>
                               <td className="px-8 py-6 text-right">
@@ -1367,6 +1520,160 @@ const Admin = () => {
                 </div>
               </AnimatePresence>
             )}
+
+            {/* Modals */}
+            <AnimatePresence>
+              {selectedApp && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+                  <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="w-full max-w-2xl bg-[#141428] border border-[#22223e] rounded-[16px] max-h-[85vh] overflow-y-auto flex flex-col">
+                    <div className="p-5 border-b border-[#22223e] flex items-center justify-between sticky top-0 bg-[#10101e] z-10 rounded-t-[16px]">
+                      <h3 className="font-bold text-lg text-white">Application Details</h3>
+                      <button onClick={() => setSelectedApp(null)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#141428] border border-[#22223e] text-[#7878a0] hover:text-[#ff4757] hover:border-[#ff4757] transition-all">
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-xl bg-[#ff6b35]/15 flex items-center justify-center text-[28px] font-bold text-[#ff6b35]">
+                          {selectedApp.stage_name?.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xl text-white">{selectedApp.stage_name}</div>
+                          <div className="text-[13px] text-[#7878a0] mt-1">Real name: {selectedApp.full_name || selectedApp.name}</div>
+                          <div className="mt-2 flex gap-2">
+                             <span className="bg-[#ffaa00]/15 text-[#ffaa00] px-2 py-1 rounded-md text-[11px] font-bold uppercase">{selectedApp.status || 'Pending'}</span>
+                             <span className="bg-[#ff6b35]/15 text-[#ff6b35] px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest font-mono">APP-{selectedApp.id?.split('-')[0]}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-6">Personal Identity</h4>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Email</span><span className="font-semibold text-white">{selectedApp.email}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Phone</span><span className="font-semibold text-white">{selectedApp.phone || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">City</span><span className="font-semibold text-white">{selectedApp.city || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Type</span><span className="font-semibold text-white">{selectedApp.id_type || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedApp.nrc_number || 'N/A'}</span></div>
+
+                      <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Verification Documents</h4>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div>
+                            <p className="text-[11px] text-[#7878a0] mb-1">ID Document</p>
+                            {selectedApp.id_document_url ? (
+                              <img src={selectedApp.id_document_url} alt="ID Document" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedApp.id_document_url, '_blank')} />
+                            ) : (
+                              <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
+                            )}
+                         </div>
+                         <div>
+                            <p className="text-[11px] text-[#7878a0] mb-1">Selfie Image</p>
+                            {selectedApp.selfie_url ? (
+                              <img src={selectedApp.selfie_url} alt="Selfie" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedApp.selfie_url, '_blank')} />
+                            ) : (
+                              <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
+                            )}
+                         </div>
+                      </div>
+                      
+                      <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Artist Roster Data</h4>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Stage Name</span><span className="font-semibold text-white">{selectedApp.stage_name}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Genre</span><span className="font-semibold text-white">{selectedApp.genre}</span></div>
+                      {selectedApp.agent_reference && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.agent_reference}</span></div>}
+
+                      <div className="flex gap-3 mt-8 pt-5 border-t border-[#22223e]">
+                         <button onClick={() => { approveArtist(selectedApp); setSelectedApp(null); }} className="flex-1 py-3 bg-[#00d68f] hover:brightness-110 text-black font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <CircleCheck size={16} /> Approve Application
+                         </button>
+                         <button onClick={() => { rejectArtist(selectedApp); setSelectedApp(null); }} className="flex-1 py-3 bg-[#ff4757]/15 border border-[#ff4757]/30 text-[#ff4757] hover:bg-[#ff4757] hover:text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <X size={16} /> Reject
+                         </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+              {selectedArtist && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+                  <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="w-full max-w-2xl bg-[#141428] border border-[#22223e] rounded-[16px] max-h-[85vh] overflow-y-auto flex flex-col">
+                    <div className="p-5 border-b border-[#22223e] flex items-center justify-between sticky top-0 bg-[#10101e] z-10 rounded-t-[16px]">
+                      <h3 className="font-bold text-lg text-white">Artist Profile</h3>
+                      <button onClick={() => setSelectedArtist(null)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#141428] border border-[#22223e] text-[#7878a0] hover:text-[#ff4757] hover:border-[#ff4757] transition-all">
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                          <img src={selectedArtist.avatar_url || "https://placehold.co/100x100/18162C/9B5DE5?text=?"} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xl text-white flex items-center gap-2">
+                            {selectedArtist.stage_name}
+                            {(selectedArtist.verified || selectedArtist.is_verified) && <ShieldCheck size={18} className="text-[#00d68f]" />}
+                          </div>
+                          <div className="text-[13px] text-[#7878a0] mt-1">{selectedArtist.genre} • {selectedArtist.city || 'Malawi'}</div>
+                          <div className="mt-2 flex gap-2">
+                             <span className="bg-[#4c9aff]/15 text-[#4c9aff] px-2 py-1 rounded-md text-[11px] font-bold uppercase">{selectedArtist.artist_tier || 'Standard'} Tier</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                         <div className="p-4 bg-[#1a1a35] rounded-xl border border-[#22223e]">
+                            <p className="text-[11px] text-[#7878a0] uppercase font-bold tracking-widest mb-1">Wallet Balance</p>
+                            <p className="text-xl font-bold text-[#00d68f]">MK {selectedArtist.wallet_balance?.toLocaleString() || 0}</p>
+                         </div>
+                         <div className="p-4 bg-[#1a1a35] rounded-xl border border-[#22223e]">
+                            <p className="text-[11px] text-[#7878a0] uppercase font-bold tracking-widest mb-1">Pending Songs</p>
+                            <p className="text-xl font-bold text-[#ffaa00]">{selectedArtist.pending_songs || 0}</p>
+                         </div>
+                      </div>
+
+                      <h4 className="font-bold text-sm text-white mb-2">Platform Identity</h4>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Email Address</span><span className="font-semibold text-white">{selectedArtist.email || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Phone / Mobile Money</span><span className="font-semibold text-white">{selectedArtist.phone || 'N/A'}</span></div>
+
+                      <h4 className="font-bold text-sm text-white mb-2 mt-8">KYC Information</h4>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Name</span><span className="font-semibold text-white">{selectedArtist.full_name || selectedArtist.name || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedArtist.nrc_number || 'N/A'}</span></div>
+
+                      <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+                         <div>
+                            <p className="text-[11px] text-[#7878a0] mb-1">ID Document</p>
+                            {selectedArtist.id_document_url ? (
+                              <img src={selectedArtist.id_document_url} alt="ID Document" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.id_document_url, '_blank')} />
+                            ) : (
+                              <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
+                            )}
+                         </div>
+                         <div>
+                            <p className="text-[11px] text-[#7878a0] mb-1">Selfie Image</p>
+                            {selectedArtist.selfie_url ? (
+                              <img src={selectedArtist.selfie_url} alt="Selfie" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.selfie_url, '_blank')} />
+                            ) : (
+                              <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
+                            )}
+                         </div>
+                      </div>
+
+                      <div className="flex gap-3 mt-8 pt-5 border-t border-[#22223e]">
+                         <button 
+                            onClick={() => { toggleArtistVerification(selectedArtist.id, !!(selectedArtist.verified || selectedArtist.is_verified)); setSelectedArtist(null); }} 
+                            className={`flex-1 py-3 font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all ${
+                              (selectedArtist.verified || selectedArtist.is_verified) ? 'bg-[#22223e] text-white hover:bg-white border text-black hover:text-black' : 'bg-[#00d68f] hover:brightness-110 text-black'
+                            }`}
+                         >
+                            <ShieldCheck size={16} /> {(selectedArtist.verified || selectedArtist.is_verified) ? 'Revoke Verification' : 'Verify Artist'}
+                         </button>
+                         <button onClick={() => { deleteArtist(selectedArtist.id, selectedArtist.stage_name); setSelectedArtist(null); }} className="flex-1 py-3 bg-[#ff4757]/15 border border-[#ff4757]/30 text-[#ff4757] hover:bg-[#ff4757] hover:text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <Trash2 size={16} /> Remove from Platform
+                         </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </div>
         </div>
       </div>
