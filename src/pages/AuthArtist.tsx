@@ -39,7 +39,7 @@ const AuthArtist: React.FC = () => {
   const [nrcFormatValid, setNrcFormatValid] = useState(false);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idDocFile, setIdDocFile] = useState<File | null>(null);
-  const [verificationMethod, setVerificationMethod] = useState<'nrc' | 'passport' | 'drivers'>('nrc');
+  const [verificationMethod, setVerificationMethod] = useState<'national_id' | 'passport' | 'drivers'>('national_id');
 
   useEffect(() => {
     if (user && !loading && role !== null) {
@@ -339,8 +339,8 @@ const AuthArtist: React.FC = () => {
       if (!city) return toast.error('City is required');
       if (!idDocFile) return toast.error('Please upload a photo of your ID document');
       if (!selfieFile) return toast.error('Please take a selfie holding your ID');
-      if (!nrcFormatValid && verificationMethod === 'nrc') {
-        return toast.error('Please enter a valid NRC number (format: 123456/78/9)');
+      if (!nrcFormatValid && verificationMethod === 'national_id') {
+        return toast.error('Please enter a valid ID number (at least 5 characters)');
       }
       if (!nrcNumber) return toast.error('Please enter your ID number');
     }
@@ -477,7 +477,7 @@ const AuthArtist: React.FC = () => {
                             </p>
                             <div className="grid grid-cols-3 gap-2 mb-4">
                               {[
-                                { id: 'nrc', label: 'NRC Card', emoji: '🪪' },
+                                { id: 'national_id', label: 'National ID', emoji: '🪪' },
                                 { id: 'passport', label: 'Passport', emoji: '📗' },
                                 { id: 'drivers', label: "Driver's Licence", emoji: '🚗' }
                               ].map((method) => (
@@ -497,24 +497,22 @@ const AuthArtist: React.FC = () => {
                               ))}
                             </div>
 
-                            {/* NRC Number Input with format validation */}
-                            {verificationMethod === 'nrc' && (
+                            {/* National ID Number Input */}
+                            {verificationMethod === 'national_id' && (
                               <div className="mb-4">
                                 <label className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-2">
-                                  NRC Number
+                                  ID Number
                                 </label>
                                 <div className="relative">
                                   <input
                                     type="text"
                                     value={nrcNumber}
                                     onChange={(e) => {
-                                      const val = e.target.value.toUpperCase().replace(/[^0-9A-Z/]/g, '');
+                                      const val = e.target.value.toUpperCase().replace(/[^0-9A-Z/_-]/g, '');
                                       setNrcNumber(val);
-                                      const nrcRegex = /^\d{6}\/\d{2}\/\d{1}$/;
-                                      setNrcFormatValid(nrcRegex.test(val));
+                                      setNrcFormatValid(val.length >= 5);
                                     }}
-                                    placeholder="e.g. 123456/78/9"
-                                    maxLength={11}
+                                    placeholder="e.g. 12345678"
                                     className={`w-full h-14 bg-white/5 border rounded-[12px] px-4 text-white font-mono text-lg tracking-widest outline-none transition-all ${nrcFormatValid
                                         ? 'border-smash-green text-smash-green'
                                         : nrcNumber.length > 0
@@ -530,19 +528,14 @@ const AuthArtist: React.FC = () => {
                                 </div>
                                 {nrcNumber.length > 0 && !nrcFormatValid && (
                                   <p className="text-[11px] text-smash-orange mt-1">
-                                    Format: 123456/78/9 (numbers and slashes only)
-                                  </p>
-                                )}
-                                {nrcFormatValid && (
-                                  <p className="text-[11px] text-smash-green mt-1">
-                                    ✓ NRC format valid
+                                    At least 5 characters required
                                   </p>
                                 )}
                               </div>
                             )}
 
                             {/* Passport/Drivers input */}
-                            {verificationMethod !== 'nrc' && (
+                            {verificationMethod !== 'national_id' && (
                               <div className="mb-4">
                                 <label className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-2">
                                   {verificationMethod === 'passport' 
@@ -567,8 +560,8 @@ const AuthArtist: React.FC = () => {
                             {/* ID Document Photo Upload */}
                             <div className="mb-4">
                               <label className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-2">
-                                Photo of Your {verificationMethod === 'nrc' 
-                                  ? 'NRC Card' 
+                                Photo of Your {verificationMethod === 'national_id' 
+                                  ? 'National ID' 
                                   : verificationMethod === 'passport' 
                                   ? 'Passport' 
                                   : "Driver's Licence"}

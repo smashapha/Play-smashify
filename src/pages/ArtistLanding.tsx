@@ -273,7 +273,7 @@ const ArtistLanding: React.FC = () => {
                    <span className="text-[11px] font-display font-medium text-white/40 uppercase tracking-widest">MWK / 6 MO</span>
                 </div>
                 <ul className="space-y-4 flex-1">
-                   {["Upload 12 songs/yr", "Mobile analytics", "Standard payouts", "Supporter badges"].map((f, i) => (
+                   {["15 uploads per year", "Mobile analytics", "Standard payouts", "Supporter badges"].map((f, i) => (
                      <li key={i} className="flex items-center gap-3 text-[14px] text-white/60 font-medium font-sans">
                         <CircleCheck size={16} className="text-smash-purple shrink-0" />
                         {f}

@@ -217,7 +217,7 @@ const Pricing = () => {
                 subtitle="Build your fanbase"
                 onAction={() => handleAction('RisingStar')}
                 features={[
-                  "30 uploads per month",
+                  "15 uploads per year",
                   "Sell tracks to fans",
                   "Accept fan subscriptions",
                   "10% fee on tips & sales",

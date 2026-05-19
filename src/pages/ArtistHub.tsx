@@ -792,9 +792,15 @@ const DashboardTab = ({ stats, balance, userProfile, setActiveTab }: any) => {
                              <p className="text-xs text-smash-green/80 mt-1">Note: {payout.admin_note}</p>
                            )}
                         </div>
-                        <div className="text-right flex items-center h-full">
-                           <p className="text-[14px] font-sans font-semibold text-smash-orange">
+                        <div className="text-right flex flex-col justify-center h-full">
+                           <p className="text-[14px] font-sans font-black text-white/80">
                               -MK {Number(payout.amount || payout.requested_amount || 0).toLocaleString()}
+                           </p>
+                           <p className="text-[11px] font-sans text-smash-orange mt-0.5">
+                              Fee: MK {Math.round(Number(payout.amount || payout.requested_amount || 0) * 0.03).toLocaleString()}
+                           </p>
+                           <p className="text-[12px] font-display font-bold text-smash-green mt-0.5 uppercase tracking-widest">
+                              Net: MK {Math.round(Number(payout.amount || payout.requested_amount || 0) * 0.97).toLocaleString()}
                            </p>
                         </div>
                      </div>
@@ -1406,15 +1412,16 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
   const limits = getTierLimits(userProfile);
 
   const isFree = getArtistTier(userProfile) === 'free';
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  const songsUploadedThisMonth = songs.filter((s: any) => {
+  const startOfYear = new Date();
+  startOfYear.setMonth(0, 1);
+  startOfYear.setHours(0, 0, 0, 0);
+  const songsUploadedThisYear = songs.filter((s: any) => {
     const createdDate = new Date(s.created_at);
-    return createdDate >= startOfMonth;
+    return createdDate >= startOfYear;
   }).length;
   const totalSongsUploaded = songs.length;
-  const canUploadMore = limits.maxUploads === Infinity ? true : totalSongsUploaded < limits.maxUploads;
+  // Enforce yearly uploads strictly
+  const canUploadMore = (limits as any).yearlyUploads === Infinity ? true : songsUploadedThisYear < (limits as any).yearlyUploads;
 
   // ── Image compression utility ─────────────────────────────
   const compressCoverImage = (file: File): Promise<Blob> => {
@@ -2160,6 +2167,11 @@ const UploadTab = ({ onComplete, albums, songs, setActiveTab, role }: any) => {
                         </div>
 
                         <div className="flex flex-col gap-4">
+                           {!canUploadMore && (
+                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-sm font-sans text-center">
+                               You have reached your upload limit. Upgrade your plan to upload more songs.
+                             </div>
+                           )}
                            <button type="submit" disabled={!canUploadMore} className="w-full h-16 bg-gradient-to-r from-smash-purple to-smash-orange text-white font-studio font-black uppercase tracking-widest text-[14px] rounded-2xl disabled:opacity-50 hover:brightness-110 transition-all flex items-center justify-center shadow-[0_10px_30px_rgba(168,85,247,0.3)]">
                              🚀 PUBLISH TO SMASHIFY
                            </button>

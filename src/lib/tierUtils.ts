@@ -68,7 +68,7 @@ export const getTierLimits = (artist: any) => {
     case 'elite':
       return {
         maxUploads: Infinity,
-        monthlyUploads: Infinity,
+        yearlyUploads: Infinity,
         canWithdraw: true,
         platformFee: 0.05,
         subscriptionFee: 0.08,
@@ -93,7 +93,7 @@ export const getTierLimits = (artist: any) => {
     case 'standard':
       return {
         maxUploads: Infinity,
-        monthlyUploads: Infinity,
+        yearlyUploads: Infinity,
         canWithdraw: true,
         platformFee: 0.07,
         subscriptionFee: 0.10,
@@ -119,7 +119,7 @@ export const getTierLimits = (artist: any) => {
     case 'rising_star':
       return {
         maxUploads: 30,
-        monthlyUploads: 30,
+        yearlyUploads: 15,
         canWithdraw: true,
         platformFee: 0.10,
         subscriptionFee: 0.15,
@@ -145,7 +145,7 @@ export const getTierLimits = (artist: any) => {
     default:
       return {
         maxUploads: 5,
-        monthlyUploads: 5,
+        yearlyUploads: 5,
         canWithdraw: false,
         platformFee: 0.15,
         subscriptionFee: 0.20,
