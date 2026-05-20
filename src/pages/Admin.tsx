@@ -398,7 +398,8 @@ const Admin = () => {
         nrc_number: application.nrc_number,
         id_document_url: application.id_document_url,
         selfie_url: application.selfie_url,
-        id_type: application.id_type
+        id_type: application.id_type,
+        agent_reference: application.agent_reference || null
       });
       if (profileError) throw profileError;
 
@@ -1692,6 +1693,7 @@ const Admin = () => {
                       <h4 className="font-bold text-sm text-white mb-2 mt-8">KYC Information</h4>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Name</span><span className="font-semibold text-white">{selectedArtist.full_name || selectedArtist.name || 'N/A'}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedArtist.nrc_number || 'N/A'}</span></div>
+                      {selectedArtist.agent_reference && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedArtist.agent_reference}</span></div>}
 
                       <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
                          <div>

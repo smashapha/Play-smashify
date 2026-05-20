@@ -139,7 +139,12 @@ const ArtistProfile: React.FC = () => {
                .single();
             
             if (artistError) throw artistError;
-            setArtist(artistData);
+            const { count: followersCount } = await supabase
+               .from('followers')
+               .select('*', { count: 'exact', head: true })
+               .eq('artist_id', id);
+
+            setArtist({ ...artistData, followers_count: followersCount || 0 });
             checkFollow();
             checkSubscription();
             fetchTopSupporters();
