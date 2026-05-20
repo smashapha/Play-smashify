@@ -234,10 +234,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           const profileData: any = {
             id: userId,
-            full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Artist',
-            stage_name: authUser.user_metadata?.stage_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Artist',
-            email: authUser.email,
-            phone: authUser.user_metadata?.phone || null,
+            full_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'New Artist',
+            stage_name: authUser?.user_metadata?.stage_name || authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'New Artist',
+            email: authUser?.email || '',
+            phone: authUser?.user_metadata?.phone || null,
             approved: false,
             user_type: 'artist',
             artist_tier: 'free',
@@ -264,9 +264,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           const profileData: any = {
             id: userId,
-            full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'New Listener',
-            email: authUser.email,
-            phone: authUser.user_metadata?.phone || null,
+            full_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'New Listener',
+            email: authUser?.email || '',
+            phone: authUser?.user_metadata?.phone || null,
             subscription_tier: listenerTier,
             subscription_ends: listenerEnds,
             user_type: 'listener'
