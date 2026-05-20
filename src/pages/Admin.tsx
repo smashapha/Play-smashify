@@ -378,7 +378,7 @@ const Admin = () => {
   const fetchArtists = async () => {
     const { data: artistsData, error } = await supabase
       .from('profiles')
-      .select('*, artist_applications:artist_applications!profile_id(nrc_number, id_type, id_document_url, selfie_url, referral_code)')
+      .select('*')
       .eq('user_type', 'artist')
       .eq('approved', true)
       .order('created_at', { ascending: false });
