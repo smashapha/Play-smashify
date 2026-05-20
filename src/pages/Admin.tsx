@@ -1620,6 +1620,7 @@ const Admin = () => {
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">City</span><span className="font-semibold text-white">{selectedApp.city || 'N/A'}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Type</span><span className="font-semibold text-white">{selectedApp.id_type || 'N/A'}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedApp.national_id_number || selectedApp.nrc_number || 'N/A'}</span></div>
+                      {(selectedApp.agent_reference || selectedApp.referral_code) && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.agent_reference || selectedApp.referral_code}</span></div>}
 
                       <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Verification Documents</h4>
                       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1644,7 +1645,7 @@ const Admin = () => {
                       <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Artist Roster Data</h4>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Stage Name</span><span className="font-semibold text-white">{selectedApp.stage_name}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Genre</span><span className="font-semibold text-white">{selectedApp.genre}</span></div>
-                      {selectedApp.referral_code && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.referral_code}</span></div>}
+                      {(selectedApp.agent_reference || selectedApp.referral_code) && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.agent_reference || selectedApp.referral_code}</span></div>}
 
                       <div className="flex gap-3 mt-8 pt-5 border-t border-[#22223e]">
                          <button onClick={() => { approveArtist(selectedApp); setSelectedApp(null); }} className="flex-1 py-3 bg-[#00d68f] hover:brightness-110 text-black font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
@@ -1680,6 +1681,7 @@ const Admin = () => {
                           <div className="text-[13px] text-[#7878a0] mt-1">{selectedArtist.genre} • {selectedArtist.city || 'Malawi'}</div>
                           <div className="mt-2 flex gap-2">
                              <span className="bg-[#4c9aff]/15 text-[#4c9aff] px-2 py-1 rounded-md text-[11px] font-bold uppercase">{selectedArtist.artist_tier || 'Standard'} Tier</span>
+                             <span className="bg-[#ff6b35]/15 text-[#ff6b35] px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest font-mono">AP-{selectedArtist.id?.split('-')[0]}</span>
                           </div>
                         </div>
                       </div>
