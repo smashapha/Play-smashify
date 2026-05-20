@@ -224,7 +224,7 @@ const AuthArtist: React.FC = () => {
           genre: genre,
           city: city,
           phone: phone,
-          national_id_number: nrcNumber,
+          nrc_number: nrcNumber,
           id_type: verificationMethod,
           selfie_url: selfieUrl,
           id_document_url: idUrl,

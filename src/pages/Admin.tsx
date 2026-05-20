@@ -376,12 +376,16 @@ const Admin = () => {
   };
 
   const fetchArtists = async () => {
-    const { data: artistsData } = await supabase
+    const { data: artistsData, error } = await supabase
       .from('profiles')
-      .select('*, artist_applications:artist_applications!profile_id(national_id_number, nrc_number, id_type, id_document_url, selfie_url, referral_code)')
+      .select('*, artist_applications:artist_applications!profile_id(nrc_number, id_type, id_document_url, selfie_url, referral_code)')
       .eq('user_type', 'artist')
       .eq('approved', true)
       .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Fetch artists error:', error);
+    }
     
     if (artistsData) {
       const artistsWithPending = await Promise.all(artistsData.map(async (art) => {
@@ -408,6 +412,11 @@ const Admin = () => {
         verified: true,
         is_verified: true,
         artist_tier: 'Free',
+        nrc_number: application.national_id_number || application.nrc_number,
+        id_document_url: application.id_document_url,
+        selfie_url: application.selfie_url,
+        id_type: application.id_type,
+        agent_reference: application.agent_reference || application.referral_code || null
       }).eq('id', application.profile_id);
       
       if (profileError) throw profileError;
@@ -1620,7 +1629,7 @@ const Admin = () => {
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">City</span><span className="font-semibold text-white">{selectedApp.city || 'N/A'}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Type</span><span className="font-semibold text-white">{selectedApp.id_type || 'N/A'}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedApp.national_id_number || selectedApp.nrc_number || 'N/A'}</span></div>
-                      {(selectedApp.agent_reference || selectedApp.referral_code) && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.agent_reference || selectedApp.referral_code}</span></div>}
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className={`font-semibold font-mono ${selectedApp.agent_reference || selectedApp.referral_code ? 'text-[#00d68f]' : 'text-white'}`}>{selectedApp.agent_reference || selectedApp.referral_code || 'N/A'}</span></div>
 
                       <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Verification Documents</h4>
                       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1645,7 +1654,7 @@ const Admin = () => {
                       <h4 className="font-bold text-sm text-[#ff6b35] mb-2 mt-8">Artist Roster Data</h4>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Stage Name</span><span className="font-semibold text-white">{selectedApp.stage_name}</span></div>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Genre</span><span className="font-semibold text-white">{selectedApp.genre}</span></div>
-                      {(selectedApp.agent_reference || selectedApp.referral_code) && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedApp.agent_reference || selectedApp.referral_code}</span></div>}
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className={`font-semibold font-mono ${selectedApp.agent_reference || selectedApp.referral_code ? 'text-[#00d68f]' : 'text-white'}`}>{selectedApp.agent_reference || selectedApp.referral_code || 'N/A'}</span></div>
 
                       <div className="flex gap-3 mt-8 pt-5 border-t border-[#22223e]">
                          <button onClick={() => { approveArtist(selectedApp); setSelectedApp(null); }} className="flex-1 py-3 bg-[#00d68f] hover:brightness-110 text-black font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
@@ -1703,24 +1712,23 @@ const Admin = () => {
 
                       <h4 className="font-bold text-sm text-white mb-2 mt-8">KYC Information</h4>
                       <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Name</span><span className="font-semibold text-white">{selectedArtist.full_name || selectedArtist.name || 'N/A'}</span></div>
-                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedArtist.artist_applications?.[0]?.national_id_number || selectedArtist.artist_applications?.[0]?.nrc_number || selectedArtist.nrc_number || 'N/A'}</span></div>
-                      {(selectedArtist.artist_applications?.[0]?.referral_code || selectedArtist.agent_reference) && <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className="font-semibold text-[#00d68f] font-mono">{selectedArtist.artist_applications?.[0]?.referral_code || selectedArtist.agent_reference}</span></div>}
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">ID Number</span><span className="font-medium text-white font-mono">{selectedArtist.nrc_number || 'N/A'}</span></div>
+                      <div className="flex justify-between py-2 border-b border-[#22223e] text-[13px]"><span className="text-[#7878a0]">Agent Reference</span><span className={`font-semibold font-mono ${selectedArtist.agent_reference ? 'text-[#00d68f]' : 'text-white'}`}>{selectedArtist.agent_reference || 'N/A'}</span></div>
 
                       <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
                          <div>
                             <p className="text-[11px] text-[#7878a0] mb-1">ID Document</p>
-                            {(selectedArtist.artist_applications?.[0]?.id_document_url || selectedArtist.id_document_url) ? (
-                              <img src={selectedArtist.artist_applications?.[0]?.id_document_url || selectedArtist.id_document_url} alt="ID Document" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.artist_applications?.[0]?.id_document_url || selectedArtist.id_document_url, '_blank')} />
+                            {selectedArtist.id_document_url ? (
+                              <img src={selectedArtist.id_document_url} alt="ID Document" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.id_document_url, '_blank')} />
                             ) : (
                               <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
                             )}
                          </div>
                          <div>
                             <p className="text-[11px] text-[#7878a0] mb-1">Selfie Image</p>
-                            {(selectedArtist.artist_applications?.[0]?.selfie_url || selectedArtist.selfie_url) ? (
-                              <img src={selectedArtist.artist_applications?.[0]?.selfie_url || selectedArtist.selfie_url} alt="Selfie" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.artist_applications?.[0]?.selfie_url || selectedArtist.selfie_url, '_blank')} />
+                            {selectedArtist.selfie_url ? (
+                              <img src={selectedArtist.selfie_url} alt="Selfie" className="w-full rounded-lg border border-[#22223e] hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(selectedArtist.selfie_url, '_blank')} />
                             ) : (
-
                               <div className="p-4 bg-[#22223e] rounded-lg text-[11px] text-[#7878a0]">Not provided</div>
                             )}
                          </div>
