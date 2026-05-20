@@ -269,7 +269,8 @@ const Admin = () => {
       if (error) throw error;
       
       // Manually refund the wallet balance
-      if (payout.artist_id && payout.amount) {
+      const refundAmount = payout.amount || payout.requested_amount;
+      if (payout.artist_id && refundAmount) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('wallet_balance')
@@ -277,7 +278,7 @@ const Admin = () => {
           .single();
           
         if (profile) {
-          const newBalance = Number(profile.wallet_balance || 0) + Number(payout.amount);
+          const newBalance = Number(profile.wallet_balance || 0) + Number(refundAmount);
           await supabase
             .from('profiles')
             .update({ wallet_balance: newBalance })
